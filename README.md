@@ -14,10 +14,12 @@ Static website for a doorstep car and bike wash in Mumbai. Plain HTML, CSS and J
 | `subscription.html` | Monthly plans for cars and bikes |
 | `gallery.html` | Before/after slider, process stages, photo grid |
 | `contact.html` | Call / WhatsApp, enquiry form, PIN check, service areas, FAQ |
-| `book.html` | 3-step booking: vehicle → place & time (PIN checked) → details |
+| `book.html` | 3-step booking: vehicle → place & time (PIN checked) → details and payment choice |
+| `privacy.html`, `terms.html`, `refunds.html` | Policy pages, linked in the footer |
 
 ## Before going live: edit the top of `src/app.js`, then rebuild
-1. **`SITE.phone` / `SITE.phoneDisplay`**: your WhatsApp Business number.
+1. **`SITE.phone` / `SITE.phoneDisplay`**: your WhatsApp Business number (already set to +91 77189 84191).
+   **`SITE.upiId`**: the UPI ID for the "Pay online now" option. Until it's set, that option shows as "coming soon" and everyone pays after the wash.
 2. **`SITE.sheetUrl`**: your Google Apps Script web-app URL (see below).
 3. **`PRICE`, `ADDONS`, `DETAIL`, `PLANS`**: all prices are launch placeholders. Change them here and every page updates.
 4. **`AREAS`**: the areas and PIN codes you serve. Bookings from any other PIN are refused with a "message us" link.

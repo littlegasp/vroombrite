@@ -425,6 +425,8 @@ footer .wrap{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:36px}
 footer h4{margin:0 0 14px;font-size:.68rem;letter-spacing:.2em;color:var(--muted)}
 footer .fl{display:flex;flex-direction:column;gap:8px;font-size:.92rem;color:#C6CCCF}
 footer .fl a:hover{color:var(--lime)}
+.legal .ll{display:flex;flex-wrap:wrap;gap:16px}
+.legal a:hover{color:var(--lime)}
 .legal{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:22px;font-size:.78rem;color:#737B81}
 .giant{font:italic 900 clamp(3rem,13vw,11.5rem)/.9 var(--f-display);letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.12);white-space:nowrap;overflow:hidden;text-align:center;margin-top:30px}
 .giant span{-webkit-text-stroke:1px rgba(201,243,106,.28)}
@@ -434,3 +436,20 @@ footer .fl a:hover{color:var(--lime)}
 .fab.away{opacity:0;pointer-events:none;transform:translateY(20px)}
 
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.track,.orbit::after,.scroll-hint b::after{animation:none}.ride img,.gal img,.btn,.pkg{transition:none}}
+
+/* policy pages */
+.legaldoc{max-width:760px;color:var(--text-dark)}
+.legaldoc h1{font-size:clamp(2rem,5vw,3.4rem);letter-spacing:-.035em;line-height:1.05;margin-top:16px}
+.legaldoc .eff{color:var(--muted-dark);font-size:.88rem;margin-top:10px;margin-bottom:26px}
+.legaldoc h2{font-size:1.25rem;letter-spacing:-.01em;margin:34px 0 10px}
+.legaldoc p,.legaldoc li{color:#3E454B;font-size:.98rem}
+.legaldoc ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.legaldoc a{color:var(--lime-deep);text-decoration:underline}
+
+/* payment choice */
+.tagp{font:700 .66rem var(--f-body)!important;letter-spacing:.14em;text-transform:uppercase;padding:5px 9px;border-radius:4px;background:rgba(201,243,106,.14);color:var(--lime)}
+.tagp.alt{background:rgba(85,214,194,.12);color:var(--aqua)}
+.pkgpick label.off{opacity:.55;cursor:not-allowed}
+.paybox{width:100%;max-width:360px;padding:20px;border-radius:14px;border:1px solid rgba(85,214,194,.35);background:rgba(85,214,194,.06);display:flex;flex-direction:column;align-items:center;gap:12px}
+.paybox .kicker{color:var(--aqua)}
+.payamt{font:800 2.2rem var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}

@@ -16,6 +16,9 @@ PAGES = [  # slug, file, nav label, <title>, meta description
  ("gallery","gallery.html","Gallery","Gallery — Vroombrite","Before and after, foam, rinse and shine. See what a Vroombrite wash looks like."),
  ("contact","contact.html","Contact","Contact & Service Areas — Vroombrite Mumbai","Call or WhatsApp Vroombrite. Check if we cover your PIN code in Mumbai."),
  ("book","book.html","Book Now","Book a Doorstep Wash — Vroombrite","Book a doorstep car or bike wash in three quick steps."),
+ ("privacy","privacy.html",None,"Privacy Policy — Vroombrite","How Vroombrite collects, uses and protects your personal information."),
+ ("terms","terms.html",None,"Terms of Service — Vroombrite","The terms for booking a doorstep car or bike wash with Vroombrite."),
+ ("refunds","refunds.html",None,"Cancellation & Refund Policy — Vroombrite","Rescheduling, cancellation and refund rules for Vroombrite bookings and monthly plans."),
 ]
 FILE = {p[0]: p[1] for p in PAGES}
 
@@ -44,7 +47,7 @@ FOOTER = '''<footer class="gut">
     <div><h4>SERVICES</h4><div class="fl"><a href="@@car-wash@@">Car wash</a><a href="@@bike-wash@@">Bike wash</a><a href="@@detailing@@">Detailing</a><a href="@@subscription@@">Monthly plans</a></div></div>
     <div><h4>COMPANY</h4><div class="fl"><a href="@@gallery@@">Gallery</a><a href="@@contact@@">Contact &amp; areas</a><a href="@@book@@">Book a wash</a></div></div>
     <div><h4>CONTACT</h4><div class="fl"><span data-num></span><a data-wa href="#">WhatsApp us</a><span>Andheri · Powai · Chandivali and nearby</span></div></div>
-    <div class="legal"><span>© 2026 Vroombrite</span><span>Prices shown are launch prices and may change.</span></div>
+    <div class="legal"><span>© 2026 Vroombrite · Prices shown are launch prices and may change.</span><span class="ll"><a href="@@privacy@@">Privacy</a><a href="@@terms@@">Terms</a><a href="@@refunds@@">Cancellation &amp; refunds</a></span></div>
   </div>
   <div class="giant" aria-hidden="true">VROOM<span>BRITE</span></div>
 </footer>

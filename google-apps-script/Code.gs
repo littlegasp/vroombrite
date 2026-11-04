@@ -11,7 +11,7 @@
  * 4. Copy the Web app URL and paste it into SITE.sheetUrl at the top of app.js.
  */
 
-const BOOKING_COLS = ["Received","Booking ID","Status","Vehicle","Number plate","Package","Extras","Date","Slot","Address","Area","PIN","Name","Mobile","Notes","Est. total (₹)"];
+const BOOKING_COLS = ["Received","Booking ID","Status","Vehicle","Number plate","Package","Extras","Date","Slot","Address","Area","PIN","Name","Mobile","Notes","Est. total (₹)","Payment"];
 const ENQUIRY_COLS = ["Received","Name","Mobile","Message","Status"];
 
 function doPost(e) {
@@ -24,7 +24,7 @@ function doPost(e) {
       const sh = sheet_("Bookings", BOOKING_COLS);
       sh.appendRow([now, clean_(d.id), "New", clean_(d.vehicle), clean_(d.plate), clean_(d.package), clean_(d.addons),
                     clean_(d.date), clean_(d.slot), clean_(d.address), clean_(d.area), "'" + clean_(d.pin),
-                    clean_(d.name), "'" + clean_(d.phone), clean_(d.notes), Number(d.total) || ""]);
+                    clean_(d.name), "'" + clean_(d.phone), clean_(d.notes), Number(d.total) || "", clean_(d.payment)]);
     } else if (d.type === "enquiry") {
       const sh = sheet_("Enquiries", ENQUIRY_COLS);
       sh.appendRow([now, clean_(d.name), "'" + clean_(d.phone), clean_(d.message), "New"]);

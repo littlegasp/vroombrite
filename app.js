@@ -4,9 +4,11 @@
    ========================================================= */
 const SITE = {
   name: "Vroombrite",
-  phone: "919820000000",            // WhatsApp / call number, country code first, digits only
-  phoneDisplay: "+91 98200 00000",
-  sheetUrl: ""                      // paste your Google Apps Script web-app URL here (see README)
+  phone: "917718984191",            // WhatsApp / call number, country code first, digits only
+  phoneDisplay: "+91 77189 84191",
+  sheetUrl: "",                     // paste your Google Apps Script web-app URL here (see README)
+  upiId: "",                        // UPI ID for "Pay online now" (e.g. vroombrite@okaxis). Empty = online option shows "coming soon"
+  upiName: "Vroombrite"             // name shown in the customer's UPI app
 };
 
 /* Prices are launch placeholders — change them here and every page updates. */
@@ -234,11 +236,15 @@ function extraById(id){ return addonList().concat(DETAIL).find(a=>a.id===id); }
 function total(){ return PRICE[priceKey(B.veh,B.size)][B.pkg] + [...B.adds].reduce((s,id)=>s+(extraById(id)?.p||0),0); }
 function vehText(){ return B.veh==="bike" ? "Bike / Scooter" : "Car · "+SIZE_LABEL[B.size]; }
 function whenText(){ const d=$("b-date").value; if(!d) return "—"; const sl=document.querySelector('input[name="slot"]:checked'); return new Date(d+"T00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"})+(sl?", "+sl.value:""); }
+function payMode(){ const r=document.querySelector('input[name="pay"]:checked'); return r?r.value:"after"; }
+function payText(){ return payMode()==="online" ? "Online by UPI" : "After the wash (UPI / cash)"; }
+function upiLink(amount,id){ return "upi://pay?pa="+encodeURIComponent(SITE.upiId)+"&pn="+encodeURIComponent(SITE.upiName)+"&am="+amount+"&cu=INR&tn="+encodeURIComponent("Booking "+id); }
 function addsText(){ return B.adds.size ? [...B.adds].map(id=>extraById(id)?.n).filter(Boolean).join(", ") : "None"; }
 function updateSum(){
   $("sVeh").textContent=vehText(); $("sPkg").textContent=PKG[B.veh][B.pkg].n;
   $("sAdd").textContent=addsText(); $("sWhen").textContent=whenText();
   const pin=$("b-pin").value, hit=areaForPin(pin); $("sWhere").textContent= hit ? `${hit.a} · ${pin}` : "—";
+  $("sPay").textContent=payText();
   $("sTot").textContent=rupee(total());
 }
 function checkBookPin(){
@@ -255,6 +261,9 @@ function showStep(n){
   $("prog").hidden=false; $("stepLbl").textContent=`STEP 0${n} / 03`; $("stepBar").style.width=(n/3*100)+"%";
 }
 if(bform){
+  const on=!!SITE.upiId;
+  $("payPick").innerHTML=`<label><span><input type="radio" name="pay" value="after" id="pay-after" checked><b>Pay after the wash</b><small>UPI or cash, once you've checked the shine. No advance needed.</small></span><strong class="tagp">Standard</strong></label>
+    <label${on?"":' class="off"'}><span><input type="radio" name="pay" value="online" id="pay-online" ${on?"":"disabled"}><b>Pay online now</b><small>${on?"Pay by UPI from any app right after you confirm.":"Online payment is coming soon."}</small></span><strong class="tagp alt">${on?"UPI":"Soon"}</strong></label>`;
   $("slotChips").innerHTML=SLOTS.map((s,i)=>`<label><input type="radio" name="slot" value="${s}" id="slot-${i}" ${i===0?"checked":""}><span>${s}</span></label>`).join("");
   const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
   const tm=new Date(); tm.setDate(tm.getDate()+1); $("b-date").min=iso(new Date()); $("b-date").value=iso(tm);
@@ -286,10 +295,14 @@ if(bform){
     const id=bookingId(), pin=$("b-pin").value, area=areaForPin(pin)?.a||"";
     const data={type:"booking", id, vehicle:vehText(), plate:$("b-plate").value.trim(), package:PKG[B.veh][B.pkg].n, addons:addsText(),
       date:$("b-date").value, slot:(document.querySelector('input[name="slot"]:checked')||{}).value||"", address:$("b-addr").value.trim(), area, pin,
-      name, phone:ph, notes:$("b-notes").value.trim(), total:total()};
-    const msg=`Hi ${SITE.name}, I'd like to book a doorstep wash.\n\nBooking ID: ${id}\nVehicle: ${data.vehicle}${data.plate?" ("+data.plate+")":""}\nPackage: ${data.package}\nAdd-ons: ${data.addons}\nWhen: ${whenText()}\nAddress: ${data.address}, ${area} ${pin}\nName: ${name}\nMobile: ${ph}${data.notes?"\nNotes: "+data.notes:""}\n\nEstimated total: ${rupee(data.total)}`;
+      name, phone:ph, notes:$("b-notes").value.trim(), total:total(), payment: payMode()==="online" ? "Online UPI · pending" : "After service"};
+    const msg=`Hi ${SITE.name}, I'd like to book a doorstep wash.\n\nBooking ID: ${id}\nVehicle: ${data.vehicle}${data.plate?" ("+data.plate+")":""}\nPackage: ${data.package}\nAdd-ons: ${data.addons}\nWhen: ${whenText()}\nAddress: ${data.address}, ${area} ${pin}\nName: ${name}\nMobile: ${ph}${data.notes?"\nNotes: "+data.notes:""}\n\nEstimated total: ${rupee(data.total)}\nPayment: ${payText()}`;
     const url=waLink(msg); $("waAgain").href=url; $("doneId").textContent=id;
     $$(".step",bform).forEach(s=>s.hidden=true); $("prog").hidden=true; $("done").hidden=false;
+    const online = payMode()==="online" && !!SITE.upiId;
+    $("payBox").hidden=!online;
+    if(online){ $("payAmt").textContent=rupee(data.total); $("payUpi").href=upiLink(data.total,id); $("upiIdText").textContent=SITE.upiId; }
+    $("doneMsg").textContent = online ? "WhatsApp should have opened with your booking. Press send there, then pay below and share the payment screenshot in the same chat." : "WhatsApp should have opened with your booking filled in. Press send there and we'll confirm your slot. You pay after the wash.";
     openNew(url);                               // open WhatsApp inside the click so it isn't blocked
     const st=$("saveState"); st.hidden=true;
     const res=await saveToSheet(data);
@@ -299,6 +312,8 @@ if(bform){
   $("newBooking").addEventListener("click",()=>{ B.adds.clear(); renderPick(); showStep(1); });
   applyPreselect();
 }
+
+$("copyUpi") && $("copyUpi").addEventListener("click",()=>{ const b=$("copyUpi"); navigator.clipboard.writeText(SITE.upiId).then(()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1500);}).catch(()=>{const r=document.createRange();r.selectNodeContents($("upiIdText"));const g=getSelection();g.removeAllRanges();g.addRange(r);}); });
 
 /* ---------- contact enquiry ---------- */
 const eform=$("eform");
