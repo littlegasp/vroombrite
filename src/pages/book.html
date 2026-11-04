@@ -1,0 +1,81 @@
+<section class="pad gut plain-top">
+  <div class="wrap">
+    <div class="head"><div><div class="kicker">Book now</div><h2 class="big">Let's get your<br><em>shine on.</em></h2></div>
+      <p>Three quick steps. We save your booking and open WhatsApp so you can send it to us. We confirm your slot within 30 minutes, 7 AM to 9 PM.</p></div>
+    <div class="book-grid">
+      <form class="bform" id="bform" novalidate>
+        <div class="prog" id="prog"><span id="stepLbl">STEP 01 / 03</span><div class="bar2"><i id="stepBar"></i></div></div>
+
+        <div class="step" data-step="1">
+          <h3>First, your vehicle.</h3><p class="sub">Car and bike bookings have their own packages and add-ons.</p>
+          <div class="vchoice">
+            <label><input type="radio" name="veh" value="car" id="bv-car" checked><img src="img/shine.jpg" alt=""><small>SELECTED</small><span>Car</span></label>
+            <label><input type="radio" name="veh" value="bike" id="bv-bike"><img src="img/bike.jpg" alt="" style="object-position:62% 50%"><small>SELECTED</small><span>Bike</span></label>
+          </div>
+          <div class="f" id="sizeField"><span class="lb">Car size</span>
+            <div class="chips" role="radiogroup" aria-label="Car size">
+              <label><input type="radio" name="size" value="hatch" id="bs-hatch" checked><span>Hatchback</span></label>
+              <label><input type="radio" name="size" value="sedan" id="bs-sedan"><span>Sedan</span></label>
+              <label><input type="radio" name="size" value="suv" id="bs-suv"><span>SUV / MUV</span></label>
+            </div></div>
+          <div class="f"><span class="lb">Package</span><div class="pkgpick" id="pkgPick"></div></div>
+          <div class="f"><span class="lb">Add-ons (optional)</span><div class="adds" id="addPick"></div></div>
+          <div class="f" id="detailField"><span class="lb">Detailing treatments (optional)</span><div class="adds" id="detailPick"></div></div>
+          <div class="acts"><button type="button" class="btn btn-lime" data-next>Continue <span class="arrow">→</span></button></div>
+        </div>
+
+        <div class="step" data-step="2" hidden>
+          <h3>Where and when?</h3><p class="sub">We come to your building's parking.</p>
+          <div class="f"><label for="b-addr">Building / society and wing</label><input id="b-addr" placeholder="B-wing, Sai Krupa CHS, near Chandivali Studio"></div>
+          <div class="two">
+            <div class="f"><label for="b-pin">PIN code</label><input id="b-pin" inputmode="numeric" autocomplete="postal-code" maxlength="6" placeholder="400072"><span class="pinmsg" id="pinMsg" aria-live="polite"></span></div>
+            <div class="f"><label for="b-date">Date</label><input type="date" id="b-date"></div>
+          </div>
+          <div class="f"><span class="lb">Time slot</span><div class="chips" role="radiogroup" aria-label="Time slot" id="slotChips"></div></div>
+          <p class="err" id="err2" hidden></p>
+          <div class="acts"><button type="button" class="btn btn-ghost" data-prev>Back</button><button type="button" class="btn btn-lime" data-next>Continue <span class="arrow">→</span></button></div>
+        </div>
+
+        <div class="step" data-step="3" hidden>
+          <h3>Who's booking?</h3><p class="sub">We'll confirm on WhatsApp.</p>
+          <div class="two">
+            <div class="f"><label for="b-name">Your name</label><input id="b-name" autocomplete="name" placeholder="Rahul Patil"></div>
+            <div class="f"><label for="b-phone">Mobile number</label><input id="b-phone" inputmode="tel" autocomplete="tel" placeholder="98XXXXXXXX"></div>
+          </div>
+          <div class="f"><label for="b-plate">Vehicle number (optional)</label><input id="b-plate" placeholder="MH 02 AB 1234"></div>
+          <div class="f"><label for="b-notes">Anything we should know?</label><textarea id="b-notes" placeholder="Parking level, slot number, keys with security"></textarea></div>
+          <p class="err" id="err3" hidden></p>
+          <div class="acts"><button type="button" class="btn btn-ghost" data-prev>Back</button><button type="submit" class="btn btn-wa">Confirm booking <span class="arrow">↗</span></button></div>
+        </div>
+
+        <div class="done" id="done" hidden>
+          <div class="tick">✓</div><h3 style="font-size:1.8rem">Booking <span id="doneId"></span></h3>
+          <p>WhatsApp should have opened with your booking filled in. Press send there and we'll confirm your slot.</p>
+          <p class="status" id="saveState" hidden></p>
+          <a class="btn btn-wa" id="waAgain" target="_blank" rel="noopener" href="#">Open WhatsApp again <span class="arrow">↗</span></a>
+          <button type="button" class="btn btn-ghost" id="newBooking">Book another vehicle</button>
+        </div>
+      </form>
+
+      <aside>
+        <div class="summary">
+          <div class="sp"><img id="sumImg" src="img/shine.jpg" alt=""></div>
+          <div class="sb">
+            <div class="kicker">Your booking</div>
+            <div class="row"><span>Vehicle</span><b id="sVeh">Car · Hatchback</b></div>
+            <div class="row"><span>Package</span><b id="sPkg">—</b></div>
+            <div class="row"><span>Extras</span><b id="sAdd">None</b></div>
+            <div class="row"><span>Where</span><b id="sWhere">—</b></div>
+            <div class="row"><span>When</span><b id="sWhen">—</b></div>
+            <div class="tot"><span>Estimated total</span><strong id="sTot">₹0</strong></div>
+          </div>
+        </div>
+        <div class="contact-box">
+          <div class="kicker">Prefer to talk?</div>
+          <div class="num"><span data-num></span><button type="button" class="copy" data-copy>Copy</button></div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px"><a class="btn btn-wa" data-wa href="#">WhatsApp</a><a class="btn btn-ghost" data-call href="#">Call</a></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
