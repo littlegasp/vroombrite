@@ -15,6 +15,10 @@ Static website for a doorstep car and bike wash in Mumbai. Plain HTML, CSS and J
 | `gallery.html` | Before/after slider, process stages, photo grid |
 | `contact.html` | Call / WhatsApp, enquiry form, PIN check, service areas, FAQ |
 | `book.html` | 3-step booking: vehicle → place & time (PIN checked) → details and payment choice |
+| `societies.html` | Society/bulk quote form (saved to the Sheet's Society leads tab) |
+| `doorstep-car-wash-<area>.html` | One landing page per service area for Google search, generated from `src/areas.json` |
+| `review.html?b=ID` | Customer feedback form; approved reviews show on Home and Gallery |
+| `ops.html` | Staff app: today's jobs, dashboard, due-for-wash list, society leads (PIN sign-in) |
 | `privacy.html`, `terms.html`, `refunds.html` | Policy pages, linked in the footer |
 
 ## Before going live: edit the top of `src/app.js`, then rebuild
@@ -38,6 +42,15 @@ When a customer confirms a booking, WhatsApp opens with the full booking and its
 
 ## GitHub Pages
 Pages is set to deploy from `main` / root. The site is served at https://littlegasp.github.io/vroombrite/. To use your own domain, add it under **Settings → Pages → Custom domain**, then point your DNS to GitHub Pages.
+
+## Staff app (ops.html)
+1. In the Sheet, open the **Vroombrite** menu → *Set staff PINs* and choose an owner PIN and a washer PIN, each 4–8 digits.
+2. Open `https://littlegasp.github.io/vroombrite/ops.html` on your phone and sign in. Add it to your home screen so it opens like an app.
+3. **Jobs:** pick a date, and each booking card has Call, Map and one-tap WhatsApp messages (Confirm, Reminder, On my way, Ask for review), plus Job done, Paid · UPI / cash and Cancel buttons.
+4. **Owner only:** *Dashboard* (bookings, money collected, unpaid jobs, repeat customers), *Due* (customers whose last wash was 12+ days ago, with a one-tap rebook message) and *Societies* (quote requests).
+
+## Search engines
+`sitemap.xml` and `robots.txt` are generated on every build. In Google Search Console, add the site and submit `sitemap.xml`.
 
 ## Images
 The photos in `img/` are AI-generated illustrative images. Replace them with real photos of your work as you collect them, keeping the same file names. Photos should be landscape, about 1680×944.

@@ -1,0 +1,18 @@
+<section class="pad gut plain-top">
+  <div class="wrap" style="max-width:640px">
+    <div class="kicker">Your feedback</div>
+    <h2 class="big">How was your<br><em>wash?</em></h2>
+    <form class="bform" id="rform" novalidate style="margin-top:36px;display:flex;flex-direction:column;gap:18px">
+      <p class="sub" id="rFor" style="color:var(--muted)">Tell us how we did. It takes 20 seconds.</p>
+      <div class="f"><span class="lb">Your rating</span>
+        <div class="stars" role="radiogroup" aria-label="Rating out of 5">
+          <label><input type="radio" name="rating" value="1" id="star-1"><span>★</span></label><label><input type="radio" name="rating" value="2" id="star-2"><span>★</span></label><label><input type="radio" name="rating" value="3" id="star-3"><span>★</span></label><label><input type="radio" name="rating" value="4" id="star-4"><span>★</span></label><label><input type="radio" name="rating" value="5" id="star-5"><span>★</span></label>
+        </div></div>
+      <div class="f"><label for="r-text">What did you like, or what can we do better?</label><textarea id="r-text" placeholder="The washer was on time and the car looked brand new…"></textarea></div>
+      <div class="f"><label for="r-name">Your first name (shown with your review)</label><input id="r-name" autocomplete="given-name" placeholder="Rahul"></div>
+      <button class="btn btn-lime" type="submit">Send feedback <span class="arrow">↗</span></button>
+      <p class="status" id="rState" hidden></p>
+      <p class="note" style="margin:0">We show reviews on our website only after checking them.</p>
+    </form>
+  </div>
+</section>

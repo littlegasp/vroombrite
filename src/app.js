@@ -55,21 +55,11 @@ const PLANS = {
          {s:"ALL IN",n:"Always Glossy",d:"For the truly clean-conscious.",p:699,w:12,i:["12 Quick washes a month","Chain lube every week","Free re-wash if it rains"]}]
 };
 /* Service areas and the PIN codes we accept. Confirm this list before launch. */
-const AREAS = [
-  {a:"Andheri East", pins:["400069","400093","400099"]},
-  {a:"Marol", pins:["400059"]},
-  {a:"Sakinaka & Chandivali", pins:["400072"]},
-  {a:"Andheri West", pins:["400053","400058","400061"]},
-  {a:"Powai", pins:["400076"]},
-  {a:"Vile Parle", pins:["400056","400057"]},
-  {a:"Jogeshwari", pins:["400060","400102"]},
-  {a:"Goregaon", pins:["400062","400063"]},
-  {a:"Santacruz", pins:["400054","400055"]},
-  {a:"Kurla", pins:["400070"]},
-  {a:"Ghatkopar", pins:["400077","400086"]},
-  {a:"Vikhroli", pins:["400079","400083"]}
-];
+const AREAS = /*@@AREAS@@*/[];   // filled from src/areas.json by build.py — edit the areas there
 const SLOTS = ["6–8 AM","8–10 AM","10 AM–1 PM","2–5 PM","5–8 PM"];
+/* Offers — keep in step with PROMOS / REFERRAL in google-apps-script/Code.gs */
+const PROMOS = { WELCOME50: { off: 50, label: "₹50 off your first wash" } };
+const REFERRAL = { friendOff: 50, referrerCredit: 50 };
 const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
 
 /* ========================================================= */
@@ -85,6 +75,10 @@ const ss = { get(k){ try{ return sessionStorage.getItem(k); }catch(e){ return nu
 const priceKey = (veh,size) => veh === "bike" ? "bike" : size;
 function areaForPin(pin){ return AREAS.find(x => x.pins.includes(pin)); }
 function openNew(url){ const a=document.createElement("a"); a.href=url; a.target="_blank"; a.rel="noopener"; a.click(); }
+async function apiGet(params){
+  if(!SITE.sheetUrl) return null;
+  try{ const r=await fetch(SITE.sheetUrl+"?"+new URLSearchParams(params)); return await r.json(); }catch(e){ return null; }
+}
 async function saveToSheet(payload){
   if(!SITE.sheetUrl) return "skipped";
   try{
@@ -96,7 +90,7 @@ async function saveToSheet(payload){
 function bookingId(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return "VB-"+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+"-"+Math.random().toString(36).slice(2,6).toUpperCase(); }
 
 /* ---------- nav ---------- */
-$("burger").addEventListener("click", () => { const o=$("links").classList.toggle("open"); $("burger").setAttribute("aria-expanded", o); });
+if($("burger")) $("burger").addEventListener("click", () => { const o=$("links").classList.toggle("open"); $("burger").setAttribute("aria-expanded", o); });
 function markNav(page){ $$("[data-nav]").forEach(a => { if(a.dataset.nav===page) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); }); }
 
 /* ---------- contact bits ---------- */
@@ -136,7 +130,7 @@ $$("[data-plans]").forEach(root => {
   $$("[data-pveh]",root).forEach(b=>b.addEventListener("click",()=>{ $$("[data-pveh]",root).forEach(x=>x.setAttribute("aria-pressed",x===b)); draw(b.dataset.pveh); }));
   draw("car");
 });
-$$("[data-areas]").forEach(el => el.innerHTML = AREAS.map(x=>`<span>${x.a}<small>${x.pins.join(" · ")}</small></span>`).join(""));
+$$("[data-areas]").forEach(el => el.innerHTML = AREAS.map(x=>`<a href="${PREVIEW?"#wash-"+x.slug:"doorstep-car-wash-"+x.slug+".html"}"><span>${x.a}<small>${x.pins.join(" · ")}</small></span></a>`).join(""));
 
 /* ---------- PIN checkers ---------- */
 $$("[data-pin-form]").forEach(form => {
@@ -233,7 +227,9 @@ function renderPick(){
   updateSum();
 }
 function extraById(id){ return addonList().concat(DETAIL).find(a=>a.id===id); }
-function total(){ return PRICE[priceKey(B.veh,B.size)][B.pkg] + [...B.adds].reduce((s,id)=>s+(extraById(id)?.p||0),0); }
+function subtotal(){ return PRICE[priceKey(B.veh,B.size)][B.pkg] + [...B.adds].reduce((s,id)=>s+(extraById(id)?.p||0),0); }
+function discount(){ return B.offer && B.offer.ok ? Math.min(B.offer.off, subtotal()) : 0; }
+function total(){ return subtotal() - discount(); }
 function vehText(){ return B.veh==="bike" ? "Bike / Scooter" : "Car · "+SIZE_LABEL[B.size]; }
 function whenText(){ const d=$("b-date").value; if(!d) return "—"; const sl=document.querySelector('input[name="slot"]:checked'); return new Date(d+"T00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"})+(sl?", "+sl.value:""); }
 function payMode(){ const r=document.querySelector('input[name="pay"]:checked'); return r?r.value:"after"; }
@@ -245,7 +241,28 @@ function updateSum(){
   $("sAdd").textContent=addsText(); $("sWhen").textContent=whenText();
   const pin=$("b-pin").value, hit=areaForPin(pin); $("sWhere").textContent= hit ? `${hit.a} · ${pin}` : "—";
   $("sPay").textContent=payText();
+  const dsc=discount(); $("sDiscRow").hidden=!dsc; $("sDisc").textContent="−"+rupee(dsc);
   $("sTot").textContent=rupee(total());
+}
+/* first-wash code or friend referral: one ₹50 discount, checked against the bookings Sheet */
+let offerTimer=0, offerSeq=0;
+function queueOffer(){ clearTimeout(offerTimer); offerTimer=setTimeout(checkOffer,450); }
+async function checkOffer(){
+  const code=$("b-code").value.trim().toUpperCase(), ref=$("b-ref").value.replace(/\D/g,"").slice(-10), phone=$("b-phone").value.replace(/\D/g,"").slice(-10), m=$("offerMsg"), seq=++offerSeq;
+  B.offer=null; m.className="pinmsg"; m.textContent="";
+  if(!code && !ref){ updateSum(); return; }
+  if(ref && ref.length<10){ updateSum(); return; }
+  if(code && !ref && !PROMOS[code]){ m.className="pinmsg no"; m.textContent="That code isn't valid. Check the spelling."; updateSum(); return; }
+  const type = ref ? "ref" : "code", off = ref ? REFERRAL.friendOff : PROMOS[code].off;
+  if(phone.length<10){ m.className="pinmsg"; m.textContent="Add your mobile number above so we can check the offer."; updateSum(); return; }
+  m.textContent="Checking…";
+  const r = await apiGet(type==="ref" ? {action:"check", ref, phone} : {action:"check", code, phone});
+  if(seq!==offerSeq) return;
+  const why={not_first:"This offer is for your first Vroombrite wash only.", unknown_ref:"We couldn't find a customer with that mobile number. Check it with your friend.", self:"You can't use your own number as the referral.", unknown:"That code isn't valid."};
+  if(r && r.ok && !r.valid){ m.className="pinmsg no"; m.textContent=why[r.reason]||"This offer can't be applied."; }
+  else { B.offer={type, value: ref||code, off, ok:true}; m.className="pinmsg ok";
+    m.textContent = (r ? "✓ " : "✓ Applied. We'll confirm it with your booking. ") + "₹"+off+" off" + (type==="ref" ? " — and your friend gets ₹"+REFERRAL.referrerCredit+" credit." : " your first wash."); }
+  updateSum();
 }
 function checkBookPin(){
   const pin=$("b-pin").value.trim(), m=$("pinMsg");
@@ -267,6 +284,7 @@ if(bform){
   $("slotChips").innerHTML=SLOTS.map((s,i)=>`<label><input type="radio" name="slot" value="${s}" id="slot-${i}" ${i===0?"checked":""}><span>${s}</span></label>`).join("");
   const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
   const tm=new Date(); tm.setDate(tm.getDate()+1); $("b-date").min=iso(new Date()); $("b-date").value=iso(tm);
+  ["b-code","b-ref","b-phone"].forEach(id=>$(id).addEventListener("input",queueOffer));
   $("b-pin").addEventListener("input",()=>{ $("b-pin").value=$("b-pin").value.replace(/\D/g,"").slice(0,6); checkBookPin(); });
   bform.addEventListener("change",e=>{
     const t=e.target;
@@ -295,9 +313,11 @@ if(bform){
     const id=bookingId(), pin=$("b-pin").value, area=areaForPin(pin)?.a||"";
     const data={type:"booking", id, vehicle:vehText(), plate:$("b-plate").value.trim(), package:PKG[B.veh][B.pkg].n, addons:addsText(),
       date:$("b-date").value, slot:(document.querySelector('input[name="slot"]:checked')||{}).value||"", address:$("b-addr").value.trim(), area, pin,
-      name, phone:ph, notes:$("b-notes").value.trim(), total:total(), payment: payMode()==="online" ? "Online UPI · pending" : "After service"};
-    const msg=`Hi ${SITE.name}, I'd like to book a doorstep wash.\n\nBooking ID: ${id}\nVehicle: ${data.vehicle}${data.plate?" ("+data.plate+")":""}\nPackage: ${data.package}\nAdd-ons: ${data.addons}\nWhen: ${whenText()}\nAddress: ${data.address}, ${area} ${pin}\nName: ${name}\nMobile: ${ph}${data.notes?"\nNotes: "+data.notes:""}\n\nEstimated total: ${rupee(data.total)}\nPayment: ${payText()}`;
+      name, phone:ph, notes:$("b-notes").value.trim(), total:total(), payment: payMode()==="online" ? "Online UPI · pending" : "After service",
+      discount:discount(), promo: B.offer&&B.offer.ok ? (B.offer.type==="ref" ? "Referral" : B.offer.value) : "", ref: B.offer&&B.offer.ok&&B.offer.type==="ref" ? B.offer.value : ""};
+    const msg=`Hi ${SITE.name}, I'd like to book a doorstep wash.\n\nBooking ID: ${id}\nVehicle: ${data.vehicle}${data.plate?" ("+data.plate+")":""}\nPackage: ${data.package}\nAdd-ons: ${data.addons}\nWhen: ${whenText()}\nAddress: ${data.address}, ${area} ${pin}\nName: ${name}\nMobile: ${ph}${data.notes?"\nNotes: "+data.notes:""}\n\n${data.discount?`Offer: ${data.promo==="Referral"?"Referred by "+data.ref:data.promo} (−${rupee(data.discount)})\n`:""}Estimated total: ${rupee(data.total)}\nPayment: ${payText()}`;
     const url=waLink(msg); $("waAgain").href=url; $("doneId").textContent=id;
+    $("referShare").href="https://wa.me/?text="+encodeURIComponent(`I just booked a doorstep car wash with ${SITE.name}, they come to your parking with their own water and power. Book here and enter my number ${ph} as "Referred by" to get ₹${REFERRAL.friendOff} off your first wash: ${location.origin}${location.pathname.replace(/[^/]*$/,"")}${PREVIEW?"#book":"book.html"}`);
     $$(".step",bform).forEach(s=>s.hidden=true); $("prog").hidden=true; $("done").hidden=false;
     const online = payMode()==="online" && !!SITE.upiId;
     $("payBox").hidden=!online;
@@ -309,7 +329,7 @@ if(bform){
     if(res==="ok"){ st.className="status ok"; st.textContent="Saved to our booking list."; st.hidden=false; }
     else if(res==="fail"){ st.className="status warn"; st.textContent="We couldn't save this online, so please press send in WhatsApp to confirm."; st.hidden=false; }
   });
-  $("newBooking").addEventListener("click",()=>{ B.adds.clear(); renderPick(); showStep(1); });
+  $("newBooking").addEventListener("click",()=>{ B.adds.clear(); B.offer=null; $("b-code").value=""; $("b-ref").value=""; $("offerMsg").textContent=""; renderPick(); showStep(1); });
   applyPreselect();
 }
 
@@ -331,6 +351,51 @@ if(eform){
   });
 }
 
+/* ---------- reviews shown on the site (approved in the Sheet) ---------- */
+async function loadReviews(){
+  const blocks=$$("[data-reviews]"); if(!blocks.length) return;
+  const r=await apiGet({action:"reviews"}); const list=(r&&r.reviews)||[];
+  if(!list.length) return;                       // nothing approved yet: keep the section hidden
+  const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const html=list.slice(0,6).map(v=>`<figure class="rv"><div class="rv-stars" aria-label="${v.rating} out of 5">${"★".repeat(v.rating)}<span>${"★".repeat(5-v.rating)}</span></div><blockquote>${esc(v.text)}</blockquote><figcaption><b>${esc(v.name)}</b>${v.area?" · "+esc(v.area):""}</figcaption></figure>`).join("");
+  blocks.forEach(b=>{ $$(".reviews",b)[0].innerHTML=html; b.hidden=false; });
+}
+loadReviews();
+
+/* ---------- review form (review.html?b=BOOKING_ID) ---------- */
+const rform=$("rform");
+if(rform){
+  const bid=(new URLSearchParams(location.search).get("b")||"").slice(0,40);
+  if(bid) $("rFor").textContent="Booking "+bid+". Tell us how we did. It takes 20 seconds.";
+  rform.addEventListener("submit", async e=>{
+    e.preventDefault();
+    const rating=+((document.querySelector('input[name="rating"]:checked')||{}).value||0), out=$("rState");
+    if(!rating){ out.className="status warn"; out.textContent="Tap a star rating first."; out.hidden=false; return; }
+    const btn=rform.querySelector("button[type=submit]"); btn.disabled=true;
+    const res=await saveToSheet({type:"review", id:bid, rating, text:$("r-text").value.trim(), name:$("r-name").value.trim()});
+    btn.disabled=false;
+    if(res==="ok"){ out.className="status ok"; out.textContent="Thank you! Your feedback is with us."; rform.querySelectorAll("input,textarea,button").forEach(x=>x.disabled=true); }
+    else { out.className="status warn"; out.innerHTML=`We couldn't send this. <a href="${waLink(`Feedback for booking ${bid}: ${rating}/5. ${$("r-text").value.trim()}`)}" target="_blank" rel="noopener" style="text-decoration:underline">Send it on WhatsApp instead</a>.`; }
+    out.hidden=false;
+  });
+}
+
+/* ---------- society quote form ---------- */
+const sform=$("sform");
+if(sform){
+  sform.addEventListener("submit", async e=>{
+    e.preventDefault();
+    const v=id=>$(id).value.trim(), ph=v("s-phone").replace(/\D/g,"").slice(-10), out=$("sState"), m=[];
+    if(!v("s-soc")) m.push("the society name"); if(!v("s-name")) m.push("your name"); if(!/^[6-9]\d{9}$/.test(ph)) m.push("a valid mobile number");
+    if(m.length){ out.className="status warn"; out.textContent="Please add "+m.join(", ")+"."; out.hidden=false; return; }
+    const d={type:"society", society:v("s-soc"), area:v("s-area"), pin:v("s-pin"), name:v("s-name"), phone:ph, role:v("s-role"), cars:v("s-cars"), bikes:v("s-bikes"), days:v("s-days"), notes:v("s-notes")};
+    openNew(waLink(`Hi ${SITE.name}, I'd like a society quote.\n\nSociety: ${d.society}${d.area?", "+d.area:""} ${d.pin}\nContact: ${d.name} (${d.role}), ${ph}\nVehicles: about ${d.cars||0} cars, ${d.bikes||0} bikes\nPreferred days: ${d.days||"—"}${d.notes?"\nNotes: "+d.notes:""}`));
+    out.className="status ok"; out.textContent="WhatsApp opened with your request. Press send there and we'll reply with a group price."; out.hidden=false;
+    const res=await saveToSheet(d);
+    if(res==="ok") out.textContent="Got it. Your request is saved, and WhatsApp is open if you'd like to chat now.";
+  });
+}
+
 /* ---------- page routing ---------- */
 if(PREVIEW){
   const views=$$(".view").map(v=>v.id.slice(2));
@@ -340,6 +405,7 @@ if(PREVIEW){
     markNav(v); $("links").classList.remove("open"); $("burger").setAttribute("aria-expanded","false");
     scrollTo(0,0);
     if(v==="book") applyPreselect();
+    const f=$("fab"); if(f) f.classList.toggle("onbook", v==="book"||v==="review");
     washFrame();
   };
   addEventListener("hashchange",route); route();

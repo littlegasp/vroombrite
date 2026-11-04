@@ -1,0 +1,14 @@
+[
+  {"a":"Andheri East","slug":"andheri-east","pins":["400069","400093","400099"],"near":["marol","sakinaka-chandivali","vile-parle","jogeshwari"]},
+  {"a":"Marol","slug":"marol","pins":["400059"],"near":["andheri-east","sakinaka-chandivali","powai"]},
+  {"a":"Sakinaka & Chandivali","slug":"sakinaka-chandivali","pins":["400072"],"near":["powai","andheri-east","marol","kurla"]},
+  {"a":"Andheri West","slug":"andheri-west","pins":["400053","400058","400061"],"near":["jogeshwari","vile-parle","goregaon"]},
+  {"a":"Powai","slug":"powai","pins":["400076"],"near":["sakinaka-chandivali","vikhroli","ghatkopar"]},
+  {"a":"Vile Parle","slug":"vile-parle","pins":["400056","400057"],"near":["santacruz","andheri-east","andheri-west"]},
+  {"a":"Jogeshwari","slug":"jogeshwari","pins":["400060","400102"],"near":["andheri-east","andheri-west","goregaon"]},
+  {"a":"Goregaon","slug":"goregaon","pins":["400062","400063"],"near":["jogeshwari","andheri-west"]},
+  {"a":"Santacruz","slug":"santacruz","pins":["400054","400055"],"near":["vile-parle","kurla"]},
+  {"a":"Kurla","slug":"kurla","pins":["400070"],"near":["sakinaka-chandivali","ghatkopar","santacruz"]},
+  {"a":"Ghatkopar","slug":"ghatkopar","pins":["400077","400086"],"near":["vikhroli","powai","kurla"]},
+  {"a":"Vikhroli","slug":"vikhroli","pins":["400079","400083"],"near":["powai","ghatkopar"]}
+]
