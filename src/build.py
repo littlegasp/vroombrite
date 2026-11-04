@@ -22,6 +22,33 @@ PAGES = [  # slug, file, nav label, <title>, meta description
 ]
 FILE = {p[0]: p[1] for p in PAGES}
 
+# Public address of the site. Change this one line when the custom domain goes live.
+SITE_URL = "https://littlegasp.github.io/vroombrite/"
+# Share-card image per page (1200x630 in img/); pages not listed use the home card.
+OG_IMG = {"car-wash": "og-car.jpg", "bike-wash": "og-bike.jpg", "detailing": "og-detail.jpg", "subscription": "og-plans.jpg"}
+OG_ALT = "Vroombrite — doorstep car & bike wash in Mumbai"
+
+def share_tags(slug, fname, title, desc):
+    url = SITE_URL if fname == "index.html" else SITE_URL + fname
+    img = SITE_URL + "img/" + OG_IMG.get(slug, "og-home.jpg")
+    return f'''<link rel="canonical" href="{url}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vroombrite">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="{url}">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{desc}">
+<meta property="og:image" content="{img}">
+<meta property="og:image:secure_url" content="{img}">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{OG_ALT}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{desc}">
+<meta name="twitter:image" content="{img}">'''
+
 def links(html, preview):
     return re.sub(r"@@([a-z-]+)@@", lambda m: ("#"+m.group(1)) if preview else FILE[m.group(1)], html)
 
@@ -69,9 +96,10 @@ def build_site():
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{title}</title>
 <meta name="description" content="{desc}">
-<meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:image" content="img/shine.jpg">
+{share_tags(slug, fname, title, desc)}
 <meta name="theme-color" content="#15191C">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 {FONTS}
 <link rel="stylesheet" href="style.css">
 </head>
@@ -86,7 +114,7 @@ def build_site():
 </html>
 '''
         open(os.path.join(SITE, fname), "w", encoding="utf-8").write(links(html, False))
-    shutil.copy(os.path.join(SRC,"style.css"), SITE); shutil.copy(os.path.join(SRC,"app.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE)
+    shutil.copy(os.path.join(SRC,"style.css"), SITE); shutil.copy(os.path.join(SRC,"app.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE); shutil.copy(os.path.join(SRC,"apple-touch-icon.png"), SITE)
 
 def build_preview():
     os.makedirs(PREV, exist_ok=True)

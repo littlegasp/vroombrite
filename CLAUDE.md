@@ -12,6 +12,7 @@ Website for **Vroombrite**, a doorstep car and bike wash/detailing business in M
   - `src/build.py`: page list, titles, meta descriptions, the shared header and footer (logo markup lives here).
   - `src/style.css` and `src/app.js` are copied to the root on build.
 - The build writes the 11 root pages (`index`, `car-wash`, `bike-wash`, `detailing`, `subscription`, `gallery`, `contact`, `book`, plus the policy pages `privacy`, `terms`, `refunds`, which are linked in the footer only) plus `preview/index.html`. The preview is a single-page, hash-routed copy used for Claude artifact previews and is git-ignored.
+- Share previews (WhatsApp/Instagram/Facebook): every page has absolute Open Graph and Twitter tags built from `SITE_URL` in `src/build.py`, which must be updated when the custom domain goes live. Cards are `img/og-*.jpg` (1200×630; home, car, bike, detail, plans), and `OG_IMG` maps pages to cards. To redesign or regenerate them, run `src/share-cards/render.py`.
 - **Do not hand-edit the root `.html`/`style.css`/`app.js`.** The next build overwrites them.
 
 ## Config (top of `src/app.js`)
