@@ -16,10 +16,10 @@ Website for **Vroombrite**, a doorstep car and bike wash/detailing business in M
 
 ## Config (top of `src/app.js`)
 - `SITE.phone`, `SITE.phoneDisplay`: the business WhatsApp/call number, +91 77189 84191.
-- `SITE.upiId`: empty, so "Pay online now" shows as "coming soon". Once a UPI ID is set, it opens a `upi://` payment link for the booking total on the done screen.
-- `SITE.sheetUrl`: empty until the Apps Script web app is deployed.
+- `SITE.upiId`: 7718984191@yescred. "Pay online now" opens a `upi://` payment link for the booking total on the done screen.
+- `SITE.sheetUrl`: the live Apps Script web app on the "Vroombrite Bookings" Sheet. If `Code.gs` changes, redeploy it as a new version of the same deployment so this URL stays the same.
 - `PRICE`, `ADDONS`, `DETAIL`, `PLANS`: all launch placeholders. Don't change prices unless Aniket asks.
-- `AREAS`: service areas and the PIN codes accepted at booking. Aniket still needs to confirm this list.
+- `AREAS`: service areas and the PIN codes accepted at booking. Aniket confirmed this list for launch (Nov 2026).
 
 ## Brand (from the Vroombrite Brand Identity Kit)
 - Colours: Electric Lime `#C9F36A` (primary), Midnight Graphite `#15191C` (background), Clean White `#F7F8F5` (light sections), Fresh Aqua `#55D6C2` (secondary: info/availability), Turbo Coral `#FF895C` (small highlights only: "Most booked", per-wash tags), Metallic Grey `#A8AFB4` (supporting text).

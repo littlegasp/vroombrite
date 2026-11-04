@@ -6,8 +6,8 @@ const SITE = {
   name: "Vroombrite",
   phone: "917718984191",            // WhatsApp / call number, country code first, digits only
   phoneDisplay: "+91 77189 84191",
-  sheetUrl: "",                     // paste your Google Apps Script web-app URL here (see README)
-  upiId: "",                        // UPI ID for "Pay online now" (e.g. vroombrite@okaxis). Empty = online option shows "coming soon"
+  sheetUrl: "https://script.google.com/macros/s/AKfycbzKZ57SuWpdzK0HCt4Vx8BeIf40FDzAGpnF1iSr3nT3os5dAsW74akLCk3kB6eRl278/exec",                     // paste your Google Apps Script web-app URL here (see README)
+  upiId: "7718984191@yescred",                        // UPI ID for "Pay online now" (e.g. vroombrite@okaxis). Empty = online option shows "coming soon"
   upiName: "Vroombrite"             // name shown in the customer's UPI app
 };
 
