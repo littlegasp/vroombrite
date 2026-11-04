@@ -33,5 +33,6 @@ Website for **Vroombrite**, a doorstep car and bike wash/detailing business in M
 - Photos in `img/` are AI-generated (Canva) and labelled "illustrative" on the site. They are to be replaced with real job photos under the same file names (landscape, about 1680×944).
 - Payment: **pay after the service (UPI/cash) is the primary/default option**. Online payment (UPI) is the secondary option for the starting phase. Aniket plans to make online payment primary once the brand is established. Razorpay comes later, with its own merchant account for this business, not Little Gasp's.
 - Policies (privacy, terms, cancellation & refund) were added at launch. They contain policy decisions Aniket should confirm: the 2-hour free-cancel window, the ₹99 late-cancel/no-access visit fee, 5–7 working-day refunds and the 24-hour redo guarantee.
+- Payment status in the Sheet is updated by hand from the Sheet's **Vroombrite** menu (Mark paid · UPI / cash, Mark job done / cancelled). A `upi://` link gives no payment callback. Automatic "paid" status needs a gateway (Razorpay webhook → Apps Script) later.
 - Prices are Claude's launch placeholders. Aniket will send final prices after discussing with his partner.
 - Testing standard: check every page at phone (390px) and laptop (1440px) widths before calling a change done.

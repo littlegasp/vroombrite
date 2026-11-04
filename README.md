@@ -32,6 +32,8 @@ Static website for a doorstep car and bike wash in Mumbai. Plain HTML, CSS and J
 
 Each booking is saved to a **Bookings** tab with its booking ID, vehicle, package, extras, date, slot, address, PIN, name, mobile and estimated total. Contact-form messages go to an **Enquiries** tab. Both tabs are created on the first submission.
 
+**Tracking payment and job status:** open the Sheet and use the **Vroombrite** menu. It appears a few seconds after the Sheet loads. Select one or more booking rows, then choose *Mark paid · UPI*, *Mark paid · cash*, *Mark job done* or *Mark cancelled*. Marking a booking paid also fills in the **Paid on** time. Run *Set up dropdowns & colours* once so the Status and Payment columns get dropdowns and colour coding. Online UPI payments can't be confirmed automatically, so mark them paid once the money shows in your UPI app.
+
 When a customer confirms a booking, WhatsApp opens with the full booking and its ID already filled in, and the booking is saved to the Sheet at the same time. If the Sheet can't be reached, the customer is asked to send the WhatsApp message instead.
 
 ## GitHub Pages
