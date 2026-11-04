@@ -453,3 +453,13 @@ footer .fl a:hover{color:var(--lime)}
 .paybox{width:100%;max-width:360px;padding:20px;border-radius:14px;border:1px solid rgba(85,214,194,.35);background:rgba(85,214,194,.06);display:flex;flex-direction:column;align-items:center;gap:12px}
 .paybox .kicker{color:var(--aqua)}
 .payamt{font:800 2.2rem var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+
+/* phone readability: no text under ~11px, comfortable tap targets */
+.copy{min-height:36px;padding:8px 12px}
+@media (max-width:600px){
+  .wm small{font-size:.56rem;letter-spacing:.2em}
+  .rail span{font-size:.66rem;letter-spacing:.1em}
+  .stage-card .n,.pop,.plan > span,.ba .tag,.prog,.vchoice small{font-size:.7rem}
+  .kicker{font-size:.72rem}
+}
+@media (max-width:380px){ .wm small{display:none} }
