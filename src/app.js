@@ -234,7 +234,27 @@ function vehText(){ return B.veh==="bike" ? "Bike / Scooter" : "Car · "+SIZE_LA
 function whenText(){ const d=$("b-date").value; if(!d) return "—"; const sl=document.querySelector('input[name="slot"]:checked'); return new Date(d+"T00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"})+(sl?", "+sl.value:""); }
 function payMode(){ const r=document.querySelector('input[name="pay"]:checked'); return r?r.value:"after"; }
 function payText(){ return payMode()==="online" ? "Online by UPI" : "After the wash (UPI / cash)"; }
-function upiLink(amount,id){ return "upi://pay?pa="+encodeURIComponent(SITE.upiId)+"&pn="+encodeURIComponent(SITE.upiName)+"&am="+amount+"&cu=INR&tn="+encodeURIComponent("Booking "+id); }
+function upiQuery(amount,id){ return "pa="+encodeURIComponent(SITE.upiId)+"&pn="+encodeURIComponent(SITE.upiName)+"&am="+amount+"&cu=INR&tn="+encodeURIComponent("Booking "+id); }
+function upiLink(amount,id){ return "upi://pay?"+upiQuery(amount,id); }
+const OS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1) ? "ios" : /Android/i.test(navigator.userAgent) ? "android" : "desktop";
+/* iPhones have no "choose an app" sheet for upi:// links (the last-installed UPI app, e.g. WhatsApp, always opens),
+   so each app gets its own button. Android uses intent links that open that exact app. */
+function upiApps(amount,id){
+  const q=upiQuery(amount,id), intent=pkg=>"intent://pay?"+q+"#Intent;scheme=upi;package="+pkg+";end";
+  const apps=[
+    {n:"Google Pay", ios:"tez://upi/pay?"+q, android:intent("com.google.android.apps.nbu.paisa.user")},
+    {n:"PhonePe",    ios:"phonepe://pay?"+q, android:intent("com.phonepe.app")},
+    {n:"Paytm",      ios:"paytmmp://pay?"+q, android:intent("net.one97.paytm")},
+    {n:"Other UPI app", ios:"upi://pay?"+q, android:"upi://pay?"+q}
+  ];
+  return apps.map(a=>`<a class="btn ${a.n==="Other UPI app"?"btn-ghost":"btn-lime"} sm" href="${OS==="ios"?a.ios:a.android}">${a.n}</a>`).join("");
+}
+function drawQr(text){
+  const el=$("upiQr"); if(!el) return;
+  if(typeof qrcode!=="function"){ el.innerHTML=""; $("qrWrap").hidden=true; return; }
+  const qr=qrcode(0,"M"); qr.addData(text); qr.make();
+  el.innerHTML=qr.createSvgTag({cellSize:5, margin:3, scalable:true});
+}
 function addsText(){ return B.adds.size ? [...B.adds].map(id=>extraById(id)?.n).filter(Boolean).join(", ") : "None"; }
 function updateSum(){
   $("sVeh").textContent=vehText(); $("sPkg").textContent=PKG[B.veh][B.pkg].n;
@@ -245,8 +265,10 @@ function updateSum(){
   $("sTot").textContent=rupee(total());
 }
 /* first-wash code or friend referral: one ₹50 discount, checked against the bookings Sheet */
-let offerTimer=0, offerSeq=0;
-function queueOffer(){ clearTimeout(offerTimer); offerTimer=setTimeout(checkOffer,450); }
+let offerTimer=0, offerSeq=0, offerRun=null;
+function setChecking(on){ const b=bform && bform.querySelector('[data-step="3"] button[type=submit]'); if(!b) return; b.disabled=on; b.innerHTML = on ? "Checking offer…" : 'Confirm booking <span class="arrow">↗</span>'; }
+function queueOffer(){ clearTimeout(offerTimer); const has=$("b-code").value.trim()||$("b-ref").value.trim(); if(has) setChecking(true); offerTimer=setTimeout(runOffer,450); }
+function runOffer(){ clearTimeout(offerTimer); offerRun=checkOffer().finally(()=>{ offerRun=null; setChecking(false); }); return offerRun; }
 async function checkOffer(){
   const code=$("b-code").value.trim().toUpperCase(), ref=$("b-ref").value.replace(/\D/g,"").slice(-10), phone=$("b-phone").value.replace(/\D/g,"").slice(-10), m=$("offerMsg"), seq=++offerSeq;
   B.offer=null; m.className="pinmsg"; m.textContent="";
@@ -259,9 +281,9 @@ async function checkOffer(){
   const r = await apiGet(type==="ref" ? {action:"check", ref, phone} : {action:"check", code, phone});
   if(seq!==offerSeq) return;
   const why={not_first:"This offer is for your first Vroombrite wash only.", unknown_ref:"We couldn't find a customer with that mobile number. Check it with your friend.", self:"You can't use your own number as the referral.", unknown:"That code isn't valid."};
-  if(r && r.ok && !r.valid){ m.className="pinmsg no"; m.textContent=why[r.reason]||"This offer can't be applied."; }
+  if(r && r.ok && r.valid===false){ m.className="pinmsg no"; m.textContent=why[r.reason]||"This offer can't be applied."; }
   else { B.offer={type, value: ref||code, off, ok:true}; m.className="pinmsg ok";
-    m.textContent = (r ? "✓ " : "✓ Applied. We'll confirm it with your booking. ") + "₹"+off+" off" + (type==="ref" ? " — and your friend gets ₹"+REFERRAL.referrerCredit+" credit." : " your first wash."); }
+    m.textContent = (r && r.valid===true ? "✓ " : "✓ Applied. We'll confirm it with your booking. ") + "₹"+off+" off" + (type==="ref" ? " — and your friend gets ₹"+REFERRAL.referrerCredit+" credit." : " your first wash."); }
   updateSum();
 }
 function checkBookPin(){
@@ -285,6 +307,9 @@ if(bform){
   const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
   const tm=new Date(); tm.setDate(tm.getDate()+1); $("b-date").min=iso(new Date()); $("b-date").value=iso(tm);
   ["b-code","b-ref","b-phone"].forEach(id=>$(id).addEventListener("input",queueOffer));
+  $("applyOffer").addEventListener("click",()=>{ setChecking(true); runOffer(); });
+  $("b-code").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); setChecking(true); runOffer(); } });
+  $("showQr").addEventListener("click",()=>{ $("qrWrap").hidden=!$("qrWrap").hidden; });
   $("b-pin").addEventListener("input",()=>{ $("b-pin").value=$("b-pin").value.replace(/\D/g,"").slice(0,6); checkBookPin(); });
   bform.addEventListener("change",e=>{
     const t=e.target;
@@ -321,7 +346,11 @@ if(bform){
     $$(".step",bform).forEach(s=>s.hidden=true); $("prog").hidden=true; $("done").hidden=false;
     const online = payMode()==="online" && !!SITE.upiId;
     $("payBox").hidden=!online;
-    if(online){ $("payAmt").textContent=rupee(data.total); $("payUpi").href=upiLink(data.total,id); $("upiIdText").textContent=SITE.upiId; }
+    if(online){
+      $("payAmt").textContent=rupee(data.total); $("upiIdText").textContent=SITE.upiId;
+      $("upiApps").innerHTML=upiApps(data.total,id); drawQr(upiLink(data.total,id));
+      $("payMobile").hidden = OS==="desktop"; $("qrWrap").hidden = OS!=="desktop";
+    }
     $("doneMsg").textContent = online ? "WhatsApp should have opened with your booking. Press send there, then pay below and share the payment screenshot in the same chat." : "WhatsApp should have opened with your booking filled in. Press send there and we'll confirm your slot. You pay after the wash.";
     openNew(url);                               // open WhatsApp inside the click so it isn't blocked
     const st=$("saveState"); st.hidden=true;

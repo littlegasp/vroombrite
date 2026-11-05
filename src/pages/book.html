@@ -1,3 +1,4 @@
+<script src="qrcode.js"></script>
 <section class="pad gut plain-top">
   <div class="wrap">
     <div class="head"><div><div class="kicker">Book now</div><h2 class="big">Let's get your<br><em>shine on.</em></h2></div>
@@ -45,7 +46,7 @@
           <div class="f"><label for="b-plate">Vehicle number (optional)</label><input id="b-plate" placeholder="MH 02 AB 1234"></div>
           <div class="f"><label for="b-notes">Anything we should know?</label><textarea id="b-notes" placeholder="Parking level, slot number, keys with security"></textarea></div>
           <div class="two">
-            <div class="f"><label for="b-code">Offer code (optional)</label><div class="pinline"><input id="b-code" placeholder="WELCOME50" autocapitalize="characters"></div></div>
+            <div class="f"><label for="b-code">Offer code (optional)</label><div class="pinline"><input id="b-code" placeholder="WELCOME50" autocapitalize="characters"><button type="button" class="copy" id="applyOffer">Apply</button></div></div>
             <div class="f"><label for="b-ref">Referred by (friend's mobile, optional)</label><input id="b-ref" inputmode="tel" placeholder="98XXXXXXXX"></div>
           </div>
           <p class="pinmsg" id="offerMsg" aria-live="polite"></p>
@@ -60,9 +61,17 @@
           <div class="paybox" id="payBox" hidden>
             <div class="kicker">Pay online</div>
             <div class="payamt" id="payAmt">₹0</div>
-            <a class="btn btn-lime" id="payUpi" href="#">Pay by UPI app <span class="arrow">↗</span></a>
+            <div id="payMobile">
+              <p class="paylbl">Choose your UPI app</p>
+              <div class="upi-apps" id="upiApps"></div>
+              <button type="button" class="linkbtn" id="showQr">Paying from another phone? Show QR code</button>
+            </div>
+            <div class="qrwrap" id="qrWrap">
+              <div class="qr" id="upiQr" role="img" aria-label="UPI payment QR code"></div>
+              <p class="paylbl">Scan with any UPI app</p>
+            </div>
             <div class="num" style="justify-content:center;font-size:1rem"><span id="upiIdText"></span><button type="button" class="copy" id="copyUpi">Copy</button></div>
-            <p class="note" style="margin:0">On a laptop? Copy the UPI ID and pay from your phone.</p>
+            <p class="note" style="margin:0">After paying, send the payment screenshot in the same WhatsApp chat.</p>
           </div>
           <p class="status" id="saveState" hidden></p>
           <a class="btn btn-wa" id="waAgain" target="_blank" rel="noopener" href="#">Open WhatsApp again <span class="arrow">↗</span></a>

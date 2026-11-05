@@ -124,7 +124,7 @@ FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="p
 def build_site():
     if os.path.exists(SITE):
         for f in os.listdir(SITE):
-            if f.endswith(".html") or f in ("style.css","app.js","ops.js","sitemap.xml","robots.txt"): os.remove(os.path.join(SITE, f))
+            if f.endswith(".html") or f in ("style.css","app.js","ops.js","qrcode.js","sitemap.xml","robots.txt"): os.remove(os.path.join(SITE, f))
     os.makedirs(os.path.join(SITE,"img"), exist_ok=True)
     for slug, fname, lbl, title, desc in PAGES:
         body = page_src(slug)
@@ -154,7 +154,7 @@ def build_site():
 </html>
 '''
         open(os.path.join(SITE, fname), "w", encoding="utf-8").write(links(html, False))
-    shutil.copy(os.path.join(SRC,"style.css"), SITE); open(os.path.join(SITE,"app.js"),"w",encoding="utf-8").write(app_js()); shutil.copy(os.path.join(SRC,"ops.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE); shutil.copy(os.path.join(SRC,"apple-touch-icon.png"), SITE)
+    shutil.copy(os.path.join(SRC,"style.css"), SITE); open(os.path.join(SITE,"app.js"),"w",encoding="utf-8").write(app_js()); shutil.copy(os.path.join(SRC,"ops.js"), SITE); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE); shutil.copy(os.path.join(SRC,"apple-touch-icon.png"), SITE)
 
 def build_seo():
     today = datetime.date.today().isoformat()
@@ -178,7 +178,7 @@ def build_preview():
 <script src="app.js"></script>
 '''
     open(os.path.join(PREV,"index.html"),"w",encoding="utf-8").write(links(html, True))
-    shutil.copy(os.path.join(SRC,"style.css"), PREV); open(os.path.join(PREV,"app.js"),"w",encoding="utf-8").write(app_js())
+    shutil.copy(os.path.join(SRC,"style.css"), PREV); open(os.path.join(PREV,"app.js"),"w",encoding="utf-8").write(app_js()); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), PREV)
     if os.path.exists(os.path.join(PREV,"img")): shutil.rmtree(os.path.join(PREV,"img"))
     shutil.copytree(os.path.join(SITE,"img"), os.path.join(PREV,"img"))
 

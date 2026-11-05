@@ -20,7 +20,7 @@ Website for **Vroombrite**, a doorstep car and bike wash/detailing business in M
 
 ## Config (top of `src/app.js`)
 - `SITE.phone`, `SITE.phoneDisplay`: the business WhatsApp/call number, +91 77189 84191.
-- `SITE.upiId`: 7718984191@yescred. "Pay online now" opens a `upi://` payment link for the booking total on the done screen.
+- `SITE.upiId`: 7718984191@yescred. After a "Pay online now" booking, the done screen shows one button per UPI app (Google Pay, PhonePe, Paytm, Other) on phones, because iPhones have no app chooser for `upi://` links and open the last-installed UPI app (e.g. WhatsApp Pay). Android uses `intent://` links per app. Laptops see a UPI QR code drawn by `src/vendor/qrcode.js` (qrcode-generator 1.4.4, MIT), which is copied to the root on build.
 - `SITE.sheetUrl`: the live Apps Script web app on the "Vroombrite Bookings" Sheet. If `Code.gs` changes, redeploy it as a new version of the same deployment so this URL stays the same.
 - `PRICE`, `ADDONS`, `DETAIL`, `PLANS`: all launch placeholders. Don't change prices unless Aniket asks.
 - `AREAS`: service areas and the PIN codes accepted at booking. Aniket confirmed this list for launch (Nov 2026).
@@ -38,7 +38,7 @@ Website for **Vroombrite**, a doorstep car and bike wash/detailing business in M
 - Payment: **pay after the service (UPI/cash) is the primary/default option**. Online payment (UPI) is the secondary option for the starting phase. Aniket plans to make online payment primary once the brand is established. Razorpay comes later, with its own merchant account for this business, not Little Gasp's.
 - Policies (privacy, terms, cancellation & refund) were added at launch. They contain policy decisions Aniket should confirm: the 2-hour free-cancel window, the ₹99 late-cancel/no-access visit fee, 5–7 working-day refunds and the 24-hour redo guarantee.
 - Payment status in the Sheet is updated by hand from the Sheet's **Vroombrite** menu (Mark paid · UPI / cash, Mark job done / cancelled). A `upi://` link gives no payment callback. Automatic "paid" status needs a gateway (Razorpay webhook → Apps Script) later.
-- Offers: code `WELCOME50` (₹50 off the first wash), or the friend's mobile in "Referred by" (₹50 off for the new customer, plus ₹50 credit for the referrer once the friend's job is marked Done). Only one ₹50 discount per booking. Both are checked against the Sheet before booking, and the amounts are placeholders. Keep `PROMOS`/`REFERRAL` in sync between `src/app.js` and `Code.gs`.
+- Offers: code `WELCOME50` (₹50 off the first wash), or the friend's mobile in "Referred by" (₹50 off for the new customer, plus ₹50 credit for the referrer once the friend's job is marked Done). Only one ₹50 discount per booking. Both are checked against the Sheet before booking, and Confirm is disabled while the check runs. If the script returns no verdict (old deployment) or is unreachable, the offer is applied provisionally and `Code.gs` flags repeat customers in the Promo column. The amounts are placeholders. Keep `PROMOS`/`REFERRAL` in sync between `src/app.js` and `Code.gs`.
 - WhatsApp messages are one-tap (they open prefilled for a human to send), not automatic. Automatic sending needs Meta's WhatsApp Business Platform with approved templates, which is not set up.
 - The nav shows Societies instead of Gallery; Gallery is in the footer.
 - Prices are Claude's launch placeholders. Aniket will send final prices after discussing with his partner.

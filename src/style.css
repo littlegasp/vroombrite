@@ -550,3 +550,14 @@ footer .fl a:hover{color:var(--lime)}
 .ops-toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--lime);color:var(--ink);font-weight:700;padding:12px 18px;border-radius:10px;transition:.25s;z-index:90;pointer-events:none}
 .ops-toast.on{opacity:1;transform:translate(-50%,0)}.ops-toast.bad{background:var(--coral)}
 body[data-page="book"] .fab,body[data-page="review"] .fab,.fab.onbook{display:none}
+
+/* UPI app picker */
+.paylbl{font-size:.82rem;color:var(--muted);text-align:center}
+.upi-apps{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:8px}
+.upi-apps .btn{width:100%}
+#payMobile{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px}
+.linkbtn{background:none;border:0;color:var(--aqua);font:600 .82rem var(--f-body);text-decoration:underline;cursor:pointer;padding:8px}
+.qrwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.qr{width:200px;max-width:100%;aspect-ratio:1;background:#fff;border-radius:10px;padding:6px}
+.qr svg{display:block;width:100%;height:100%}
+.pinline .copy{flex:none}
