@@ -143,15 +143,18 @@ const NAV = [
 ];
 const allowed = id => id==="b" || NAV.some(n => n.id===id && (!n.owner || isOwner()));
 const homeView = () => isOwner() ? "home" : "jobs";
+function setHTML(el, h){ if(el._h!==h){ el.innerHTML=h; el._h=h; } }
+/* same for a part of a screen: writes to .innerHTML are skipped when nothing changed */
+const box = el => new Proxy({}, { get:(t,k)=>{ const v=el[k]; return typeof v==="function" ? v.bind(el) : v; }, set:(t,k,v)=>{ if(k==="innerHTML") setHTML(el, v); else el[k]=v; return true; } });
 function drawNav(){
   const cur = S.v==="b" ? (S.from||"bookings") : S.v;
-  $("nav").innerHTML = NAV.filter(n => !n.owner || isOwner()).map(n => n.label ? `<div class="nav-label">${n.label}</div>`
-    : `<button type="button" class="nav-link${n.id===cur?" on":""}" data-go="${n.id}" title="${n.t}"><span class="nav-ic">${n.i}</span><span class="nav-tx">${n.t}</span>${n.badge&&n.badge()?`<span class="nav-badge">${n.badge()}</span>`:""}</button>`).join("");
+  setHTML($("nav"), NAV.filter(n => !n.owner || isOwner()).map(n => n.label ? `<div class="nav-label">${n.label}</div>`
+    : `<button type="button" class="nav-link${n.id===cur?" on":""}" data-go="${n.id}" title="${n.t}"><span class="nav-ic">${n.i}</span><span class="nav-tx">${n.t}</span>${n.badge&&n.badge()?`<span class="nav-badge">${n.badge()}</span>`:""}</button>`).join(""));
   const tabs = isOwner()
     ? [["home","Home",I.home],["jobs","Jobs",I.jobs],["new","New",I.plus],["bookings","Bookings",I.board],["more","More",I.menu]]
     : [["jobs","Jobs",I.jobs],["bookings","Bookings",I.board],["new","New",I.plus],["help","Help",I.help],["more","Me",I.user]];
   const inMore = ["customers","inbox","analytics","settings"].concat(isOwner()?["help"]:[]);
-  $("tabbar").innerHTML = tabs.map(([id,l,i]) => `<button type="button" data-tab="${id}" class="${id==="new"?"tb-new":""}${id===cur||(id==="more"&&inMore.includes(cur))?" on":""}">${i}<span>${l}</span>${id==="more"&&S.inboxCount?`<i class="tb-dot">${S.inboxCount}</i>`:""}${id==="home"&&S.attnCount?`<i class="tb-dot">${S.attnCount}</i>`:""}</button>`).join("");
+  setHTML($("tabbar"), tabs.map(([id,l,i]) => `<button type="button" data-tab="${id}" class="${id==="new"?"tb-new":""}${id===cur||(id==="more"&&inMore.includes(cur))?" on":""}">${i}<span>${l}</span>${id==="more"&&S.inboxCount?`<i class="tb-dot">${S.inboxCount}</i>`:""}${id==="home"&&S.attnCount?`<i class="tb-dot">${S.attnCount}</i>`:""}</button>`).join(""));
   $("whoAv").textContent = (S.me&&S.me.name||"?").trim().charAt(0).toUpperCase();
   $("whoName").textContent = S.me ? S.me.name : ""; $("whoRole").textContent = isOwner() ? "Owner" : "Washer";
   drawBell();
@@ -178,9 +181,24 @@ function route(){
   S.v=view; S.arg=arg; closePop(); drawNav();
   if(view==="settings" && arg) S.setTab=arg;
   const fn = {home:vHome, jobs:vJobs, bookings:vBookings, b:vBooking, customers:vCustomers, inbox:vInbox, analytics:vAnalytics, settings:vSettings, help:vHelp}[view];
-  scrollTo(0,0); fn();
+  if(painted!==S.v+"/"+S.arg){ painted=""; $("view")._h=""; scrollTo(0,0); } fn();
 }
-const V = () => $("view");
+/* Draw a screen only when its content changed. The entrance animation and count-up play only the
+   first time a screen is opened, not on background refreshes, so nothing jumps or flashes twice.
+   Every "V().innerHTML = …" in this file goes through paint(). */
+let painted="";
+function paint(html, el){
+  const root = !el; el = el || $("view");
+  if(el._h === html) return false;
+  if(root){ const key=S.v+"/"+S.arg; el.classList.toggle("norise", painted===key); painted=key; }
+  const y = scrollY; el.innerHTML = html; el._h = html;
+  if(root && painted && Math.abs(scrollY-y)>2) scrollTo(0,y);
+  return true;
+}
+const VIEW = new Proxy({}, { get:(t,k)=>{ const el=$("view"), v=el[k]; return typeof v==="function" ? v.bind(el) : v; },
+  set:(t,k,v)=>{ if(k==="innerHTML") paint(v); else $("view")[k]=v; return true; } });
+const V = () => VIEW;
+const firstPaint = () => !$("view").classList.contains("norise");
 const pageHead = (title, sub, acts, back) => `<div class="page-head"><div>${back?`<button class="back" type="button" data-back>${I.back}${back}</button>`:""}<h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:""}</div>${acts?`<div class="acts">${acts}</div>`:""}</div>`;
 const newBtn = () => `<button class="btn primary" type="button" data-new>${I.plus}New booking</button>`;
 document.addEventListener("click", e => { if(e.target.closest("[data-back]")) go(S.from||homeView()); });
@@ -337,7 +355,7 @@ function dHome(){
     + `<div class="grid grid-2"><section class="card"><div class="card-head"><h2>Needs attention</h2>${uc.length+up.length?`<span class="pill st-collect">${uc.length+up.length}</span>`:""}</div>${attn.length?attn.join(""):`<div class="empty"><b>All clear</b>Every booking is confirmed and every finished wash is paid.</div>`}</section>
       <section class="card" id="calCard">${calHTML()}</section></div>`
     + `<section class="card"><div class="card-head"><h2>Recent bookings</h2><button class="link-btn" type="button" data-go="bookings">See all</button></div>${recent.length?`<div style="overflow-x:auto"><table class="data"><thead><tr><th>Booked</th><th>Name</th><th>When</th><th class="hide-sm">Package</th><th class="r">Total</th><th>Status</th></tr></thead><tbody>${recent.map(j=>`<tr data-go="b/${encodeURIComponent(j.id)}"><td class="nw muted small">${ago(j.created_at)}</td><td><b>${esc(j.name)}</b><div class="tiny muted">${esc(SOURCE[j.source]||"")}</div></td><td class="nw">${relDay(j.wash_date)}<div class="tiny muted">${esc(j.slot)}</div></td><td class="hide-sm">${esc(j.package)}</td><td class="r num">${rupee(j.total)}</td><td>${pill(j)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">No bookings yet.</div>'}</section></div>`;
-  countUp(V());
+  if(firstPaint()) countUp($("view"));
 }
 function calHTML(){
   const m=S.calMonth, d0=new Date(m+"T12:00:00Z"), days=new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth()+1, 0)).getUTCDate();
@@ -362,7 +380,7 @@ function countUp(root){
 /* ============================== JOBS (day runner) ============================== */
 let DAY=null;
 async function vJobs(){
-  const k="day."+S.day; DAY=cache.get(k); if(DAY) remember(DAY.jobs); dJobs(true);
+  const k="day."+S.day; DAY=cache.get(k); if(DAY) remember(DAY.jobs); dJobs(painted!=="jobs/" || S.dayDrawn!==S.day); S.dayDrawn=S.day;
   try{ const d=await rpc("staff_day",{p_date:S.day}); DAY=d; remember(d.jobs, true); cache.set(k,d); if(S.v==="jobs") dJobs(); } catch(e){ quiet(e); }
 }
 function dJobs(scroll){
@@ -388,7 +406,7 @@ function dJobs(scroll){
       + sec("Coming up", open.slice(1), many(open.slice(1))) + sec("Finished", finished, many(finished)) + sec("Cancelled", cancelled, many(cancelled));
   }
   V().innerHTML = html;
-  const sel=$("strip").querySelector(".sel"); if(sel && scroll) sel.scrollIntoView({inline:"center", block:"nearest"});
+  const st=$("strip"), sel=st&&st.querySelector(".sel"); if(sel && (scroll||!st._did)){ st.scrollLeft = sel.offsetLeft - st.clientWidth/2 + sel.offsetWidth/2; st._did=1; }
 }
 document.addEventListener("click", e => {
   const d=e.target.closest("[data-sday]"); if(d){ S.day=d.dataset.sday; S.open.clear(); vJobs(); }
@@ -400,7 +418,7 @@ document.addEventListener("click", e => {
 let BK=null, bkTimer=0;
 const RANGES = {today:["Today",()=>[istToday(),istToday()]], week:["Next 7 days",()=>[istToday(),addDays(istToday(),6)]], month:["Next 30 days",()=>[istToday(),addDays(istToday(),29)]], past:["Last 30 days",()=>[addDays(istToday(),-30),addDays(istToday(),-1)]], all:["±60 days",()=>[addDays(istToday(),-60),addDays(istToday(),60)]]};
 async function vBookings(){
-  dBookings(true);
+  dBookings(!$("bkBody") || painted!=="bookings/");
   const k="bk."+S.bk.range+"."+S.bk.q; BK=cache.get(k); if(BK){ remember(BK); dBookings(); }
   try{ BK = S.bk.q ? await rpc("staff_bookings",{p_query:S.bk.q, p_from:addDays(istToday(),-365), p_limit:200}) : await rpc("staff_range",{p_from:RANGES[S.bk.range][1]()[0], p_to:RANGES[S.bk.range][1]()[1]});
     remember(BK, true); cache.set(k,BK); if(S.v==="bookings") dBookings(); } catch(e){ quiet(e); }
@@ -416,7 +434,7 @@ function dBookings(shell){
       <label class="search-in grow">${I.search}<input class="input" id="bkQ" type="search" placeholder="Search name, mobile, plate, area, ID" value="${esc(S.bk.q)}" autocomplete="off"></label></div>
       <div id="bkBody"></div>`;
   }
-  const el=$("bkBody"), list=bkList();
+  const el=box($("bkBody")), list=bkList();
   $("bkSub").textContent = !BK ? "" : S.bk.q ? `${list.length} found for “${S.bk.q}”` : `${list.length} booking${list.length===1?"":"s"} · ${RANGES[S.bk.range][0].toLowerCase()} · ${rupee(list.filter(j=>j.status!=="cancelled").reduce((s,j)=>s+j.total,0))}`;
   if(!BK){ el.innerHTML = `<div class="grid grid-3">${skel(3,240)}</div>`; return; }
   if(S.bk.mode==="board"){
@@ -725,7 +743,7 @@ async function delBooking(b){
 /* ============================== CUSTOMERS (owner) ============================== */
 let CU=null, DUE=null, cqTimer=0;
 async function vCustomers(){
-  dCustomers(true);
+  dCustomers(!$("cuBody") || painted!=="customers/" || S.cu.drawn!==S.cu.mode); S.cu.drawn=S.cu.mode;
   if(S.cu.mode==="all"){ const k="cu."+S.cu.q; CU=cache.get(k); dCustomers(); try{ CU=await rpc("owner_customers",{p_query:S.cu.q, p_limit:300}); cache.set(k,CU); dCustomers(); }catch(e){ quiet(e); } }
   else { const k="due."+S.cu.due; DUE=cache.get(k); dCustomers(); try{ DUE=await rpc("owner_due",{p_days:S.cu.due}); cache.set(k,DUE); dCustomers(); }catch(e){ quiet(e); } }
 }
@@ -733,7 +751,7 @@ function dCustomers(shell){
   if(S.v!=="customers") return;
   if(shell || !$("cuBody")) V().innerHTML = pageHead("Customers", "Everyone who has booked, by mobile number", newBtn()) + `<div class="toolbar"><div class="seg"><button type="button" data-cumode="all" class="${S.cu.mode==="all"?"on":""}">All customers</button><button type="button" data-cumode="due" class="${S.cu.mode==="due"?"on":""}">Due for a wash</button></div>
     ${S.cu.mode==="all"?`<label class="search-in grow">${I.search}<input class="input" id="cuQ" type="search" placeholder="Search name, mobile, plate, area" value="${esc(S.cu.q)}" autocomplete="off"></label>`:`<div class="seg">${[7,12,21,30].map(d=>`<button type="button" data-due="${d}" class="${d===S.cu.due?"on":""}">${d}+ days</button>`).join("")}</div>`}</div><div id="cuBody"></div>`;
-  const el=$("cuBody");
+  const el=box($("cuBody"));
   if(S.cu.mode==="all"){
     if(!CU){ el.innerHTML=skel(1,300); return; }
     el.innerHTML = CU.length ? `<div class="table-wrap"><table class="data"><thead><tr><th>Name</th><th class="hide-sm">Vehicle</th><th class="hide-sm">Area</th><th class="r">Washes</th><th class="r">Paid</th><th class="hide-sm">Last wash</th><th>Next</th></tr></thead><tbody>${CU.map(c=>`<tr data-cust="${c.phone}" style="cursor:pointer"><td><b>${esc(c.name)}</b><div class="tiny muted">${esc(fmtPhone(c.phone))}${c.credit?` · <span style="color:var(--sage)">${rupee(c.credit)} credit</span>`:""}</div></td><td class="hide-sm">${esc(c.vehicle||"")}</td><td class="hide-sm">${esc(c.area||"")}</td><td class="r num">${c.washes}</td><td class="r num">${rupee(c.spent)}</td><td class="hide-sm nw">${c.last_date?fmtDay(c.last_date):"—"}</td><td class="nw">${c.next_date?`<span class="pill st-new">${relDay(c.next_date)}</span>`:"—"}</td></tr>`).join("")}</tbody></table></div><p class="tiny muted">${CU.length} customer${CU.length===1?"":"s"}</p>`
@@ -1026,7 +1044,7 @@ document.addEventListener("click", e => {
 /* ============================== bell (notifications) ============================== */
 function drawBell(ring){
   const seen=store.get("vb.bellSeen")||"", n=NOTES.filter(x=>x.at>seen).length + (isOwner()?(S.inboxCount||0):0);
-  $$("[data-bell]").forEach(b=>{ b.innerHTML = I.bell + (n?`<span class="bell-count">${n>9?"9+":n}</span>`:""); if(ring){ b.classList.remove("ring"); void b.offsetWidth; b.classList.add("ring"); } });
+  $$("[data-bell]").forEach(b=>{ setHTML(b, I.bell + (n?`<span class="bell-count">${n>9?"9+":n}</span>`:"")); if(ring){ b.classList.remove("ring"); void b.offsetWidth; b.classList.add("ring"); } });
 }
 document.addEventListener("click", e => {
   const b=e.target.closest("[data-bell]"); if(!b) return; if(!$("pop").hidden){ closePop(); return; }

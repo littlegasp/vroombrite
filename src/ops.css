@@ -493,3 +493,5 @@ details.card[open] > summary::after{content:"−"}
 .sidebar .fold-btn svg{width:17px;height:17px}
 html[data-theme="dark"] .stepper button.on{background:var(--lime);color:#14190A;border-color:#A9D63E}
 html[data-theme="dark"] .stepper button.done{background:var(--accent-tint);color:var(--accent-dark);border-color:transparent}
+/* background refreshes don't replay entrance animations */
+.norise .rise > *,.norise .hbar-fill,.norise .bars .b i,.norise .funnel .f i{animation:none!important}

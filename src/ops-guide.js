@@ -2,6 +2,7 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["6 Nov 2026", "Screens no longer flash or jump when they refresh in the background; they only change when something new comes in."],
   ["6 Nov 2026", "New look, same as Studio CRM's layout in Vroombrite colours: a menu on the left (laptop) or tabs at the bottom (phone), light and dark look."],
   ["6 Nov 2026", "Owner: Home shows what needs attention, the month's calendar and recent bookings. Analytics compares any period with the one before."],
   ["6 Nov 2026", "Bookings has a board (drag a card to move it along) and a table. Every booking has its own page with a journey line, money box and history."],
