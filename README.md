@@ -38,7 +38,7 @@ When a customer confirms, WhatsApp also opens with the booking filled in. If Sup
 
 ## Google Sheet copy (nightly)
 The Sheet is now a read-only copy for viewing and backups; make changes in the staff app.
-1. In the Sheet: **Extensions → Apps Script**, replace everything with `google-apps-script/SheetCopy.gs`, save, reload the Sheet.
+1. Create a **new** Google Sheet (e.g. "Vroombrite Copy"). Keep the old Sheet and its script as they are: they are the website's fallback. In the new Sheet: **Extensions → Apps Script**, replace everything with `google-apps-script/SheetCopy.gs`, save, reload the Sheet.
 2. **Vroombrite → Set copy key** and paste the key from the staff app (**Team → Google Sheet copy key**).
 3. **Vroombrite → Turn on nightly copy** (about 2 am), then **Copy now** to test.
 
