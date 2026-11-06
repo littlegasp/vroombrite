@@ -119,12 +119,13 @@ FOOTER = '''<footer class="gut">
 </footer>
 <a class="btn btn-wa fab" id="fab" data-wa href="#">WhatsApp</a>'''
 
+OPS_HEAD = '<link rel="stylesheet" href="ops.css">\n<link rel="manifest" href="ops.webmanifest">\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n<meta name="apple-mobile-web-app-title" content="VB Staff">'
 FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,600;0,700;0,800;1,800;1,900&display=swap">'
 
 def build_site():
     if os.path.exists(SITE):
         for f in os.listdir(SITE):
-            if f.endswith(".html") or f in ("style.css","app.js","ops.js","qrcode.js","sitemap.xml","robots.txt"): os.remove(os.path.join(SITE, f))
+            if f.endswith(".html") or f in ("style.css","app.js","ops.js","ops.css","ops.webmanifest","config.js","qrcode.js","sitemap.xml","robots.txt"): os.remove(os.path.join(SITE, f))
     os.makedirs(os.path.join(SITE,"img"), exist_ok=True)
     for slug, fname, lbl, title, desc in PAGES:
         body = page_src(slug)
@@ -140,8 +141,7 @@ def build_site():
 {jsonld(slug)}<meta name="theme-color" content="#15191C">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-{FONTS}
-<link rel="stylesheet" href="style.css">
+{OPS_HEAD if slug == "ops" else FONTS + chr(10) + '<link rel="stylesheet" href="style.css">'}
 </head>
 <body data-page="{slug}">
 {'' if slug in BARE else nav()}
@@ -149,12 +149,12 @@ def build_site():
 {body}
 </main>
 {'' if slug in BARE else FOOTER}
-<script src="app.js"></script>{'<script src="ops.js"></script>' if slug == "ops" else ''}
+<script src="config.js"></script>{'<script src="ops.js"></script>' if slug == "ops" else '<script src="app.js"></script>'}
 </body>
 </html>
 '''
         open(os.path.join(SITE, fname), "w", encoding="utf-8").write(links(html, False))
-    shutil.copy(os.path.join(SRC,"style.css"), SITE); open(os.path.join(SITE,"app.js"),"w",encoding="utf-8").write(app_js()); shutil.copy(os.path.join(SRC,"ops.js"), SITE); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE); shutil.copy(os.path.join(SRC,"apple-touch-icon.png"), SITE)
+    shutil.copy(os.path.join(SRC,"style.css"), SITE); open(os.path.join(SITE,"app.js"),"w",encoding="utf-8").write(app_js()); shutil.copy(os.path.join(SRC,"ops.js"), SITE); shutil.copy(os.path.join(SRC,"config.js"), SITE); shutil.copy(os.path.join(SRC,"ops.css"), SITE); shutil.copy(os.path.join(SRC,"ops.webmanifest"), SITE); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE); shutil.copy(os.path.join(SRC,"apple-touch-icon.png"), SITE)
 
 def build_seo():
     today = datetime.date.today().isoformat()
@@ -175,10 +175,11 @@ def build_preview():
 {views}
 </main>
 {FOOTER}
+<script src="config.js"></script>
 <script src="app.js"></script>
 '''
     open(os.path.join(PREV,"index.html"),"w",encoding="utf-8").write(links(html, True))
-    shutil.copy(os.path.join(SRC,"style.css"), PREV); open(os.path.join(PREV,"app.js"),"w",encoding="utf-8").write(app_js()); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), PREV)
+    shutil.copy(os.path.join(SRC,"style.css"), PREV); open(os.path.join(PREV,"app.js"),"w",encoding="utf-8").write(app_js()); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), PREV); shutil.copy(os.path.join(SRC,"config.js"), PREV)
     if os.path.exists(os.path.join(PREV,"img")): shutil.rmtree(os.path.join(PREV,"img"))
     shutil.copytree(os.path.join(SITE,"img"), os.path.join(PREV,"img"))
 

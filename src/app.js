@@ -1,15 +1,4 @@
-/* =========================================================
-   Vroombrite — shared site script
-   EDIT THIS BLOCK BEFORE GOING LIVE
-   ========================================================= */
-const SITE = {
-  name: "Vroombrite",
-  phone: "917718984191",            // WhatsApp / call number, country code first, digits only
-  phoneDisplay: "+91 77189 84191",
-  sheetUrl: "https://script.google.com/macros/s/AKfycbzKZ57SuWpdzK0HCt4Vx8BeIf40FDzAGpnF1iSr3nT3os5dAsW74akLCk3kB6eRl278/exec",                     // paste your Google Apps Script web-app URL here (see README)
-  upiId: "7718984191@yescred",                        // UPI ID for "Pay online now" (e.g. vroombrite@okaxis). Empty = online option shows "coming soon"
-  upiName: "Vroombrite"             // name shown in the customer's UPI app
-};
+/* Vroombrite — shared site script. Business settings (phone, UPI, database) are in config.js. */
 
 /* Prices are launch placeholders — change them here and every page updates. */
 const PKG = {
@@ -76,11 +65,31 @@ const ss = { get(k){ try{ return sessionStorage.getItem(k); }catch(e){ return nu
 const priceKey = (veh,size) => veh === "bike" ? "bike" : size;
 function areaForPin(pin){ return AREAS.find(x => x.pins.includes(pin)); }
 function openNew(url){ const a=document.createElement("a"); a.href=url; a.target="_blank"; a.rel="noopener"; a.click(); }
+/* ---------- database: Supabase when configured, the old Google Sheet script otherwise ---------- */
+const USE_DB = !!(SITE.supabaseUrl && SITE.supabaseKey);
+async function rpc(fn, args){
+  const r = await fetch(SITE.supabaseUrl.replace(/\/$/,"")+"/rest/v1/rpc/"+fn, {method:"POST",
+    headers:{"Content-Type":"application/json", apikey:SITE.supabaseKey}, body:JSON.stringify(args||{})});
+  const j = await r.json().catch(()=>null);
+  if(!r.ok) throw new Error((j&&j.message)||("HTTP "+r.status));
+  return j;
+}
 async function apiGet(params){
+  if(USE_DB){
+    try{
+      if(params.action==="check") return await rpc("check_offer",{p_phone:params.phone||"", p_code:params.code||null, p_ref:params.ref||null});
+      if(params.action==="reviews") return {ok:true, reviews: await rpc("public_reviews")};
+    }catch(e){ return null; }
+    return null;
+  }
   if(!SITE.sheetUrl) return null;
   try{ const r=await fetch(SITE.sheetUrl+"?"+new URLSearchParams(params)); return await r.json(); }catch(e){ return null; }
 }
 async function saveToSheet(payload){
+  if(USE_DB){
+    const fn={booking:"create_booking", enquiry:"submit_enquiry", society:"submit_society_lead", review:"submit_review"}[payload.type];
+    try{ const j=await rpc(fn,{p:payload}); return j&&j.ok ? "ok" : "fail"; }catch(e){ console.warn(e); return "fail"; }
+  }
   if(!SITE.sheetUrl) return "skipped";
   try{
     const r = await fetch(SITE.sheetUrl, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload)});
@@ -88,7 +97,9 @@ async function saveToSheet(payload){
     return j && j.ok ? "ok" : "fail";
   }catch(e){ return "fail"; }
 }
-function bookingId(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return "VB-"+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+"-"+Math.random().toString(36).slice(2,6).toUpperCase(); }
+function bookingId(){ const d=new Date(), p=n=>String(n).padStart(2,"0"), A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const r=new Uint8Array(5); (window.crypto||{getRandomValues:a=>a.map(()=>Math.random()*256)}).getRandomValues(r);
+  return "VB-"+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+"-"+[...r].map(x=>A[x%A.length]).join(""); }
 
 /* ---------- nav ---------- */
 if($("burger")) $("burger").addEventListener("click", () => { const o=$("links").classList.toggle("open"); $("burger").setAttribute("aria-expanded", o); });
@@ -345,7 +356,7 @@ if(bform){
     const data={type:"booking", id, vehicle:vehText(), plate:$("b-plate").value.trim(), package:PKG[B.veh][B.pkg].n, addons:addsText(),
       date:$("b-date").value, slot:(document.querySelector('input[name="slot"]:checked')||{}).value||"", address:$("b-addr").value.trim(), area, pin,
       name, phone:ph, notes:$("b-notes").value.trim(), total:total(), payment: payMode()==="online" ? "Online UPI · pending" : "After service",
-      discount:discount(), promo: discount()>0 ? (B.offer.type==="ref" ? "Referral" : B.offer.value) : "", ref: discount()>0 && B.offer.type==="ref" ? B.offer.value : ""};
+      subtotal:subtotal(), pay_mode:payMode(), discount:discount(), promo: discount()>0 ? (B.offer.type==="ref" ? "Referral" : B.offer.value) : "", ref: discount()>0 && B.offer.type==="ref" ? B.offer.value : ""};
     const msg=`Hi ${SITE.name}, I'd like to book a doorstep wash.\n\nBooking ID: ${id}\nVehicle: ${data.vehicle}${data.plate?" ("+data.plate+")":""}\nPackage: ${data.package}\nAdd-ons: ${data.addons}\nWhen: ${whenText()}\nAddress: ${data.address}, ${area} ${pin}\nName: ${name}\nMobile: ${ph}${data.notes?"\nNotes: "+data.notes:""}\n\n${data.discount?`Offer: ${data.promo==="Referral"?"Referred by "+data.ref:data.promo} (−${rupee(data.discount)})\n`:""}Estimated total: ${rupee(data.total)}\nPayment: ${payText()}`;
     const url=waLink(msg); $("waAgain").href=url; $("doneId").textContent=id;
     $("referShare").href="https://wa.me/?text="+encodeURIComponent(`I just booked a doorstep car wash with ${SITE.name}, they come to your parking with their own water and power. Book here and enter my number ${ph} as "Referred by" to get ₹${REFERRAL.friendOff} off your first wash (on orders of ₹${REFERRAL.min}+): ${location.origin}${location.pathname.replace(/[^/]*$/,"")}${PREVIEW?"#book":"book.html"}`);
