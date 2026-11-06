@@ -26,79 +26,105 @@
 <meta name="theme-color" content="#15191C">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,600;0,700;0,800;1,800;1,900&display=swap">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="ops.css">
+<link rel="manifest" href="ops.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VB Staff">
 </head>
 <body data-page="ops">
 
 <main>
-<div class="ops gut">
-  <header class="ops-top wrap">
-    <div class="brand"><svg class="vicon" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#15191C"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#15191C"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#15191C"/></svg><span class="wm"><b>VROOM<i>BRITE</i></b><small>STAFF</small></span></div>
-    <div class="ops-who" id="who" hidden><span class="role" id="roleChip"></span><button type="button" class="copy" id="signOut">Sign out</button></div>
-  </header>
+<div class="app" id="app">
 
-  <section class="ops-login wrap" id="login">
-    <div class="bform" style="max-width:420px;margin:12vh auto 0">
-      <div class="kicker">Staff sign-in</div>
-      <h2 class="big" style="font-size:2.2rem">Enter your PIN.</h2>
-      <form id="pinForm" novalidate style="display:flex;flex-direction:column;gap:14px;margin-top:22px">
-        <div class="f"><label for="ops-pin">PIN</label><input id="ops-pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" placeholder="••••"></div>
-        <button class="btn btn-lime" type="submit">Sign in</button>
-        <p class="status warn" id="loginErr" hidden></p>
-      </form>
-      <p class="note">The owner sets PINs in the Google Sheet: Vroombrite menu → Set staff PINs.</p>
+  <section class="gate" id="scrSetup" hidden>
+    <div class="gate-card">
+      <svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg>
+      <h1>Staff app not connected</h1>
+      <p>Add the Supabase Project URL and key to <code>src/config.js</code>, then rebuild.</p>
     </div>
   </section>
 
-  <main class="wrap" id="app" hidden>
-    <nav class="ops-tabs" role="tablist" aria-label="Staff sections">
-      <button type="button" role="tab" id="tab-jobs" data-tab="jobs" aria-selected="true">Jobs</button>
-      <button type="button" role="tab" id="tab-dash" data-tab="dash" data-owner aria-selected="false">Dashboard</button>
-      <button type="button" role="tab" id="tab-due" data-tab="due" data-owner aria-selected="false">Due</button>
-      <button type="button" role="tab" id="tab-leads" data-tab="leads" data-owner aria-selected="false">Societies</button>
-    </nav>
+  <section class="gate" id="scrLogin" hidden>
+    <form class="gate-card" id="loginForm" novalidate>
+      <svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg>
+      <h1>Vroombrite Staff</h1>
+      <label class="fld"><span>Email</span><input id="lgEmail" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com"></label>
+      <label class="fld"><span>Password</span><input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••"></label>
+      <button class="b b-lime b-lg" type="submit" id="lgBtn">Sign in</button>
+      <p class="msg bad" id="lgErr" hidden></p>
+      <p class="hint">Forgot your password? Ask the owner to reset it.</p>
+    </form>
+  </section>
 
-    <section data-panel="jobs">
-      <div class="ops-date">
-        <button type="button" class="copy" id="dPrev" aria-label="Previous day">‹</button>
-        <input type="date" id="dPick" aria-label="Jobs date">
-        <button type="button" class="copy" id="dNext" aria-label="Next day">›</button>
-        <button type="button" class="copy" id="dToday">Today</button>
-        <button type="button" class="copy" id="dRefresh">Refresh</button>
+  <section class="gate" id="scrWait" hidden>
+    <div class="gate-card">
+      <h1>Almost there</h1>
+      <p>Your login works, but the owner still needs to switch it on in <b>Team</b>.</p>
+      <button class="b b-ghost" type="button" id="waitRetry">Check again</button>
+      <button class="b b-text" type="button" data-signout>Sign out</button>
+    </div>
+  </section>
+
+  <div class="shell" id="shell" hidden>
+    <header class="top">
+      <div class="top-l">
+        <svg class="vi sm" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg>
+        <div><h1 id="title">Today</h1><p id="subtitle"></p></div>
       </div>
-      <p class="ops-sum" id="jobsSum"></p>
-      <div class="ops-list" id="jobs"></div>
-    </section>
-
-    <section data-panel="dash" hidden>
-      <div class="tiles" id="tiles"></div>
-      <div class="cgrid" style="margin-top:18px">
-        <div class="cbox"><h3>Bookings, last 7 days</h3><div class="bars" id="bars"></div></div>
-        <div class="cbox"><h3>Top packages</h3><div class="hours" id="pkgs"></div><p class="note" id="todo" style="margin:0"></p></div>
+      <div class="top-r">
+        <span class="sync" id="sync" title="Up to date"></span>
+        <button class="me" type="button" id="meBtn" aria-label="Account"></button>
       </div>
-    </section>
+    </header>
+    <nav class="views" id="views" aria-label="Sections"></nav>
 
-    <section data-panel="due" hidden>
-      <div class="ops-date">
-        <label for="dueDays" class="lb" style="font-size:.84rem;color:var(--muted)">Last wash at least</label>
-        <select id="dueDays"><option value="7">7 days ago</option><option value="12" selected>12 days ago</option><option value="21">21 days ago</option><option value="30">30 days ago</option></select>
-      </div>
-      <p class="ops-sum" id="dueSum"></p>
-      <div class="ops-list" id="due"></div>
-    </section>
+    <main class="main">
+      <section data-view="day">
+        <div class="strip" id="strip" role="tablist" aria-label="Choose a day"></div>
+        <div class="daybar" id="daybar"></div>
+        <div id="dayBody"></div>
+      </section>
 
-    <section data-panel="leads" hidden>
-      <p class="ops-sum">Society quote requests, newest first. Update their status in the Sheet → Society leads tab.</p>
-      <div class="ops-list" id="leads"></div>
-    </section>
-  </main>
+      <section data-view="bookings" hidden>
+        <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="search" placeholder="Search name, phone, plate, area, booking ID" autocomplete="off"></label>
+        <div id="bkBody"></div>
+      </section>
+
+      <section data-view="customers" hidden>
+        <div class="chips" id="dueChips"></div>
+        <p class="lead" id="dueLead"></p>
+        <div id="dueBody"></div>
+      </section>
+
+      <section data-view="inbox" hidden>
+        <div class="seg" id="inTabs"></div>
+        <div id="inBody"></div>
+      </section>
+
+      <section data-view="numbers" hidden>
+        <div id="numBody"></div>
+      </section>
+
+      <section data-view="team" hidden>
+        <div id="teamBody"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-grip"></div>
+      <div class="sheet-head"><h2 id="sheetTitle"></h2><button class="b b-icon" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="sheet-body" id="sheetBody"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
-
 
 </main>
 
-<script src="app.js"></script><script src="ops.js"></script>
+<script src="config.js"></script><script src="ops.js"></script>
 </body>
 </html>

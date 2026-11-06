@@ -211,6 +211,7 @@ code{font-size:.85em;background:var(--s2);padding:2px 6px;border-radius:6px}
 .person .pm{flex:1;min-width:0}
 .person .pm b{display:block}
 .person .pm span{display:block;color:var(--mu);font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person .pm b .tag{display:inline-flex;vertical-align:middle;margin-left:4px;font-size:.68rem}
 .keybox{display:flex;align-items:center;gap:8px;background:var(--s2);border-radius:10px;padding:8px 10px;font-family:ui-monospace,Menlo,monospace;font-size:.8rem;overflow-wrap:anywhere}
 .steps-txt{margin:0;padding-left:18px;color:#D7DBDE;font-size:.9rem;display:flex;flex-direction:column;gap:4px}
 
@@ -234,3 +235,5 @@ code{font-size:.85em;background:var(--s2);padding:2px 6px;border-radius:6px}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .toast.bad{background:var(--coral);color:#2A1206}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.linkish{all:unset;cursor:pointer;font:inherit;color:inherit;border-bottom:1px dashed rgba(255,255,255,.3)}
+.linkish:focus-visible{outline:2px solid var(--lime);outline-offset:2px}

@@ -9,8 +9,8 @@ const SITE = {
   upiName: "Vroombrite",            // name shown in the customer's UPI app
 
   // Database (Supabase, Mumbai). Both values are public by design; never put the secret / service_role key here.
-  supabaseUrl: "",                  // https://xxxx.supabase.co
-  supabaseKey: "",                  // publishable (sb_publishable_…) or anon key
+  supabaseUrl: "https://rcekecnigbtgicvntfbz.supabase.co",
+  supabaseKey: "sb_publishable_1eXeVJPxzCkJY2Hou8kwIg_B_9kvme2",   // publishable key (public by design)
 
   // Old Google Sheet script. Used only while supabaseUrl is empty.
   sheetUrl: "https://script.google.com/macros/s/AKfycbzKZ57SuWpdzK0HCt4Vx8BeIf40FDzAGpnF1iSr3nT3os5dAsW74akLCk3kB6eRl278/exec"
