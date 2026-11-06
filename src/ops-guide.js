@@ -2,6 +2,10 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["6 Nov 2026", "New look, same as Studio CRM's layout in Vroombrite colours: a menu on the left (laptop) or tabs at the bottom (phone), light and dark look."],
+  ["6 Nov 2026", "Owner: Home shows what needs attention, the month's calendar and recent bookings. Analytics compares any period with the one before."],
+  ["6 Nov 2026", "Bookings has a board (drag a card to move it along) and a table. Every booking has its own page with a journey line, money box and history."],
+  ["6 Nov 2026", "Search anything with Ctrl K (or the search button), a bell for new bookings, a short tour, add a job to your phone calendar, and a warning when a time slot is already busy."],
   ["6 Nov 2026", "New booking button: add phone, WhatsApp and walk-in bookings. Paste a customer's WhatsApp message and tap Fill to fill the form."],
   ["6 Nov 2026", "Every booking now has a history (who confirmed, washed, got paid, changed it), notes, and call results."],
   ["6 Nov 2026", "Owner: add washers, change their access, set new passwords and delete logins in Team. No need to open Supabase."],
@@ -15,78 +19,86 @@ const GUIDE = [
   { id: "start", role: "all", title: "Getting started", body: `
 <p>Open the staff app link on your phone and sign in with your email and password.</p>
 <ol><li>In Chrome: tap <b>⋮ → Add to Home screen</b>. On iPhone Safari: tap <b>Share → Add to Home Screen</b>.</li>
-<li>Open it from the home screen icon from then on. It opens straight to today's jobs.</li></ol>
-<p>The small dot next to your initial shows the connection: <b>green</b> up to date, <b>blue</b> updating, <b>orange</b> offline (you are seeing the last saved data; buttons try again when you're back online).</p>
-<p>When a new version is published you'll see <b>A new version of the staff app is ready</b>. Tap <b>Update</b>.</p>` },
+<li>Open it from the home screen icon from then on.</li></ol>
+<p><b>Phone:</b> tabs at the bottom (owner: Home, Jobs, <b>+</b>, Bookings, More · washer: Jobs, Bookings, <b>+</b>, Help, Me). The top bar has search, the bell and the light/dark switch.</p>
+<p><b>Laptop:</b> the menu is on the left. The button at its top folds it to icons. Press <b>Ctrl K</b> to search.</p>
+<p>When a new version is published you'll see <b>A new version of the staff app is ready</b>. Tap <b>Update</b>. Tap <b>Show me around</b> on this page to see the tour again.</p>` },
 
-  { id: "day", role: "all", title: "Today's jobs (Day)", body: `
-<p>Pick a day in the strip at the top. Dots show how many jobs are on each day.</p>
+  { id: "home", role: "owner", title: "Home", body: `
+<ul><li>The boxes at the top: jobs today, upcoming, money collected and <b>Washed, not paid</b>. Tap a box to open that screen.</li>
+<li><b>Needs attention</b>: bookings not confirmed yet (tap <b>Confirm</b> to send the WhatsApp), washed jobs not paid, jobs with no washer, customers due for a wash and new Inbox items.</li>
+<li>The <b>calendar</b> shows bookings per day. Tap a day to open it in Jobs.</li>
+<li><b>Recent bookings</b> lists the newest bookings. Tap one to open it.</li></ul>` },
+
+  { id: "day", role: "all", title: "Jobs: today's work", body: `
+<p>Pick a day in the strip. Dots show how many jobs are on each day.</p>
 <p><b>Up next</b> is the next job, shown big. Its main button moves the job along, one tap at a time:</p>
 <ol><li><b>Confirm on WhatsApp</b>: opens WhatsApp with the confirmation filled in. Press send.</li>
 <li><b>Send "On my way"</b>: when you leave for the customer.</li>
 <li><b>Mark washed</b>: when the job is finished.</li>
 <li><b>Paid by UPI</b> or <b>Paid in cash</b>: once the money is with you.</li>
 <li><b>Ask for a review</b>: sends the rating link.</li></ol>
-<p><b>Call</b>, <b>Map</b> (opens Google Maps at the address), <b>Chat</b> (pick a ready message) and <b>More</b> are on every card.</p>
-<p>Washers see <b>Mine</b> (jobs given to you) and <b>Everyone</b>. Tap a short row to open the full card.</p>
+<p><b>Call</b>, <b>Map</b>, <b>Chat</b> (pick a ready message) and <b>Open</b> are on every card. Tap a short row to open its full card; tap the name to open the booking's page.</p>
+<p>Washers see <b>Mine</b> (jobs given to you) and <b>Everyone</b>.</p>
 <p>If a customer has <b>referral credit</b>, the card says so. Take it off the bill, then tap <b>Mark used</b>.</p>` },
 
+  { id: "bookings", role: "all", title: "Bookings: board and table", body: `
+<p>Choose <b>Board</b> or <b>Table</b>, and a range: Today, Next 7 days, Next 30 days, Last 30 days or ±60 days. Search finds any booking by name, mobile, number plate, area or booking ID.</p>
+<p><b>Board</b> has a column for each step: New, Confirmed, On the way, To collect, Done, Cancelled. On a laptop, drag a card to another column to move it along (to Done asks UPI or cash; to Cancelled asks first). On a phone, scroll sideways and tap a card.</p>
+<p><b>Table</b>: tap a column heading to sort by it. The owner can also show one washer's bookings.</p>` },
+
+  { id: "job", role: "all", title: "A booking's page", body: `
+<ul><li>The <b>journey line</b> at the top shows where the job is. Tap a later step to move it there.</li>
+<li><b>Next step</b> has the one button you need now.</li>
+<li><b>The job</b>: day, time, vehicle, package, address (Map), notes, washer. Tap <b>Edit</b> to change it. Washers can change the number plate and notes; the owner can change everything, including day, time and price.</li>
+<li>The money box shows what to collect, any discount or referral credit, and the paid buttons (with <b>Undo</b>).</li>
+<li><b>Customer</b>: Call, WhatsApp, Map and <b>Calendar</b> (adds the job to your phone's calendar).</li>
+<li><b>History and notes</b>: every step with who did it and when, including messages, calls and changes. Add notes like gate codes here.</li>
+<li><b>More</b>: send a reminder, ask for a review, cancel or reopen.</li></ul>
+<p><b>After a call</b> the app asks how it went: <b>Talked</b>, <b>No answer</b> (offers the "Couldn't reach you" WhatsApp message) or <b>Busy</b>. It's saved in the history.</p>` },
+
   { id: "new", role: "all", title: "Adding a booking (phone, WhatsApp, walk-in)", body: `
-<ol><li>Tap <b>+ New</b> (bottom of the screen) or <b>New booking</b> (laptop).</li>
+<ol><li>Tap <b>+</b> (phone) or <b>New booking</b> (laptop).</li>
 <li>Fastest: copy the customer's WhatsApp message, paste it in the box at the top and tap <b>Fill</b>. Check what it filled.</li>
 <li>Choose the vehicle, package and any add-ons. The price fills in by itself; you can change it. To give a discount, enter it with a reason.</li>
-<li>Pick the day and time, and enter the address and PIN code (the area fills in by itself).</li>
-<li>Choose where the booking came from (Phone, WhatsApp, Walk-in…) and tap <b>Save booking</b>.</li></ol>
+<li>Pick the day and time. If that time already has bookings, a yellow note says who.</li>
+<li>Enter the address and PIN code (the area fills in by itself), choose where the booking came from and tap <b>Save booking</b>.</li></ol>
 <p>After saving you can send the confirmation on WhatsApp in one tap. Bookings a washer adds are given to that washer.</p>` },
 
-  { id: "job", role: "all", title: "A booking's details, notes and history", body: `
-<p>Tap a booking to open it. Below the card:</p>
-<ul><li><b>Add a note</b>: gate codes, parking slot, "customer wants extra care on seats".</li>
-<li><b>History</b>: every step with who did it and when, including messages, calls and changes.</li>
-<li><b>Edit</b>: washers can change the number plate and notes. The owner can change everything: day and time, address, package and price.</li></ul>
-<p><b>After a call</b> the app asks how it went: <b>Talked</b>, <b>No answer</b> (offers the "Couldn't reach you" WhatsApp message) or <b>Busy</b>. It's saved in the history.</p>
-<p>Under <b>More</b>: send a reminder, mark washed or paid, undo "paid", cancel or reopen.</p>` },
-
-  { id: "bookings", role: "all", title: "Finding bookings and the calendar", body: `
-<p><b>Bookings → List</b> shows everything coming up. Search by name, mobile, number plate, area or booking ID (searching also finds past bookings).</p>
-<p><b>Bookings → Calendar</b> shows a month. Each day shows its number of bookings; tap a day to open it in Day.</p>` },
-
   { id: "messages-use", role: "all", title: "WhatsApp messages", body: `
-<p>The app never sends messages by itself. It opens WhatsApp with the message ready; you press send.</p>
-<p><b>Chat</b> on a card lets you pick any ready message (confirmation, reminder, on my way, review, couldn't reach you…). Sending one is noted in the booking's history.</p>` },
+<p>The app never sends messages by itself. It opens WhatsApp with the message ready; you press send. <b>Chat</b> lets you pick any ready message; sending one is noted in the booking's history.</p>` },
+
+  { id: "search", role: "all", title: "Search and the bell", body: `
+<p><b>Search</b> (Ctrl K on a laptop, the magnifier on a phone) finds bookings, customers and screens. Use the arrow keys and Enter on a laptop.</p>
+<p>The <b>bell</b> lists new bookings that came in since you last looked (the owner also sees new Inbox items). The app also shows a note at the bottom and vibrates when a new booking arrives.</p>` },
 
   { id: "customers", role: "owner", title: "Customers", body: `
-<p><b>Customers → All</b> lists every customer by mobile number: washes, amount paid, last wash, next booking and referral credit. Tap one to see all their bookings, call or message them, or start a <b>New booking</b> with their details filled in.</p>
-<p><b>Customers → Due for a wash</b> lists people whose last wash was 7, 12, 21 or 30+ days ago and who have nothing booked. Tap <b>Send rebook message</b>.</p>` },
+<p><b>All customers</b> lists every customer by mobile number: washes, amount paid, last wash and next booking. Tap one to see their bookings, call or message them, or start a <b>New booking</b> with their details filled in.</p>
+<p><b>Due for a wash</b> lists people whose last wash was 7, 12, 21 or 30+ days ago and who have nothing booked. Tap <b>Send rebook message</b>.</p>` },
 
   { id: "assign", role: "owner", title: "Giving jobs to washers", body: `
-<p>Open a booking and choose the washer under <b>Washer</b>. They see it under <b>Mine</b>. Choose <b>Nobody</b> to take it back.</p>
-<p>New website bookings start with nobody. Bookings a washer adds are given to them.</p>` },
+<p>Open a booking and choose the washer under <b>The job → Washer</b>. They see it under <b>Mine</b>. Choose <b>Nobody yet</b> to take it back. Home shows jobs in the next 3 days with no washer.</p>` },
 
-  { id: "team", role: "owner", title: "Team logins", body: `
-<p>Everything is done in <b>Team</b>; you don't need to open Supabase.</p>
-<ul><li><b>+ Add login</b>: name, email, mobile, Washer or Owner, and a password (8+ characters; tap <b>Make one</b> for a random one). Share the email and password with them on WhatsApp. The login works straight away.</li>
-<li>Tap a person to change their name, email, mobile or access (Washer / Owner), <b>Set a new password</b>, or switch their login off.</li>
-<li><b>Switch off</b> stops them signing in, and keeps their history. Use it when someone leaves.</li>
+  { id: "team", role: "owner", title: "Team logins (Settings → Team)", body: `
+<p>Everything is done here; you don't need to open Supabase.</p>
+<ul><li><b>Add login</b>: name, email, mobile, Washer or Owner, and a password (tap <b>New</b> for a random one). Then tap <b>Send login on WhatsApp</b>. The login works straight away.</li>
+<li>Tap a person to change their name, email, mobile or access, <b>Set a new password</b> (then send it on WhatsApp), or switch their login off.</li>
+<li><b>Switch off</b> stops them signing in and keeps their history. Use it when someone leaves.</li>
 <li><b>Delete login</b> removes the login for good. Their open jobs go back to "nobody"; past bookings stay.</li></ul>
-<p>You can't switch off, demote or delete your own login.</p>
-<p><b>Washer</b> sees Day, Bookings and New booking, and can change only plate and notes. <b>Owner</b> sees everything.</p>` },
+<p>You can't switch off, demote or delete your own login.</p>` },
 
   { id: "settings", role: "owner", title: "Settings", body: `
-<ul><li><b>Team notice</b>: one line everyone sees at the top of Day ("Rain today, carry covers"). Clear it when done.</li>
-<li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {days}, {society}, {brand}.</li>
+<ul><li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {days}, {society}, {brand}.</li>
 <li><b>Offers</b>: change WELCOME50 and the referral offer (amount, minimum order, first wash only, on/off), or add a new code like DIWALI100. The website uses the new amounts straight away.</li>
-<li><b>Monthly costs</b>: ads, supplies, fuel, washer pay and other costs for a month. Numbers then shows profit and cost per wash.</li>
-<li><b>Download bookings</b>: a spreadsheet (CSV) of bookings between two dates. Keep it private; it has customers' details.</li>
-<li><b>Activity log</b>: who downloaded data, deleted a booking, changed logins, offers or messages, and when. It never shows customers' details.</li>
-<li><b>Google Sheet copy</b>: the key for the nightly copy into Google Sheets.</li></ul>` },
+<li><b>Monthly costs</b>: ads, supplies, fuel, washer pay and other costs. Analytics then shows profit and cost per wash.</li>
+<li><b>Team notice</b>: one line everyone sees at the top of Home and Jobs ("Rain today, carry covers"). Clear it when done.</li>
+<li><b>Data &amp; activity</b>: download bookings as a spreadsheet (CSV), the Google Sheet copy key, and the <b>Activity log</b> (who changed logins, offers or messages, downloaded or deleted data; it never shows customers' details).</li></ul>` },
 
-  { id: "numbers", role: "owner", title: "Reading Numbers", body: `
-<ul><li><b>Collected</b> counts bookings marked paid (by the day they were paid).</li>
-<li><b>Washed, not paid</b> is money still to collect. Chase these first.</li>
-<li><b>This month</b>: bookings, washes, cancellations, discounts given, money collected, your costs (from Settings → Monthly costs), <b>profit</b> (collected minus costs) and <b>cost per wash</b>.</li>
-<li><b>Ad cost per new customer</b>: ad spend this month ÷ customers whose first booking was this month.</li>
-<li><b>Where bookings came from</b> and <b>washes per washer</b> are for this month.</li></ul>` },
+  { id: "analytics", role: "owner", title: "Reading Analytics", body: `
+<p>Pick a range (7 days, 30 days, This month, Last month, 90 days). Each box compares it with the same number of days just before: green ▲ is better, red ▼ is worse.</p>
+<ul><li><b>Collected</b> counts bookings in the range marked paid. <b>Profit</b> is collected minus your monthly costs for those days.</li>
+<li><b>From booking to review</b> shows how many bookings got confirmed, washed, paid and reviewed.</li>
+<li>Also: where bookings came from, packages, areas, time slots, washes per washer, offers used, cost per wash and ad cost per new customer.</li></ul>` },
 
   { id: "inbox", role: "owner", title: "Inbox: societies, messages, reviews", body: `
 <p><b>Societies</b>: quote requests from the Societies page. Mark them Contacted, Quoted, Won or Lost.</p>
@@ -95,14 +107,14 @@ const GUIDE = [
 
   { id: "delete", role: "owner", title: "Deleting a booking and customers' privacy", body: `
 <p>Delete only test or spam bookings: open it → <b>Edit</b> → <b>Delete booking</b>. It removes the booking, its history and its review for good. The activity log keeps a line without the customer's details.</p>
-<p>The app has customers' names, mobiles and addresses. Don't share screenshots or downloads outside the business. If a phone with the app is lost, switch that login off in Team.</p>` },
+<p>The app has customers' names, mobiles and addresses. Don't share screenshots or downloads outside the business. If a phone with the app is lost, switch that login off in Settings → Team.</p>` },
 
   { id: "account", role: "all", title: "My account and password", body: `
-<p>Tap your initial (top right) for <b>Change my password</b>, light or dark look, <b>Refresh now</b> and <b>Sign out</b>.</p>
-<p>Forgot your password? On the sign-in screen tap <b>Forgot password?</b> for an email link, or ask the owner to set a new one in Team.</p>` },
+<p>Tap your name (laptop menu) or <b>Me</b> / <b>More → My account</b> (phone) for <b>Change my password</b>, light or dark look, <b>Refresh now</b> and <b>Sign out</b>. The sun/moon button switches the look too.</p>
+<p>Forgot your password? On the sign-in screen tap <b>Forgot password?</b> for an email link, or ask the owner to set a new one in Settings → Team.</p>` },
 
   { id: "problems", role: "all", title: "Something looks wrong?", body: `
-<ul><li>Pull down or tap <b>Refresh now</b> in your account menu.</li>
-<li>"Couldn't save": check your internet and tap again. The card goes back to how it was until it saves.</li>
+<ul><li>Tap <b>Refresh now</b> in your account.</li>
+<li>"Couldn't save": check your internet and tap again. The screen goes back to how it was until it saves.</li>
 <li>Still stuck: send a screenshot to the owner.</li></ul>` }
 ];

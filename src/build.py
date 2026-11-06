@@ -85,7 +85,7 @@ VI = '<svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" he
 # (a hash of the shared files, so it only changes when they do)
 import hashlib
 BUILD = hashlib.sha1(b"".join(open(os.path.join(SRC, f), "rb").read() for f in
-        ("app.js", "ops.js", "ops-guide.js", "ops.css", "config.js", "style.css", "areas.json", "pages/ops.html"))).hexdigest()[:10]
+        ("app.js", "ops.js", "ops-guide.js", "ops.css", "build.py", "config.js", "style.css", "areas.json", "pages/ops.html"))).hexdigest()[:10]
 
 def ops_js():
     """Staff app = the price list from app.js (one source of truth) + src/ops.js."""
@@ -158,7 +158,7 @@ def build_site():
 {jsonld(slug)}<meta name="theme-color" content="#15191C">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-{OPS_HEAD.replace("ops.css", "ops.css?v=" + BUILD) if slug == "ops" else FONTS + chr(10) + '<link rel="stylesheet" href="style.css?v=' + BUILD + '">'}
+{FONTS + chr(10) + OPS_HEAD.replace("ops.css", "ops.css?v=" + BUILD) if slug == "ops" else FONTS + chr(10) + '<link rel="stylesheet" href="style.css?v=' + BUILD + '">'}
 </head>
 <body data-page="{slug}">
 {'' if slug in BARE else nav()}

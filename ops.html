@@ -26,7 +26,9 @@
 <meta name="theme-color" content="#15191C">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="ops.css?v=5b72731715">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,600;0,700;0,800;1,800;1,900&display=swap">
+<link rel="stylesheet" href="ops.css?v=93841ffa3c">
 <link rel="manifest" href="ops.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -35,129 +37,107 @@
 <body data-page="ops">
 
 <main>
-<div class="app" id="app">
+<div class="backdrop" aria-hidden="true"></div>
 
-  <section class="gate" id="scrSetup" hidden>
-    <div class="gate-card">
-      <svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg>
-      <h1>Staff app not connected</h1>
-      <p>Add the Supabase Project URL and key to <code>src/config.js</code>, then rebuild.</p>
+<section class="gate" id="scrSetup" hidden>
+  <div class="login-card"><h1>Staff app not connected</h1><p>Add the Supabase Project URL and key to <code>src/config.js</code>, then rebuild.</p></div>
+</section>
+
+<section class="gate" id="scrLogin" hidden>
+  <form class="login-card" id="loginForm" novalidate>
+    <div class="brand"><svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg><span class="wm"><b>VROOM<i>BRITE</i></b><small>STAFF</small></span></div>
+    <div id="lgFields" class="form-section">
+      <label class="field">Email<input id="lgEmail" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com"></label>
+      <label class="field">Password<span class="pw-wrap"><input id="lgPass" type="password" autocomplete="current-password"><button type="button" class="pw-eye" data-eye="lgPass">Show</button></span></label>
+      <div class="alert error" id="lgErr" hidden></div>
+      <button class="btn primary lg" type="submit" id="lgBtn">Sign in</button>
+      <button class="link-btn" type="button" id="forgotBtn" style="align-self:center">Forgot password?</button>
     </div>
-  </section>
-
-  <section class="gate" id="scrLogin" hidden>
-    <form class="gate-card" id="loginForm" novalidate>
-      <svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg>
-      <h1>Vroombrite Staff</h1>
-      <label class="fld"><span>Email</span><input id="lgEmail" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com"></label>
-      <label class="fld"><span>Password</span><span class="pw"><input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••"><button type="button" class="pw-eye" data-eye="lgPass" aria-label="Show password">Show</button></span></label>
-      <button class="b b-lime b-lg" type="submit" id="lgBtn">Sign in</button>
-      <p class="msg bad" id="lgErr" hidden></p>
-      <button class="b b-text" type="button" id="forgotBtn">Forgot password?</button>
-    </form>
-  </section>
-
-  <section class="gate" id="scrForgot" hidden>
-    <form class="gate-card" id="forgotForm" novalidate>
-      <h1>Reset your password</h1>
-      <p>Enter your login email. We'll email you a link to set a new password. If it doesn't arrive in a few minutes, ask the owner to set one for you in Team.</p>
-      <label class="fld"><span>Email</span><input id="fgEmail" type="email" autocomplete="username" inputmode="email"></label>
-      <button class="b b-lime b-lg" type="submit" id="fgBtn">Email me a link</button>
-      <p class="msg" id="fgMsg" hidden></p>
-      <button class="b b-text" type="button" data-goto="login">Back to sign in</button>
-    </form>
-  </section>
-
-  <section class="gate" id="scrRecover" hidden>
-    <form class="gate-card" id="recoverForm" novalidate>
-      <h1>Set a new password</h1>
-      <label class="fld"><span>New password (8 or more characters)</span><span class="pw"><input id="rcPass" type="password" autocomplete="new-password" minlength="8"><button type="button" class="pw-eye" data-eye="rcPass" aria-label="Show password">Show</button></span></label>
-      <button class="b b-lime b-lg" type="submit" id="rcBtn">Save and sign in</button>
-      <p class="msg bad" id="rcErr" hidden></p>
-    </form>
-  </section>
-
-  <section class="gate" id="scrWait" hidden>
-    <div class="gate-card">
-      <h1>Almost there</h1>
-      <p>Your login works, but the owner still needs to switch it on in <b>Team</b>.</p>
-      <button class="b b-ghost" type="button" id="waitRetry">Check again</button>
-      <button class="b b-text" type="button" data-signout>Sign out</button>
+    <div class="ceremony" id="lgCer" hidden>
+      <div class="cer-stage"><div class="cer-ring"><i></i><i></i><i></i><i></i></div><div class="cer-core"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div>
+      <p id="lgCerText">Signing you in…</p>
     </div>
-  </section>
+  </form>
+</section>
 
-  <div class="shell" id="shell" hidden>
-    <div class="updbar" id="updBar" hidden><span>A new version of the staff app is ready.</span><button class="b b-lime" type="button" id="updBtn">Update</button></div>
-    <header class="top">
-      <div class="top-l">
-        <svg class="vi sm" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg>
-        <div><h1 id="title">Today</h1><p id="subtitle"></p></div>
-      </div>
-      <div class="top-r">
-        <span class="sync" id="sync" title="Up to date"></span>
-        <button class="b b-lime top-new" type="button" data-new><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New booking</button>
-        <button class="me" type="button" id="meBtn" aria-label="Account and settings"></button>
-      </div>
-    </header>
-    <nav class="views" id="views" aria-label="Sections"></nav>
+<section class="gate" id="scrForgot" hidden>
+  <form class="login-card" id="forgotForm" novalidate>
+    <h1>Reset your password</h1>
+    <p>Enter your login email and we'll send a link to set a new password. If it doesn't arrive in a few minutes, ask the owner to set one for you in Team.</p>
+    <label class="field">Email<input id="fgEmail" type="email" autocomplete="username" inputmode="email"></label>
+    <button class="btn primary lg" type="submit" id="fgBtn">Email me a link</button>
+    <div class="alert" id="fgMsg" hidden></div>
+    <button class="link-btn" type="button" data-goto="login" style="align-self:center">Back to sign in</button>
+  </form>
+</section>
 
-    <main class="main">
-      <section data-view="day">
-        <div class="notice" id="notice" hidden></div>
-        <div class="strip" id="strip" role="tablist" aria-label="Choose a day"></div>
-        <div class="daybar" id="daybar"></div>
-        <div id="dayBody"></div>
-      </section>
+<section class="gate" id="scrRecover" hidden>
+  <form class="login-card" id="recoverForm" novalidate>
+    <h1>Set a new password</h1>
+    <label class="field">New password (8 or more characters)<span class="pw-wrap"><input id="rcPass" type="password" autocomplete="new-password"><button type="button" class="pw-eye" data-eye="rcPass">Show</button></span></label>
+    <div class="alert error" id="rcErr" hidden></div>
+    <button class="btn primary lg" type="submit" id="rcBtn">Save and sign in</button>
+  </form>
+</section>
 
-      <section data-view="bookings" hidden>
-        <div class="seg" id="bkMode"></div>
-        <div id="bkList">
-          <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="search" placeholder="Search name, phone, plate, area, booking ID" autocomplete="off"></label>
-          <div id="bkBody"></div>
-        </div>
-        <div id="calBody" hidden></div>
-      </section>
-
-      <section data-view="customers" hidden>
-        <div class="seg" id="cuMode"></div>
-        <div id="cuAll">
-          <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="cq" type="search" placeholder="Search name, phone, plate, area" autocomplete="off"></label>
-          <div id="cuBody"></div>
-        </div>
-        <div id="cuDue" hidden>
-          <div class="chips" id="dueChips"></div>
-          <p class="lead" id="dueLead"></p>
-          <div id="dueBody"></div>
-        </div>
-      </section>
-
-      <section data-view="inbox" hidden>
-        <div class="seg" id="inTabs"></div>
-        <div id="inBody"></div>
-      </section>
-
-      <section data-view="numbers" hidden><div id="numBody"></div></section>
-      <section data-view="team" hidden><div id="teamBody"></div></section>
-      <section data-view="settings" hidden><div id="setBody"></div></section>
-      <section data-view="help" hidden><div id="helpBody"></div></section>
-    </main>
-
-    <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
+<section class="gate" id="scrWait" hidden>
+  <div class="login-card">
+    <h1>Almost there</h1>
+    <p>Your login works, but the owner still needs to switch it on in <b>Team</b>.</p>
+    <button class="btn" type="button" id="waitRetry">Check again</button>
+    <button class="link-btn" type="button" data-signout style="align-self:center">Sign out</button>
   </div>
+</section>
 
-  <div class="sheet" id="sheet" hidden>
-    <div class="sheet-bg" data-close></div>
-    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-      <div class="sheet-grip"></div>
-      <div class="sheet-head"><h2 id="sheetTitle"></h2><button class="b b-icon" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-      <div class="sheet-body" id="sheetBody"></div>
+<div class="shell" id="shell" hidden>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-row">
+      <a class="brand" href="#home" data-home><svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg><span class="wm"><b>VROOM<i>BRITE</i></b><small>STAFF</small></span></a>
+      <button class="menu-icon fold-btn" type="button" id="foldBtn" aria-label="Fold the menu"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button>
     </div>
-  </div>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <button class="menu-search" type="button" data-find><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="nav-tx">Search</span><kbd class="nav-tx" id="kbdHint">Ctrl K</kbd></button>
+    <nav id="nav" aria-label="Main"></nav>
+    <div class="sidebar-foot">
+      <button class="who" type="button" data-account><span class="av" id="whoAv"></span><div><b id="whoName"></b><span id="whoRole"></span></div></button>
+      <div class="foot-row">
+        <button class="sign-out" type="button" data-signout><svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg><span class="nav-tx">Sign out</span></button>
+        <button class="menu-icon bell" type="button" data-bell aria-label="Notifications"></button>
+        <button class="menu-icon" type="button" data-themebtn aria-label="Light or dark look"></button>
+      </div>
+    </div>
+  </aside>
+
+  <header class="top-phone">
+    <a class="brand" href="#home" data-home><svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg><span class="wm"><b>VROOM<i>BRITE</i></b><small>STAFF</small></span></a>
+    <span class="sp"></span>
+    <button class="menu-icon" type="button" data-find aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>
+    <button class="menu-icon bell" type="button" data-bell aria-label="Notifications"></button>
+    <button class="menu-icon" type="button" data-themebtn aria-label="Light or dark look"></button>
+  </header>
+
+  <main class="main" id="main">
+    <div class="updbar" id="updBar" hidden><span>A new version of the staff app is ready.</span><button class="btn primary sm" type="button" id="updBtn">Update</button></div>
+    <div id="view"></div>
+  </main>
+
+  <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
 </div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-bg" data-close></div>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><h2 id="sheetTitle"></h2><button class="menu-icon" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+<div class="pop" id="pop" hidden></div>
+<div class="finder" id="finder" hidden><div class="finder-box"><input class="input" id="findIn" placeholder="Search bookings, customers, screens…" autocomplete="off"><div class="finder-res" id="findRes"></div></div></div>
+<div class="tour" id="tour" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 </main>
 
-<script src="config.js?v=5b72731715"></script><script src="ops.js?v=5b72731715"></script>
+<script src="config.js?v=93841ffa3c"></script><script src="ops.js?v=93841ffa3c"></script>
 </body>
 </html>
