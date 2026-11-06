@@ -46,7 +46,8 @@ const PLANS = {
 /* Service areas and the PIN codes we accept. Confirm this list before launch. */
 const AREAS = [{"a": "Andheri East", "slug": "andheri-east", "pins": ["400069", "400093", "400099"]}, {"a": "Marol", "slug": "marol", "pins": ["400059"]}, {"a": "Sakinaka & Chandivali", "slug": "sakinaka-chandivali", "pins": ["400072"]}, {"a": "Andheri West", "slug": "andheri-west", "pins": ["400053", "400058", "400061"]}, {"a": "Powai", "slug": "powai", "pins": ["400076"]}, {"a": "Vile Parle", "slug": "vile-parle", "pins": ["400056", "400057"]}, {"a": "Jogeshwari", "slug": "jogeshwari", "pins": ["400060", "400102"]}, {"a": "Goregaon", "slug": "goregaon", "pins": ["400062", "400063"]}, {"a": "Santacruz", "slug": "santacruz", "pins": ["400054", "400055"]}, {"a": "Kurla", "slug": "kurla", "pins": ["400070"]}, {"a": "Ghatkopar", "slug": "ghatkopar", "pins": ["400077", "400086"]}, {"a": "Vikhroli", "slug": "vikhroli", "pins": ["400079", "400083"]}];   // filled from src/areas.json by build.py — edit the areas there
 const SLOTS = ["6–8 AM","8–10 AM","10 AM–1 PM","2–5 PM","5–8 PM"];
-/* Offers — keep in step with PROMOS / REFERRAL in google-apps-script/Code.gs */
+/* Offers — starting values only. With the database on, the owner changes offers in the staff app
+   (Settings → Offers) and the amounts and minimums below are replaced by the database's answer. */
 /* min = minimum order value (package + add-ons, before discount) for the ₹50 to apply */
 const PROMOS = { WELCOME50: { off: 50, min: 299, label: "₹50 off your first wash" } };
 const REFERRAL = { friendOff: 50, referrerCredit: 50, min: 299 };
@@ -291,16 +292,23 @@ async function checkOffer(){
   B.offer=null; m.className="pinmsg"; m.textContent="";
   if(!code && !ref){ updateSum(); return; }
   if(ref && ref.length<10){ updateSum(); return; }
-  if(code && !ref && !PROMOS[code]){ m.className="pinmsg no"; m.textContent="That code isn't valid. Check the spelling."; updateSum(); return; }
-  const type = ref ? "ref" : "code", off = ref ? REFERRAL.friendOff : PROMOS[code].off;
+  if(code && !ref && !PROMOS[code] && !USE_DB){ m.className="pinmsg no"; m.textContent="That code isn't valid. Check the spelling."; updateSum(); return; }
+  const type = ref ? "ref" : "code";
+  let off = ref ? REFERRAL.friendOff : (PROMOS[code]||{}).off || 0;
   if(phone.length<10){ m.className="pinmsg"; m.textContent="Add your mobile number above so we can check the offer."; updateSum(); return; }
   m.textContent="Checking…";
   const r = await apiGet(type==="ref" ? {action:"check", ref, phone} : {action:"check", code, phone});
   if(seq!==offerSeq) return;
   const why={not_first:"This offer is for your first Vroombrite wash only.", unknown_ref:"We couldn't find a customer with that mobile number. Check it with your friend.", self:"You can't use your own number as the referral.", unknown:"That code isn't valid."};
+  if(r && r.ok && r.valid===true && r.off){   // the database's amounts win (owner edits them in the staff app)
+    off = r.off;
+    if(type==="ref"){ REFERRAL.friendOff=r.off; REFERRAL.min=r.min||0; if(r.referrer_credit!=null) REFERRAL.referrerCredit=r.referrer_credit; }
+    else PROMOS[code] = Object.assign({}, PROMOS[code], {off:r.off, min:r.min||0});
+  }
   if(r && r.ok && r.valid===false){ m.className="pinmsg no"; m.textContent=why[r.reason]||"This offer can't be applied."; }
+  else if(!off){ m.className="pinmsg no"; m.textContent="That code isn't valid. Check the spelling."; }
   else { B.offer={type, value: ref||code, off, ok:true}; m.className="pinmsg ok";
-    B.offer.msg = (r && r.valid===true ? "✓ " : "✓ Applied. We'll confirm it with your booking. ") + "₹"+off+" off" + (type==="ref" ? " — and your friend gets ₹"+REFERRAL.referrerCredit+" credit." : " your first wash."); }
+    B.offer.msg = (r && r.valid===true ? "✓ " : "✓ Applied. We'll confirm it with your booking. ") + "₹"+off+" off" + (type==="ref" ? " — and your friend gets ₹"+REFERRAL.referrerCredit+" credit." : code==="WELCOME50" ? " your first wash." : " with "+code+"."); }
   updateSum();
 }
 function checkBookPin(){

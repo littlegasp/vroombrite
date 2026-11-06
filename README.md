@@ -29,10 +29,12 @@ Static website for a doorstep car and bike wash in Mumbai. Plain HTML, CSS and J
 Bookings, enquiries, society requests and reviews are saved in a Supabase database in the Mumbai region. The website calls database functions only; customers can never read anyone's data. Offers (WELCOME50, referrals, the ₹299 minimum) are decided by the database, so a changed price in the browser can't fake a discount.
 
 **Setting up a new Supabase project (done once):**
-1. Supabase → **SQL Editor** → paste all of `supabase/migrations/0001_init.sql` → **Run**.
+1. Supabase → **SQL Editor** → run each file in `supabase/migrations/` in order (`0001`, `0002`, `0003`…), checking each says Success.
 2. **Authentication → Users → Add user → Create new user**, your email and a password, tick **Auto Confirm User**. The first login becomes the owner.
 3. **Authentication → Sign In / Providers** → turn off **Allow new users to sign up**.
-4. Put the Project URL and publishable key in `src/config.js` and rebuild.
+4. **Edge Functions → Deploy a new function → Via editor**, name it `team-admin`, paste `supabase/functions/team-admin/index.ts`, **Deploy**. This lets the owner add washers, change access, set passwords and delete logins from the staff app's Team screen. Supabase gives it the master key itself; the key is never in the repo or the browser.
+5. **Authentication → URL Configuration**: Site URL = the site's address; add `https://littlegasp.github.io/vroombrite/ops.html` under Redirect URLs (needed for "Forgot password?" emails).
+6. Put the Project URL and publishable key in `src/config.js` and rebuild.
 
 When a customer confirms, WhatsApp also opens with the booking filled in. If Supabase is ever unreachable, the website falls back to the old Google Sheet script (`SITE.sheetUrl`), and if that fails too, the customer is asked to send the WhatsApp message.
 
@@ -46,11 +48,12 @@ The Sheet is now a read-only copy for viewing and backups; make changes in the s
 Pages is set to deploy from `main` / root. The site is served at https://littlegasp.github.io/vroombrite/. To use your own domain, add it under **Settings → Pages → Custom domain**, then point your DNS to GitHub Pages.
 
 ## Staff app (ops.html)
-Open `https://littlegasp.github.io/vroombrite/ops.html` on your phone, sign in with email and password, and add it to your home screen. It shows the last saved data instantly, refreshes every 30 seconds, and buttons update straight away.
-- **Day** (everyone): pick a day; the next job is shown big with one main button that moves it along: Confirm on WhatsApp → Send "On my way" → Mark washed → Paid by UPI / cash → Ask for a review. Call, Map, Chat and More (reminder, cancel, undo paid) are on every card. Referral credits show on the card with *Mark used*.
-- **Bookings** (everyone): upcoming bookings and search by name, phone, plate, area or ID.
-- **Owner only:** **Customers** (nobody booked and last wash 7/12/21/30+ days ago, with a rebook message), **Inbox** (society requests, contact messages, reviews: *Show on website*), **Numbers** (bookings, money collected, unpaid, top packages and areas), **Team** (switch washer logins on/off, rename, Sheet copy key).
-- **Adding a washer:** Supabase → Authentication → Users → Add user (Auto Confirm), then switch their login on in **Team**.
+Open `https://littlegasp.github.io/vroombrite/ops.html` on your phone, sign in with email and password, and add it to your home screen. The full how-to for staff is inside the app under **Help** (`src/ops-guide.js`); update it, and its What's new list, in the same commit as any change people can see.
+- Phones get a bottom tab bar (Day, Bookings, **+ New**, Customers / Help, More); laptops get top tabs and a **New booking** button. Light and dark look.
+- **Everyone:** Day (one main button per job: confirm → on my way → washed → paid → review), Bookings (list, search, month calendar), **New booking** (paste a WhatsApp message and tap Fill), notes, call results, WhatsApp message picker, booking history.
+- **Owner only:** Customers (all customers + due for a wash), Inbox, Numbers (with monthly costs and profit), **Team** (add / edit / switch off / delete logins, set passwords, owner or washer access), **Settings** (team notice, WhatsApp message wording, offers and codes, monthly costs, CSV download, activity log, Google Sheet key).
+- Washers see their own jobs first (Mine / Everyone) and can change only plate and notes.
+- Shows saved data instantly, refreshes every 30 s, alerts on new bookings, and shows "A new version is ready" after a publish (`version.json`, written by the build).
 
 ## Search engines
 `sitemap.xml` and `robots.txt` are generated on every build. In Google Search Console, add the site and submit `sitemap.xml`.

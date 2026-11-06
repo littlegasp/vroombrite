@@ -26,7 +26,7 @@
 <meta name="theme-color" content="#15191C">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="ops.css">
+<link rel="stylesheet" href="ops.css?v=5b72731715">
 <link rel="manifest" href="ops.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -50,10 +50,30 @@
       <svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg>
       <h1>Vroombrite Staff</h1>
       <label class="fld"><span>Email</span><input id="lgEmail" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com"></label>
-      <label class="fld"><span>Password</span><input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••"></label>
+      <label class="fld"><span>Password</span><span class="pw"><input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••"><button type="button" class="pw-eye" data-eye="lgPass" aria-label="Show password">Show</button></span></label>
       <button class="b b-lime b-lg" type="submit" id="lgBtn">Sign in</button>
       <p class="msg bad" id="lgErr" hidden></p>
-      <p class="hint">Forgot your password? Ask the owner to reset it.</p>
+      <button class="b b-text" type="button" id="forgotBtn">Forgot password?</button>
+    </form>
+  </section>
+
+  <section class="gate" id="scrForgot" hidden>
+    <form class="gate-card" id="forgotForm" novalidate>
+      <h1>Reset your password</h1>
+      <p>Enter your login email. We'll email you a link to set a new password. If it doesn't arrive in a few minutes, ask the owner to set one for you in Team.</p>
+      <label class="fld"><span>Email</span><input id="fgEmail" type="email" autocomplete="username" inputmode="email"></label>
+      <button class="b b-lime b-lg" type="submit" id="fgBtn">Email me a link</button>
+      <p class="msg" id="fgMsg" hidden></p>
+      <button class="b b-text" type="button" data-goto="login">Back to sign in</button>
+    </form>
+  </section>
+
+  <section class="gate" id="scrRecover" hidden>
+    <form class="gate-card" id="recoverForm" novalidate>
+      <h1>Set a new password</h1>
+      <label class="fld"><span>New password (8 or more characters)</span><span class="pw"><input id="rcPass" type="password" autocomplete="new-password" minlength="8"><button type="button" class="pw-eye" data-eye="rcPass" aria-label="Show password">Show</button></span></label>
+      <button class="b b-lime b-lg" type="submit" id="rcBtn">Save and sign in</button>
+      <p class="msg bad" id="rcErr" hidden></p>
     </form>
   </section>
 
@@ -67,6 +87,7 @@
   </section>
 
   <div class="shell" id="shell" hidden>
+    <div class="updbar" id="updBar" hidden><span>A new version of the staff app is ready.</span><button class="b b-lime" type="button" id="updBtn">Update</button></div>
     <header class="top">
       <div class="top-l">
         <svg class="vi sm" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg>
@@ -74,27 +95,40 @@
       </div>
       <div class="top-r">
         <span class="sync" id="sync" title="Up to date"></span>
-        <button class="me" type="button" id="meBtn" aria-label="Account"></button>
+        <button class="b b-lime top-new" type="button" data-new><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New booking</button>
+        <button class="me" type="button" id="meBtn" aria-label="Account and settings"></button>
       </div>
     </header>
     <nav class="views" id="views" aria-label="Sections"></nav>
 
     <main class="main">
       <section data-view="day">
+        <div class="notice" id="notice" hidden></div>
         <div class="strip" id="strip" role="tablist" aria-label="Choose a day"></div>
         <div class="daybar" id="daybar"></div>
         <div id="dayBody"></div>
       </section>
 
       <section data-view="bookings" hidden>
-        <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="search" placeholder="Search name, phone, plate, area, booking ID" autocomplete="off"></label>
-        <div id="bkBody"></div>
+        <div class="seg" id="bkMode"></div>
+        <div id="bkList">
+          <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="search" placeholder="Search name, phone, plate, area, booking ID" autocomplete="off"></label>
+          <div id="bkBody"></div>
+        </div>
+        <div id="calBody" hidden></div>
       </section>
 
       <section data-view="customers" hidden>
-        <div class="chips" id="dueChips"></div>
-        <p class="lead" id="dueLead"></p>
-        <div id="dueBody"></div>
+        <div class="seg" id="cuMode"></div>
+        <div id="cuAll">
+          <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="cq" type="search" placeholder="Search name, phone, plate, area" autocomplete="off"></label>
+          <div id="cuBody"></div>
+        </div>
+        <div id="cuDue" hidden>
+          <div class="chips" id="dueChips"></div>
+          <p class="lead" id="dueLead"></p>
+          <div id="dueBody"></div>
+        </div>
       </section>
 
       <section data-view="inbox" hidden>
@@ -102,14 +136,13 @@
         <div id="inBody"></div>
       </section>
 
-      <section data-view="numbers" hidden>
-        <div id="numBody"></div>
-      </section>
-
-      <section data-view="team" hidden>
-        <div id="teamBody"></div>
-      </section>
+      <section data-view="numbers" hidden><div id="numBody"></div></section>
+      <section data-view="team" hidden><div id="teamBody"></div></section>
+      <section data-view="settings" hidden><div id="setBody"></div></section>
+      <section data-view="help" hidden><div id="helpBody"></div></section>
     </main>
+
+    <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
   </div>
 
   <div class="sheet" id="sheet" hidden>
@@ -125,6 +158,6 @@
 
 </main>
 
-<script src="config.js"></script><script src="ops.js"></script>
+<script src="config.js?v=5b72731715"></script><script src="ops.js?v=5b72731715"></script>
 </body>
 </html>

@@ -77,7 +77,24 @@ def page_src(slug):
                      "NEARLINKS": ", ".join(f'<a href="@@wash-{n["slug"]}@@" style="text-decoration:underline">{n["a"]}</a>' for n in near)}.items():
             t = t.replace("{{"+k+"}}", v)
         return t.replace("@@CTA@@", CTA)
-    return open(os.path.join(SRC, "pages", slug + ".html"), encoding="utf-8").read().replace("@@CTA@@", CTA)
+    t = open(os.path.join(SRC, "pages", slug + ".html"), encoding="utf-8").read().replace("@@CTA@@", CTA)
+    return t.replace("@@VI_SM@@", VI.replace('class="vi"', 'class="vi sm"')).replace("@@VI@@", VI)
+
+VI = '<svg class="vi" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#C9F36A"/><path d="M19 17h10l5 18 9-18h10L38 48H28z" fill="#0F1214"/><path d="M7 22h11l-1.6 4H5.4zM5 30h10l-1.6 4H3.4zM7 38h8l-1.6 4H5.4z" fill="#0F1214"/><path d="M52 6l1.6 4.4L58 12l-4.4 1.6L52 18l-1.6-4.4L46 12l4.4-1.6z" fill="#0F1214"/></svg>'
+# Every build gets an id; the staff app compares it with version.json to offer "Update".
+# (a hash of the shared files, so it only changes when they do)
+import hashlib
+BUILD = hashlib.sha1(b"".join(open(os.path.join(SRC, f), "rb").read() for f in
+        ("app.js", "ops.js", "ops-guide.js", "ops.css", "config.js", "style.css", "areas.json", "pages/ops.html"))).hexdigest()[:10]
+
+def ops_js():
+    """Staff app = the price list from app.js (one source of truth) + src/ops.js."""
+    js = app_js()
+    a = js.index("const PKG"); b = js.index("\n", js.index("const SIZE_LABEL"))
+    catalog = "/* Price list and areas, copied from app.js by build.py */\n" + js[a:b+1]
+    ops = open(os.path.join(SRC, "ops.js"), encoding="utf-8").read().replace("/*@@BUILD@@*/\"\"", json.dumps(BUILD))
+    guide = open(os.path.join(SRC, "ops-guide.js"), encoding="utf-8").read()
+    return catalog + "\n" + guide + "\n" + ops
 
 def app_js():
     js = open(os.path.join(SRC, "app.js"), encoding="utf-8").read()
@@ -141,7 +158,7 @@ def build_site():
 {jsonld(slug)}<meta name="theme-color" content="#15191C">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-{OPS_HEAD if slug == "ops" else FONTS + chr(10) + '<link rel="stylesheet" href="style.css">'}
+{OPS_HEAD.replace("ops.css", "ops.css?v=" + BUILD) if slug == "ops" else FONTS + chr(10) + '<link rel="stylesheet" href="style.css?v=' + BUILD + '">'}
 </head>
 <body data-page="{slug}">
 {'' if slug in BARE else nav()}
@@ -149,12 +166,12 @@ def build_site():
 {body}
 </main>
 {'' if slug in BARE else FOOTER}
-<script src="config.js"></script>{'<script src="ops.js"></script>' if slug == "ops" else '<script src="app.js"></script>'}
+<script src="config.js?v={BUILD}"></script>{'<script src="ops.js?v=' + BUILD + '"></script>' if slug == "ops" else '<script src="app.js?v=' + BUILD + '"></script>'}
 </body>
 </html>
 '''
         open(os.path.join(SITE, fname), "w", encoding="utf-8").write(links(html, False))
-    shutil.copy(os.path.join(SRC,"style.css"), SITE); open(os.path.join(SITE,"app.js"),"w",encoding="utf-8").write(app_js()); shutil.copy(os.path.join(SRC,"ops.js"), SITE); shutil.copy(os.path.join(SRC,"config.js"), SITE); shutil.copy(os.path.join(SRC,"ops.css"), SITE); shutil.copy(os.path.join(SRC,"ops.webmanifest"), SITE); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE); shutil.copy(os.path.join(SRC,"apple-touch-icon.png"), SITE)
+    shutil.copy(os.path.join(SRC,"style.css"), SITE); open(os.path.join(SITE,"app.js"),"w",encoding="utf-8").write(app_js()); open(os.path.join(SITE,"ops.js"),"w",encoding="utf-8").write(ops_js()); open(os.path.join(SITE,"version.json"),"w").write(json.dumps({"build": BUILD}) + "\n"); shutil.copy(os.path.join(SRC,"config.js"), SITE); shutil.copy(os.path.join(SRC,"ops.css"), SITE); shutil.copy(os.path.join(SRC,"ops.webmanifest"), SITE); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE); shutil.copy(os.path.join(SRC,"apple-touch-icon.png"), SITE)
 
 def build_seo():
     today = datetime.date.today().isoformat()
