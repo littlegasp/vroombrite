@@ -2,6 +2,11 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["7 Nov 2026", "Start wash timer: tap Start wash when you begin and Mark washed when you finish. Analytics shows the average time per package and per washer."],
+  ["7 Nov 2026", "Checklist on every job, made from the package (same steps as the website) plus its add-ons. Tick as you go."],
+  ["7 Nov 2026", "Saved note for a customer (gate code, parking spot): save it once and it shows on all their bookings."],
+  ["7 Nov 2026", "Route button on Jobs: the day's jobs in order, opened in Google Maps."],
+  ["7 Nov 2026", "Owner: Move day on Jobs, for rain. Move the day's bookings to another day, then send each customer the ready WhatsApp message."],
   ["6 Nov 2026", "No internet (basement parking)? Taps like Washed, Paid and notes are saved on your phone and sent by themselves when the internet is back. An orange bar shows how many are waiting."],
   ["6 Nov 2026", "Before and after photos on every booking, and one tap to send them to the customer."],
   ["6 Nov 2026", "UPI QR button: the customer scans it on your phone and the amount is already filled in."],
@@ -40,10 +45,15 @@ const GUIDE = [
 <p><b>Up next</b> is the next job, shown big. Its main button moves the job along, one tap at a time:</p>
 <ol><li><b>Confirm on WhatsApp</b>: opens WhatsApp with the confirmation filled in. Press send.</li>
 <li><b>Send "On my way"</b>: when you leave for the customer.</li>
-<li><b>Mark washed</b>: when the job is finished.</li>
+<li><b>Start wash</b>: when you begin washing. The timer runs on the button.</li>
+<li><b>Mark washed</b>: when the job is finished. If some checklist items aren't ticked, the app reminds you; tap again if it's done.</li>
 <li><b>Paid by UPI</b> or <b>Paid in cash</b>: once the money is with you.</li>
 <li><b>Ask for a review</b>: sends the rating link.</li></ol>
 <p><b>Call</b>, <b>Map</b>, <b>Chat</b> (pick a ready message) and <b>Open</b> are on every card. Tap a short row to open its full card; tap the name to open the booking's page.</p>
+<p>While you're washing, the card has a <b>Checklist</b>: tap Show and tick each step. It's made from the package (the same steps the website lists), the add-ons the customer chose, and a final walk-round with the customer.</p>
+<p>A blue note with a pin is the customer's <b>saved note</b> (gate code, parking spot). It shows on all their bookings.</p>
+<p><b>Route</b> lists the day's open jobs in order and opens them in Google Maps, starting from where you are. Choose <b>By time</b> or <b>Same area together</b>. Google Maps takes 10 stops per link, so a busy day has more than one button.</p>
+<p>Owner: <b>Move day</b> is for rain or a day off. Tick the bookings, pick the new day (and a time, or keep each one's time), then tap <b>Move</b>. A list opens with a <b>WhatsApp</b> button for each customer with the "Moved" message ready; send them one by one. The history of each booking shows the move. Slot limits don't stop a move, but the app tells you if the new day is closed or already busy.</p>
 <p>Washers see <b>Mine</b> (jobs given to you) and <b>Everyone</b>.</p>
 <p>If a customer has <b>referral credit</b>, the card says so. Take it off the bill, then tap <b>Mark used</b>.</p>` },
 
@@ -58,6 +68,9 @@ const GUIDE = [
 <li><b>The job</b>: day, time, vehicle, package, address (Map), notes, washer. Tap <b>Edit</b> to change it. Washers can change the number plate and notes; the owner can change everything, including day, time and price.</li>
 <li>The money box shows what to collect, any discount or referral credit, and the paid buttons (with <b>Undo</b>).</li>
 <li><b>UPI QR</b>: tap it and show your screen to the customer. They scan it with Google Pay, PhonePe, Paytm or any UPI app; the amount and booking ID are filled in. When their app says paid, tap <b>They've paid · Paid by UPI</b>. Always check the money has come in before you tap.</li>
+<li><b>Wash time</b>: when the wash started and how long it took. <b>Undo start</b> if you tapped Start wash by mistake.</li>
+<li><b>Checklist</b>: the same list as on the job card.</li>
+<li><b>Saved note</b> (under Customer): tap <b>Add a saved note</b> for things that stay true every visit, like the gate code or parking spot. Anyone in the team can change it. Not for payment or personal details. It is deleted with the customer's last booking.</li>
 <li><b>Photos</b>: tap <b>Before</b> when you arrive and <b>After</b> when you finish. Take the photo or pick it from your gallery. Photos need internet. Tap <b>Send photos to …</b> to share them with the customer: on a phone pick WhatsApp and their chat, or send links that work for 7 days. You can delete your own photos (tap ✕ twice); the owner can delete any.</li>
 <li><b>Customer</b>: Call, WhatsApp, Map and <b>Calendar</b> (adds the job to your phone's calendar).</li>
 <li><b>History and notes</b>: every step with who did it and when, including messages, calls and changes. Add notes like gate codes here.</li>
@@ -106,7 +119,8 @@ const GUIDE = [
 <p>Pick a range (7 days, 30 days, This month, Last month, 90 days). Each box compares it with the same number of days just before: green ▲ is better, red ▼ is worse.</p>
 <ul><li><b>Collected</b> counts bookings in the range marked paid. <b>Profit</b> is collected minus your monthly costs for those days.</li>
 <li><b>From booking to review</b> shows how many bookings got confirmed, washed, paid and reviewed.</li>
-<li>Also: where bookings came from, packages, areas, time slots, washes per washer, offers used, cost per wash and ad cost per new customer.</li></ul>` },
+<li>Also: where bookings came from, packages, areas, time slots, washes per washer, offers used, cost per wash and ad cost per new customer.</li>
+<li><b>Time per wash</b>: average minutes from Start wash to Mark washed, by package and by washer. Only washes where the timer was used count; under 3 minutes or over 8 hours are left out.</li></ul>` },
 
   { id: "inbox", role: "owner", title: "Inbox: societies, messages, reviews", body: `
 <p><b>Societies</b>: quote requests from the Societies page. Mark them Contacted, Quoted, Won or Lost.</p>

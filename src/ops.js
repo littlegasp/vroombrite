@@ -58,6 +58,10 @@ const I = {
   note: ic('<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'),
   search: ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'),
   qr: ic('<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/>'),
+  play: ic('<path d="M8 5v14l11-7z"/>'),
+  route: ic('<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/>'),
+  move: ic('<path d="M4 12h14M13 6l6 6-6 6"/><path d="M5 5v14" opacity=".5"/>'),
+  pin: ic('<path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>'),
   cam: ic('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>')
 };
 
@@ -240,6 +244,7 @@ const DEFAULT_T = {
   rebook:["Rebook (due customers)","Hi {first_name}, it's been {days} days since your last {brand} wash. Shall we book your {package} again? Reply with a day and time that suits you, or book here: {book_link}"],
   lead:["Society request","Hi {first_name}, this is {brand}. Thanks for your society quote request for {society}. When can we visit to see the parking and share a group price?"],
   enquiry:["Reply to a message","Hi {first_name}, this is {brand}. Thanks for your message. "],
+  moved:["Moved (rain day)","Hi {first_name}, this is {brand}. Because of the weather we've moved your {package} to {date}, {slot}. If that doesn't suit you, reply here with a better day and time. Sorry for the change!"],
   noanswer:["Couldn't reach you","Hi {first_name}, this is {brand}. We tried calling about your {package} on {date}. Please reply here or call us back when free."]
 };
 function templates(){ const map={}; Object.keys(DEFAULT_T).forEach((k,i)=>map[k]={key:k,title:DEFAULT_T[k][0],body:DEFAULT_T[k][1],position:i}); (SET.templates||[]).forEach(t=>map[t.key]=t); return Object.values(map).sort((a,b)=>a.position-b.position); }
@@ -261,11 +266,14 @@ function nextStep(j, big){
   if(j.status==="cancelled") return `<button class="btn${lg}" data-act="reopen">Reopen booking</button>`;
   if(j.status==="new") return `<a class="btn wa${lg}" data-act="confirm" target="_blank" rel="noopener" href="${wa(j.phone, fill("confirm", jobCtx(j)))}">Confirm on WhatsApp</a>`;
   if(j.status==="confirmed") return `<a class="btn wa${lg}" data-act="on_way" target="_blank" rel="noopener" href="${wa(j.phone, fill("onway", jobCtx(j)))}">Send "On my way"</a>`;
-  if(j.status==="on_way") return `<button class="btn primary${lg}" data-act="done">Mark washed</button>`;
+  if(j.status==="on_way") return j.started_at ? `<button class="btn primary${lg}" data-act="done">Mark washed <span class="timer">· ${mins(j.started_at)}</span></button>`
+    : `<button class="btn primary${lg}" type="button" data-timer="start">${I.play}Start wash</button><button class="btn${lg}" data-act="done">Mark washed</button>`;
   if(!isPaid(j)) return `<button class="btn${lg}" type="button" data-qr>${I.qr}UPI QR</button><button class="btn coral${lg}" data-act="paid_upi">Paid by UPI</button><button class="btn coral${lg}" data-act="paid_cash">Paid in cash</button>`;
   if(!j.review_asked_at) return `<a class="btn${lg}" data-act="review_asked" target="_blank" rel="noopener" href="${wa(j.phone, fill("review", jobCtx(j)))}">Ask for a review</a>`;
   return `<button class="btn${lg}" disabled>All done ✓</button>`;
 }
+const mins = iso => { const m=Math.max(0,Math.round((Date.now()-new Date(iso))/6e4)); return m<60 ? m+" min" : Math.floor(m/60)+" h "+(m%60)+" min"; };
+const took = j => j.started_at && j.done_at ? Math.round((new Date(j.done_at)-new Date(j.started_at))/6e4) : null;
 const nextLabel = j => j.status==="cancelled" ? "Cancelled" : j.status==="new" ? "Confirm with the customer" : j.status==="confirmed" ? "Leave for the job" : j.status==="on_way" ? "Finish the wash" : !isPaid(j) ? "Collect "+rupee(j.total) : !j.review_asked_at ? "Ask for a review" : "All done";
 function steps(j){ const n = j.status==="cancelled" ? 0 : ({new:0, confirmed:1, on_way:2, done:3})[j.status] + (isPaid(j)?1:0); return `<ol class="steps">${["Confirmed","On the way","Washed","Paid"].map((s,i)=>`<li class="${i<n?"on":""}">${s}</li>`).join("")}</ol>`; }
 const discLabel = j => j.promo==="REFERRAL" ? "Referral" : j.promo==="MANUAL" ? ("Discount"+(j.promo_note?" · "+j.promo_note:"")) : j.promo;
@@ -276,7 +284,8 @@ function card(j, hero){
     <p class="veh"><b>${esc(j.vehicle)}</b>${j.plate?" · "+esc(j.plate):""} — ${esc(j.package)}${j.extras?" + "+esc(j.extras):""}</p>
     <p class="addr">${I.map}<span>${esc(j.address)}${j.area?", "+esc(j.area):""} ${esc(j.pin)}</span></p>
     ${j.assigned_name||(j.source&&j.source!=="website")?`<p class="meta">${j.assigned_name?`<span>Washer: <b>${esc(j.assigned_name)}</b></span>`:""}${j.source&&j.source!=="website"?`<span>From: ${esc(SOURCE[j.source]||j.source)}</span>`:""}</p>`:""}
-    ${j.notes?`<p class="note">${esc(j.notes)}</p>`:""}
+    ${j.cust_note?`<p class="note saved">${I.pin}<span>${esc(j.cust_note)}</span></p>`:""}${j.notes?`<p class="note">${esc(j.notes)}</p>`:""}
+    ${j.status==="on_way"?checkHTML(j, true):""}
     ${j.credit>0 && j.status!=="cancelled"?`<div class="credit"><span>${rupee(j.credit)} referral credit — take it off the bill</span><button class="btn sm" data-act="use_credit">Mark used</button></div>`:""}
     <div class="money"><span>${j.discount>0?esc(discLabel(j))+" −"+rupee(j.discount):"To collect"}</span><b class="num">${j.discount>0?`<s>${rupee(j.subtotal)}</s>`:""}${rupee(j.total)}</b></div>
     ${steps(j)}
@@ -316,7 +325,7 @@ let QUEUE = store.get("vb.queue")||[], flushing=false;
 const netDown = e => !!e && !e.status && e.message!=="signed out";
 function saveQueue(){ store.set("vb.queue", QUEUE); drawSync(); }
 function queueAdd(item){ QUEUE.push(Object.assign({at:new Date().toISOString()}, item)); saveQueue(); }
-function withQueued(j){ QUEUE.forEach(q => { if(q.fn==="staff_update" && q.id===j.id && OPTIMISTIC[q.action]) j=Object.assign({}, j, OPTIMISTIC[q.action](j)); }); return j; }
+function withQueued(j){ QUEUE.forEach(q => { if(q.id!==j.id) return; if(q.fn==="staff_update" && OPTIMISTIC[q.action]) j=Object.assign({}, j, OPTIMISTIC[q.action](j)); else if(q.patch) j=Object.assign({}, j, q.patch); }); return j; }
 function drawSync(){ const b=$("syncBar"); if(!b) return; const n=QUEUE.length; b.hidden=!n; if(n) $("syncTx").textContent=`${n} change${n>1?"s":""} saved on this phone. ${n>1?"They":"It"} will sync when the internet is back.`; }
 async function flush(){
   if(flushing || !QUEUE.length || !session) return; flushing=true; let sent=0;
@@ -325,7 +334,7 @@ async function flush(){
       const q=QUEUE[0];
       try{
         if(q.fn==="staff_update"){ const f=await rpc("staff_update",{p_id:q.id, p_action:q.action}); QUEUE.shift(); JOBS.set(f.id, withQueued(f)); }
-        else { await rpc(q.fn, q.args); QUEUE.shift(); }
+        else { const r=await rpc(q.fn, q.args); QUEUE.shift(); if(r && r.id && r.wash_date) JOBS.set(r.id, withQueued(r)); }
         sent++;
       }catch(e){
         if(netDown(e) || e.message==="signed out") break;            // still offline: keep it for later
@@ -343,6 +352,15 @@ function logLater(id, kind, detail, label){
   return rpc("staff_log",{p_id:id, p_kind:kind, p_detail:detail}).then(()=>"ok", e => { if(netDown(e)){ save(); return "queued"; } throw e; });
 }
 window.addEventListener("online", () => flush());
+/* A change to one booking (timer, checklist…): shown at once, sent now or kept for later when offline, rolled back if refused. */
+async function bookCall(id, fn, args, patch, label){
+  const before=JOBS.get(id); if(!before) return false;
+  JOBS.set(id, Object.assign({}, before, patch)); redraw();
+  const later = () => { queueAdd({fn, args, id, patch, name:before.name, label}); return "queued"; };
+  if(QUEUE.length){ later(); flush(); return "queued"; }
+  try{ const r=await rpc(fn, args); if(r && r.id) JOBS.set(r.id, withQueued(r)); redraw(); return "ok"; }
+  catch(e){ if(e.message==="signed out") return false; if(netDown(e)) return later(); JOBS.set(id, before); redraw(); toast(e.message||"Couldn't save", true); return false; }
+}
 async function act(id, action, from){
   const before = JOBS.get(id); if(!before) return false;
   JOBS.set(id, Object.assign({}, before, OPTIMISTIC[action](before)));
@@ -438,7 +456,8 @@ function dJobs(scroll){
   const anyMine = jobs.some(j=>j.assigned_to===meId), filterOn = !isOwner() && anyMine && S.mine;
   if(filterOn) jobs = jobs.filter(j => j.assigned_to===meId || !j.assigned_to);
   const live = jobs.filter(j=>j.status!=="cancelled"), done = live.filter(j=>j.status==="done").length, toCollect = live.filter(j=>!isPaid(j)).reduce((s,j)=>s+j.total,0);
-  const acts = (!isOwner()&&anyMine?`<div class="seg"><button type="button" data-mine="1" class="${S.mine?"on":""}">Mine</button><button type="button" data-mine="0" class="${!S.mine?"on":""}">Everyone</button></div>`:"") + newBtn();
+  const openJobs = jobs.filter(j=>["new","confirmed","on_way"].includes(j.status)).length;
+  const acts = (openJobs?`<button class="btn" type="button" data-route aria-label="Route">${I.route}<span class="hide-sm">Route</span></button>`:"") + (isOwner()&&openJobs&&S.day>=istToday()?`<button class="btn" type="button" data-moveday>${I.move}<span class="hide-sm">Move day</span></button>`:"") + (!isOwner()&&anyMine?`<div class="seg"><button type="button" data-mine="1" class="${S.mine?"on":""}">Mine</button><button type="button" data-mine="0" class="${!S.mine?"on":""}">Everyone</button></div>`:"") + newBtn();
   let html = pageHead(relDay(S.day), fmtDay(S.day,{weekday:"long", day:"numeric", month:"long"}) + (live.length?` · ${done}/${live.length} washed`:""), acts)
     + (n&&n.body?`<div class="notice">${I.note}<div><b>${esc(n.body)}</b><small>${esc(n.by||"")} · ${ago(n.updated_at)}</small></div></div>`:"")
     + `<div class="daystrip" id="strip">${DAY?DAY.strip.map(d=>`<button type="button" class="day${d.date===istToday()?" today":""}${d.date===S.day?" sel":""}" data-sday="${d.date}"><small>${fmtDay(d.date,{weekday:"short"})}</small><b>${fmtDay(d.date,{day:"numeric"})}</b><i>${d.count>3?`<em>${d.count}</em>`:Array.from({length:d.count},(_,k)=>`<span class="${k<d.open?"open":""}"></span>`).join("")}</i></button>`).join(""):Array.from({length:8},()=>'<div class="skel" style="flex:none;width:58px;height:66px"></div>').join("")}</div>`;
@@ -554,6 +573,7 @@ function dBooking(){
         <section class="dark-card"><div class="label">Next step</div><div class="big" style="font-size:22px">${esc(nextLabel(j))}</div><div class="next">${nextStep(j)}</div></section>
         <section class="card"><div class="card-head"><h2>The job</h2><button class="btn sm" type="button" data-edit>Edit</button></div>
           <dl class="dl"><dt>When</dt><dd><b>${relDay(j.wash_date)}</b>, ${fmtDay(j.wash_date,{day:"numeric", month:"long"})} · ${esc(j.slot)}</dd>
+          ${j.started_at?`<dt>Wash time</dt><dd>${j.status==="done"&&took(j)!=null?`<b>${took(j)} min</b> <span class="muted">(started ${clock(j.started_at)})</span>`:`Started ${clock(j.started_at)} · <b class="timer" data-since="${esc(j.started_at)}">${mins(j.started_at)}</b> so far${j.status!=="done"?` <button class="link-btn small" type="button" data-timer="reset">Undo start</button>`:""}`}</dd>`:""}
           <dt>Vehicle</dt><dd>${esc(j.vehicle)}${j.plate?" · <b>"+esc(j.plate)+"</b>":""}</dd>
           <dt>Package</dt><dd>${esc(j.package)}${j.extras?"<br><span class='muted'>+ "+esc(j.extras)+"</span>":""}</dd>
           <dt>Address</dt><dd>${esc(j.address)}${j.area?", "+esc(j.area):""} ${esc(j.pin)} · <a href="${mapUrl(j)}" target="_blank" rel="noopener">Map</a></dd>
@@ -561,6 +581,7 @@ function dBooking(){
           <dt>Washer</dt><dd>${isOwner()?`<select class="input" data-assign style="max-width:260px"><option value="">Nobody yet</option>${(SET.team||[]).map(t=>`<option value="${t.id}" ${t.id===j.assigned_to?"selected":""}>${esc(t.name)}${t.role==="owner"?" (owner)":""}</option>`).join("")}</select>`:esc(j.assigned_name||"Nobody yet")}</dd>
           <dt>Came from</dt><dd>${esc(SOURCE[j.source]||j.source)}</dd>
           ${j.promo_note&&j.promo!=="MANUAL"?`<dt>Offer note</dt><dd>${esc(j.promo_note)}</dd>`:""}</dl></section>
+        ${j.status!=="cancelled"?`<section class="card"><div class="card-head"><h2>Checklist</h2><span class="muted small">${ckCount(j)} done</span></div>${checkHTML(j)}</section>`:""}
         <section class="card"><div class="card-head"><h2>Photos</h2><div class="row"><label class="btn sm">${I.cam}Before<input type="file" accept="image/*" data-photo="before" multiple hidden></label><label class="btn sm">${I.cam}After<input type="file" accept="image/*" data-photo="after" multiple hidden></label></div></div>
           <div id="photos">${photosHTML(j.id)}</div><button class="btn wa" type="button" id="phSend" data-phsend style="margin-top:12px"${(PH[j.id]||[]).length?"":" hidden"}>${I.chat}Send photos to ${esc(first(j.name))}</button></section>
         <section class="card"><div class="card-head"><h2>History and notes</h2></div>
@@ -574,6 +595,7 @@ function dBooking(){
           <div class="muted small">${j.pay_mode==="online"?"Customer chose to pay online (UPI)":"Pay after the wash"}</div></section>
         <section class="card"><div class="card-head"><h2>Customer</h2>${j.visits?`<span class="pill st-confirmed">${ord(j.visits+1)} visit</span>`:""}</div>
           <p><b>${esc(j.name)}</b><br><span class="muted">${esc(fmtPhone(j.phone))}</span></p>
+          <div class="cnote">${j.cust_note?`<p class="note saved">${I.pin}<span>${esc(j.cust_note)}</span></p>`:`<p class="muted small">No saved note. Save things like the gate code or parking spot once, and they show on every booking.</p>`}<button class="link-btn small" type="button" data-cnote>${j.cust_note?"Edit saved note":"Add a saved note"}</button></div>
           <div class="contact-acts" style="margin-top:12px"><a class="btn" href="${tel(j.phone)}" data-call>${I.call}Call</a><button class="btn wa" type="button" data-chat>${I.chat}WhatsApp</button><a class="btn" target="_blank" rel="noopener" href="${mapUrl(j)}">${I.map}Map</a><button class="btn" type="button" data-ics>${I.cal}Calendar</button></div>
           ${isOwner()?`<button class="link-btn small" type="button" data-cust="${j.phone}" style="margin-top:12px">All bookings for this customer</button>`:""}</section>
         <section class="card"><div class="card-head"><h2>More</h2></div><div class="menu">
@@ -633,6 +655,126 @@ $("sheetBody").addEventListener("click", e => {
 });
 
 /* ============================== NEW / EDIT BOOKING ============================== */
+/* Checklist: the package's steps from the price list (one source with the website), its add-ons, and a final walk-round. */
+const CKOPEN=new Set();
+const clock = iso => new Date(iso).toLocaleTimeString("en-IN",{hour:"numeric", minute:"2-digit", timeZone:"Asia/Kolkata"});
+function pkgItems(name, seen){
+  for(const t of ["car","bike"]){ const p=PKG[t].find(x=>x.n===name); if(!p) continue;
+    return p.i.flatMap(it=>{ const m=it.match(/^Everything in (.+)$/i); if(!m) return [it];
+      const q=PKG[t].find(x=>x.n.toLowerCase().startsWith(m[1].toLowerCase())); return q && !(seen||[]).includes(q.n) ? pkgItems(q.n, [...(seen||[]), name]) : []; }); }
+  return [];
+}
+function checklist(j){ const ex=String(j.extras||"").split(/\s*,\s*/).filter(x=>x && x!=="None"); return [...new Set([...pkgItems(j.package), ...ex, "Final walk-round with the customer"])]; }
+const ckCount = j => { const it=checklist(j); return `${it.filter(x=>(j.checks||[]).includes(x)).length}/${it.length}`; };
+function checkHTML(j, inCard){
+  const has=j.checks||[], list=`<div class="cklist">${checklist(j).map(x=>`<label class="ck${has.includes(x)?" on":""}"><input type="checkbox" data-check="${esc(x)}" ${has.includes(x)?"checked":""}><span>${esc(x)}</span></label>`).join("")}</div>`;
+  return inCard ? `<details class="ckwrap" data-ck="${esc(j.id)}"${CKOPEN.has(j.id)?" open":""}><summary><span>Checklist · <b>${ckCount(j)}</b></span></summary>${list}</details>` : list;
+}
+document.addEventListener("toggle", e => { const d=e.target; if(!d.matches || !d.matches("[data-ck]")) return; d.open ? CKOPEN.add(d.dataset.ck) : CKOPEN.delete(d.dataset.ck); }, true);
+document.addEventListener("change", e => {
+  const c=e.target.closest("[data-check]"); if(!c) return; const id=c.closest("[data-id]").dataset.id, j=JOBS.get(id); if(!j) return;
+  const it=c.dataset.check, on=c.checked, checks=(j.checks||[]).filter(x=>x!==it).concat(on?[it]:[]);
+  bookCall(id, "staff_check", {p_id:id, p_item:it, p_on:on}, {checks}, on?"Tick "+it:"Untick "+it);
+});
+// Washed with items not ticked: ask for a second tap
+document.addEventListener("click", e => {
+  const a=e.target.closest('[data-act="done"]'); if(!a) return; const h=a.closest("[data-id]"), j=h&&JOBS.get(h.dataset.id); if(!j) return;
+  const left=checklist(j).filter(x=>!(j.checks||[]).includes(x)).length;
+  if(!left || a.dataset.sure) return;
+  e.preventDefault(); e.stopImmediatePropagation(); a.dataset.sure="1"; toast(`${left} checklist item${left>1?"s":""} not ticked. Tap Mark washed again if it's done.`, true);
+  setTimeout(()=>{ if(a.isConnected) delete a.dataset.sure; }, 5000);
+}, true);
+/* Wash timer: Start wash → Mark washed. Analytics shows the average time. */
+document.addEventListener("click", e => {
+  const t=e.target.closest("[data-timer]"); if(!t) return; const h=t.closest("[data-id]"); if(!h) return; const id=h.dataset.id, what=t.dataset.timer;
+  bookCall(id, "staff_timer", {p_id:id, p_what:what}, {started_at: what==="start"?new Date().toISOString():null}, what==="start"?"Start wash":"Undo start")
+    .then(r=>{ if(r) toast(what==="start"?"Wash started. Tap Mark washed when you finish.":"Start undone"); delete HIST[id]; if(S.v==="b" && r==="ok") loadHist(id); });
+});
+setInterval(() => $$("[data-since]").forEach(x => x.textContent = mins(x.dataset.since)), 30e3);
+/* Saved note for a customer: shows on all their bookings. */
+document.addEventListener("click", e => {
+  if(!e.target.closest("[data-cnote]")) return; const h=e.target.closest("[data-id]"), j=h&&JOBS.get(h.dataset.id); if(!j) return;
+  openSheet("Saved note for "+first(j.name), `<form id="cnForm" class="menu" data-for="${esc(j.id)}"><p class="muted small">Shows on every booking for ${esc(fmtPhone(j.phone))}, today and later. For example the gate code, parking spot, "call before you come", or how they like it done. Not for payment or personal details.</p>
+    <textarea class="input" id="cnIn" rows="4" maxlength="300" placeholder="Gate code 4512 · car in B2, slot 14 · call 10 min before">${esc(j.cust_note||"")}</textarea>
+    <button class="btn primary lg" type="submit">Save</button></form>`);
+  setTimeout(()=>{ const t=$("cnIn"); if(t) t.focus(); }, 60);
+});
+document.addEventListener("submit", async e => {
+  if(e.target.id!=="cnForm") return; e.preventDefault(); const id=e.target.dataset.for, j=JOBS.get(id), v=$("cnIn").value.trim().slice(0,300); if(!j) return;
+  closeSheet(); const r=await bookCall(id, "staff_save_customer_note", {p_phone:j.phone, p_note:v}, {cust_note:v}, "Saved note");
+  if(r){ for(const [k,x] of JOBS) if(x.phone===j.phone && k!==id) JOBS.set(k, Object.assign({}, x, {cust_note:v})); redraw(); toast(r==="queued"?"Saved on this phone, will sync when online":v?"Note saved for every visit":"Saved note removed"); }
+});
+
+/* Route: the day's open jobs in time order, same area together, opened in Google Maps (10 stops per link). */
+let ROUTE_BY="time";
+const addrOf = j => [j.address, j.area, "Mumbai", j.pin].filter(Boolean).join(", ");
+function mapsDir(stops, origin){ const enc=encodeURIComponent, last=stops[stops.length-1], mid=stops.slice(0,-1);
+  return "https://www.google.com/maps/dir/?api=1"+(origin?"&origin="+enc(origin):"")+"&destination="+enc(last)+(mid.length?"&waypoints="+mid.map(enc).join("%7C"):"")+"&travelmode=driving"; }
+function routeJobs(){
+  const meId=S.me&&S.me.id; let jobs=(DAY?DAY.jobs:[]).map(j=>JOBS.get(j.id)||j).filter(j=>j.wash_date===S.day && ["new","confirmed","on_way"].includes(j.status));
+  if(!isOwner() && S.mine && jobs.some(j=>j.assigned_to===meId)) jobs=jobs.filter(j=>j.assigned_to===meId || !j.assigned_to);
+  const si=s=>{ const i=SLOTS.indexOf(s); return i<0?99:i; };
+  if(ROUTE_BY==="area"){ const first={}; jobs.forEach(j=>{ const a=j.area||j.pin||""; first[a]=Math.min(first[a]??99, si(j.slot)); });
+    return jobs.sort((a,b)=>first[a.area||a.pin||""]-first[b.area||b.pin||""] || (a.area||"").localeCompare(b.area||"") || si(a.slot)-si(b.slot)); }
+  return jobs.sort((a,b)=>si(a.slot)-si(b.slot) || (a.area||"").localeCompare(b.area||"") || String(a.pin).localeCompare(String(b.pin)));
+}
+function routeSheet(){
+  const jobs=routeJobs(); if(!jobs.length) return toast("No open jobs left on this day");
+  const chunks=[]; for(let i=0;i<jobs.length;i+=10) chunks.push(jobs.slice(i,i+10));
+  let area=null;
+  openSheet(`Route · ${relDay(S.day)}`, `<div class="menu"><div class="seg"><button type="button" data-rby="time" class="${ROUTE_BY==="time"?"on":""}">By time</button><button type="button" data-rby="area" class="${ROUTE_BY==="area"?"on":""}">Same area together</button></div>
+    <ol class="route">${jobs.map((j,i)=>{ const head=ROUTE_BY==="area" && (j.area||"")!==area ? `<li class="route-area">${esc((area=j.area||"")||"No area")}</li>` : ""; return head+`<li><span class="route-n">${i+1}</span><div class="lr-main"><b>${esc(j.slot)} · ${esc(j.name)}</b><span>${esc(addrOf(j))}</span></div><a class="btn sm" target="_blank" rel="noopener" href="${mapUrl(j)}">${I.map}</a></li>`; }).join("")}</ol>
+    ${chunks.map((c,k)=>`<a class="btn primary lg" target="_blank" rel="noopener" href="${mapsDir(c.map(addrOf), k?addrOf(chunks[k-1][chunks[k-1].length-1]):"")}">${I.route}Open in Google Maps${chunks.length>1?` · stops ${k*10+1}–${k*10+c.length}`:""}</a>`).join("")}
+    <p class="small muted">Starts from where you are. Google Maps works out the roads; the order of stops is the order above.</p></div>`);
+}
+document.addEventListener("click", e => {
+  if(e.target.closest("[data-route]")) return routeSheet();
+  const r=e.target.closest("[data-rby]"); if(r){ ROUTE_BY=r.dataset.rby; routeSheet(); }
+});
+
+/* Move a day (rain): owner moves the day's open bookings to another day, then tells each customer on WhatsApp. */
+function moveSheet(){
+  const jobs=(DAY?DAY.jobs:[]).map(j=>JOBS.get(j.id)||j).filter(j=>j.wash_date===S.day && !["done","cancelled"].includes(j.status))
+    .sort((a,b)=>SLOTS.indexOf(a.slot)-SLOTS.indexOf(b.slot));
+  if(!jobs.length) return toast("Nothing to move on this day");
+  const to=addDays(S.day<istToday()?istToday():S.day, 1);
+  openSheet(`Move ${relDay(S.day).toLowerCase()==="today"?"today":fmtDay(S.day)}'s bookings`, `<form id="mvForm" class="menu"><p class="muted small">For rain or a day off. Tick the bookings to move and pick the new day. Then send each customer a WhatsApp message.</p>
+    <div class="cklist">${jobs.map(j=>`<label class="ck on"><input type="checkbox" data-mv="${esc(j.id)}" checked><span><b>${esc(j.slot)}</b> · ${esc(j.name)} · ${esc(j.package)}</span></label>`).join("")}</div>
+    <div class="form-grid"><label class="field">New day<input type="date" id="mvDate" min="${istToday()}" value="${to}"></label>
+      <label class="field">Time<select id="mvSlot"><option value="">Keep each booking's time</option>${SLOTS.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></label>
+      <label class="field">Reason (shows in the history)<input id="mvWhy" value="Rain" maxlength="60"></label></div>
+    <div class="alert warn" id="mvLoad" hidden></div>
+    <button class="btn primary lg" type="submit" id="mvGo">Move ${jobs.length} booking${jobs.length>1?"s":""}</button></form>`);
+  mvLoad();
+}
+async function mvLoad(){
+  const d=$("mvDate")&&$("mvDate").value, el=$("mvLoad"); if(!d||!el) return;
+  try{ const x=await rpc("staff_slots",{p_from:d, p_to:d}); if($("mvDate").value!==d) return;
+    const n=(x.counts||[]).reduce((a,c)=>a+c.n,0), why=closedWhy(x, d, $("mvSlot").value||SLOTS[0]), full=(x.caps||[]).filter(c=>c.cap!=null && ((x.counts||[]).find(k=>k.slot===c.slot)||{}).n>=c.cap).map(c=>c.slot);
+    const m=[]; if(why) m.push(`${fmtDay(d)} is closed (${esc(why)}).`); if(n) m.push(`${fmtDay(d)} already has ${n} booking${n>1?"s":""}.`); if(full.length) m.push(`Full: ${full.map(esc).join(", ")}.`);
+    el.hidden=!m.length; el.innerHTML=m.join(" ")+(m.length?" You can still move them.":""); }catch(e){ el.hidden=true; }
+}
+document.addEventListener("change", e => { if(e.target.id==="mvDate"||e.target.id==="mvSlot") mvLoad(); const c=e.target.closest("[data-mv]"); if(c){ c.closest(".ck").classList.toggle("on", c.checked); const n=$$("[data-mv]:checked").length, b=$("mvGo"); if(b){ b.disabled=!n; b.textContent=`Move ${n} booking${n===1?"":"s"}`; } } });
+document.addEventListener("click", e => { if(e.target.closest("[data-moveday]")) moveSheet(); });
+document.addEventListener("submit", async e => {
+  if(e.target.id!=="mvForm") return; e.preventDefault();
+  const ids=$$("[data-mv]:checked").map(x=>x.dataset.mv), d=$("mvDate").value, b=$("mvGo"); if(!ids.length||!d) return;
+  b.disabled=true; b.textContent="Moving…";
+  try{
+    const moved=await rpc("owner_move_day",{p_ids:ids, p_date:d, p_slot:$("mvSlot").value||null, p_reason:$("mvWhy").value.trim()}); remember(moved);
+    cache.set("day."+S.day, null); cache.set("day."+d, null);
+    openSheet(`Moved ${moved.length} to ${fmtDay(d)}`, `<div class="menu"><p class="muted small">Now tell each customer. Each button opens WhatsApp with the message ready; send it, then come back for the next.</p>
+      ${moved.map(j=>`<div class="list-row mv-row" style="cursor:default"><div class="lr-main"><b>${esc(j.name)}</b><span>${esc(j.slot)} · ${esc(j.package)}</span></div><a class="btn wa sm" target="_blank" rel="noopener" data-mvsent="${esc(j.id)}" href="${wa(j.phone, fill("moved", jobCtx(j)))}">${I.chat}WhatsApp</a></div>`).join("")}
+      <p class="small muted">Change the wording in Settings → WhatsApp messages → Moved (rain day).</p></div>`);
+    toast(`Moved ${moved.length} booking${moved.length>1?"s":""}`); vJobs();
+  }catch(x){ b.disabled=false; b.textContent="Try again"; toast(x.message||"Couldn't move", true); }
+});
+document.addEventListener("click", e => {
+  const a=e.target.closest("[data-mvsent]"); if(!a) return; const id=a.dataset.mvsent;
+  setTimeout(()=>{ a.classList.remove("wa"); a.innerHTML="Sent ✓"; a.closest(".mv-row").classList.add("sent"); }, 300);
+  logLater(id, "message", "Sent: Moved (rain day)", "Message").catch(()=>{});
+});
+
 /* Before/after photos: shrunk on the phone to about 1280 px, kept in the private "job-photos" Storage bucket. */
 const PH={}, UPL={};
 async function setPhotos(id, rows, local){
@@ -808,6 +950,7 @@ async function lookupCustomer(ph){
     if(!c){ m.hidden=true; return; }
     m.hidden=false; m.innerHTML=`Returning customer: <b>${esc(c.name)}</b> · ${c.washes} wash${c.washes===1?"":"es"}${c.credit?` · ${rupee(c.credit)} referral credit`:""}`;
     const last=(await rpc("owner_customer",{p_phone:ph}))[0];
+    if(last && last.cust_note) m.innerHTML+=`<br>${I.pin} Saved note: <b>${esc(last.cust_note)}</b>`;
     if(last){ if(!$("fName").value) $("fName").value=last.name; if(!$("fAddr").value) $("fAddr").value=last.address; if(!$("fPin").value) $("fPin").value=last.pin; if(!$("fArea").value) $("fArea").value=last.area; if(!$("fPlate").value) $("fPlate").value=last.plate;
       const s=sizeOf(last.vehicle); const b=$("fVeh").querySelector(`[data-veh="${s}"]`); if(b && s!==F.size) b.click(); }
   }catch(e){}
@@ -972,7 +1115,10 @@ document.addEventListener("click", async e => {
 const AN_RANGES = {week:["7 days",()=>[addDays(istToday(),-6),istToday()]], d30:["30 days",()=>[addDays(istToday(),-29),istToday()]], month:["This month",()=>[monthStart(istToday()),istToday()]],
   last:["Last month",()=>{ const e=addDays(monthStart(istToday()),-1); return [monthStart(e),e]; }], d90:["90 days",()=>[addDays(istToday(),-89),istToday()]]};
 let AN=null;
-async function vAnalytics(){ const k="an."+S.an; AN=cache.get(k); dAnalytics(); try{ const [f,t]=AN_RANGES[S.an][1](); AN=await rpc("owner_analytics",{p_from:f, p_to:t}); cache.set(k,AN); dAnalytics(); }catch(e){ quiet(e); } }
+let DUR=null;
+async function vAnalytics(){ const k="an."+S.an; AN=cache.get(k); DUR=cache.get("dur."+S.an); dAnalytics(); try{ const [f,t]=AN_RANGES[S.an][1]();
+  const [a,d]=await Promise.all([rpc("owner_analytics",{p_from:f, p_to:t}), rpc("owner_durations",{p_from:f, p_to:t}).catch(()=>null)]); AN=a; DUR=d; cache.set(k,AN); cache.set("dur."+S.an,DUR); dAnalytics(); }catch(e){ quiet(e); } }
+const durRows = list => list&&list.length ? `<table class="mini"><tbody>${list.map(x=>`<tr><td>${esc(x.name)}</td><td class="muted">${x.n} timed</td><td class="num"><b>${x.avg} min</b></td></tr>`).join("")}</tbody></table>` : "";
 const PAL=["#9BCB2E","#0B7F6F","#F08A5D","#2F4566","#C9A23A","#7E57C2","#38B2AC","#5D666C"];
 function delta(cur, prev, lowerBetter, money){
   if(prev==null) return ""; if(!prev && !cur) return `<div class="delta flat">same as before</div>`; if(!prev) return `<div class="delta flat">none in the days before</div>`;
@@ -1011,7 +1157,10 @@ function dAnalytics(){
         <dl class="dl" style="color:#F3F5F1"><dt class="muted">Cost per wash</dt><dd>${c.washed?rupee((c.costs||0)/c.washed):"–"}</dd><dt class="muted">Ad cost per new customer</dt><dd>${c.new_customers&&c.ads?rupee(c.ads/c.new_customers):"–"}</dd><dt class="muted">Car / bike</dt><dd>${AN.vehicles.map(v=>`${v.count} ${v.name}`).join(" · ")||"–"}</dd></dl>
         <button class="btn sm" type="button" data-go="settings/costs" style="align-self:flex-start">Edit monthly costs</button></section>
       <section class="card"><div class="card-head"><h2>Offers used</h2></div>${hbars(AN.offers,"#C9A23A",true)}</section></div>
-    <section class="card"><div class="card-head"><h2>How these are counted</h2></div><dl class="dl small"><dt>Bookings</dt><dd>Wash day in the range, not cancelled.</dd><dt>Collected</dt><dd>Bookings in the range marked paid (UPI or cash).</dd><dt>Profit</dt><dd>Collected minus Settings → Monthly costs, shared over the days of each month in the range.</dd><dt>New customers</dt><dd>Mobile numbers whose first booking falls in the range.</dd><dt>Compared with</dt><dd>The same number of days just before the range.</dd></dl></section>`;
+    <section class="card"><div class="card-head"><h2>Time per wash</h2>${DUR&&DUR.n?`<span class="pill st-confirmed">${DUR.avg} min on average</span>`:""}</div>
+      ${DUR&&DUR.n?`<div class="grid grid-2"><div><p class="opt-h">By package</p>${durRows(DUR.packages)}</div><div><p class="opt-h">By washer</p>${durRows(DUR.washers)}</div></div>`
+        :`<p class="muted small">No timed washes yet. When washers tap <b>Start wash</b> and then <b>Mark washed</b>, the average time per package and per washer shows here.</p>`}</section>
+    <section class="card"><div class="card-head"><h2>How these are counted</h2></div><dl class="dl small"><dt>Bookings</dt><dd>Wash day in the range, not cancelled.</dd><dt>Time per wash</dt><dd>From Start wash to Mark washed, for washes in the range. Times under 3 minutes or over 8 hours are left out.</dd><dt>Collected</dt><dd>Bookings in the range marked paid (UPI or cash).</dd><dt>Profit</dt><dd>Collected minus Settings → Monthly costs, shared over the days of each month in the range.</dd><dt>New customers</dt><dd>Mobile numbers whose first booking falls in the range.</dd><dt>Compared with</dt><dd>The same number of days just before the range.</dd></dl></section>`;
   V().innerHTML = `<div class="rise" style="display:flex;flex-direction:column;gap:16px">${html}</div>`;
 }
 document.addEventListener("click", e => { const a=e.target.closest("[data-an]"); if(a){ S.an=a.dataset.an; store.set("vb.an",S.an); AN=null; vAnalytics(); } });
