@@ -2,8 +2,7 @@
  * Vroombrite — nightly copy of the database into this Google Sheet.
  *
  * Setup (once):
- *   1. Create a NEW Google Sheet (keep the old booking Sheet and its script untouched: it is the
- *      website's fallback). In the new Sheet: Extensions → Apps Script. Replace everything with this file. Save.
+ *   1. In the Google Sheet: Extensions → Apps Script. Replace everything with this file. Save.
  *   2. Reload the Sheet. Use the menu  Vroombrite → Set copy key  and paste the key
  *      from the staff app (Team → Google Sheet copy key).
  *   3. Vroombrite → Turn on nightly copy. Approve the permissions Google asks for.

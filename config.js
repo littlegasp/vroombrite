@@ -13,5 +13,5 @@ const SITE = {
   supabaseKey: "sb_publishable_1eXeVJPxzCkJY2Hou8kwIg_B_9kvme2",   // publishable key (public by design)
 
   // Old Google Sheet script. Used only while supabaseUrl is empty.
-  sheetUrl: "https://script.google.com/macros/s/AKfycbzKZ57SuWpdzK0HCt4Vx8BeIf40FDzAGpnF1iSr3nT3os5dAsW74akLCk3kB6eRl278/exec"
+  sheetUrl: ""   // old Apps Script booking API, retired Nov 2026 (the Sheet is now a nightly copy of Supabase)
 };

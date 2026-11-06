@@ -180,7 +180,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "9d33a46757";
+const BUILD_ID = "c96555ca08";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";

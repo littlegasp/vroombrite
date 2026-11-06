@@ -5,7 +5,7 @@ Website for **Vroombrite**, a doorstep car and bike wash/detailing business in M
 ## Stack
 - Plain static HTML/CSS/JS, deployed with GitHub Pages from the root of `main`. `.nojekyll` is present. No framework; this was chosen over Next.js.
 - Data lives in **Supabase** (project `rcekecnigbtgicvntfbz`, Mumbai region). Schema, security and functions are in `supabase/migrations/` (run in order: 0001 init, 0002 fixes, 0003 staff tools, 0004 Studio screens); test locally with `supabase/test/stub.sql` + `test.sql` + `test_0003.sql` + `test_0004.sql` on plain Postgres. Publish an app change only after its migration has been run in Supabase. The site and staff app call database functions (`/rest/v1/rpc/<fn>`) with plain `fetch`, no libraries. All tables have RLS on and no direct grants; anon may only call `check_offer`, `create_booking`, `submit_enquiry`, `submit_society_lead`, `submit_review`, `public_reviews`, `sheet_copy`.
-- The customer is also handed off to WhatsApp with the booking prefilled. The old Apps Script (`google-apps-script/Code.gs`, `SITE.sheetUrl`) is only a fallback if Supabase is unreachable. `google-apps-script/SheetCopy.gs` copies the database into the Google Sheet nightly (read-only copy) using the key shown in Team.
+- The customer is also handed off to WhatsApp with the booking prefilled. If Supabase can't be reached, the customer is asked to send the prefilled WhatsApp message instead (no Sheet fallback). The old Apps Script booking API (`google-apps-script/Code.gs`) is retired; `SITE.sheetUrl` is empty. Aniket replaced it in the "Vroombrite Bookings" Sheet with `google-apps-script/SheetCopy.gs`, which rewrites that Sheet's tabs from the database every night (read-only copy) using the key in Settings → Data & activity.
 - Never put the Supabase secret/service_role key or database password in the repo or chat. Only the publishable key goes in `src/config.js`. New schema changes go in a new numbered migration file that Aniket runs in the SQL Editor.
 
 ## How the files fit
@@ -29,8 +29,8 @@ Website for **Vroombrite**, a doorstep car and bike wash/detailing business in M
 ## Config (`src/config.js` and top of `src/app.js`)
 - `SITE.phone`, `SITE.phoneDisplay`: the business WhatsApp/call number, +91 77189 84191.
 - `SITE.upiId`: 7718984191@yescred. After a "Pay online now" booking, the done screen shows one button per UPI app (Google Pay, PhonePe, Paytm, Other) on phones, because iPhones have no app chooser for `upi://` links and open the last-installed UPI app (e.g. WhatsApp Pay). Android uses `intent://` links per app. Laptops see a UPI QR code drawn by `src/vendor/qrcode.js` (qrcode-generator 1.4.4, MIT), which is copied to the root on build.
-- `SITE.supabaseUrl`, `SITE.supabaseKey` (publishable): in `src/config.js`, with phone and UPI. Empty URL = website falls back to the Sheet.
-- `SITE.sheetUrl`: the old Apps Script web app, kept as a fallback only.
+- `SITE.supabaseUrl`, `SITE.supabaseKey` (publishable): in `src/config.js`, with phone and UPI. Both are needed for the website to save bookings.
+- `SITE.sheetUrl`: empty (old Apps Script API retired).
 - `PRICE`, `ADDONS`, `DETAIL`, `PLANS`: all launch placeholders. Don't change prices unless Aniket asks.
 - `AREAS`: service areas and the PIN codes accepted at booking. Aniket confirmed this list for launch (Nov 2026).
 
@@ -43,7 +43,7 @@ Website for **Vroombrite**, a doorstep car and bike wash/detailing business in M
 ## Decisions so far
 - Home keeps the scroll-to-wash hero: muddy → foam → shine car crossfaded by a jet wipe as you scroll, built from three matching Canva images. The Dribbble-style hero was rejected.
 - Separate car and bike booking journeys. Car bookings can add detailing treatments. A PIN check is required in step 2.
-- Photos in `img/` are AI-generated (Canva) and labelled "illustrative" on the site. They are to be replaced with real job photos under the same file names (landscape, about 1680×944).
+- Photos in `img/` are AI-generated (Canva). Aniket decided (6 Nov 2026) to use them for the first few months without any "illustrative" label, then replace them with real job photos under the same file names (landscape, about 1680×944). Copy must not claim they are real customer cars or results.
 - Payment: **pay after the service (UPI/cash) is the primary/default option**. Online payment (UPI) is the secondary option for the starting phase. Aniket plans to make online payment primary once the brand is established. Razorpay comes later, with its own merchant account for this business, not Little Gasp's.
 - Policies (privacy, terms, cancellation & refund) were added at launch. They contain policy decisions Aniket should confirm: the 2-hour free-cancel window, the ₹99 late-cancel/no-access visit fee, 5–7 working-day refunds and the 24-hour redo guarantee.
 - Payment status is updated by staff in the staff app (Paid by UPI / Paid in cash). A `upi://` link gives no payment callback. Automatic "paid" status needs a gateway (Razorpay webhook → Supabase) later.

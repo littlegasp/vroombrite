@@ -15,7 +15,7 @@ Static website for a doorstep car and bike wash in Mumbai. Plain HTML, CSS and J
 | `gallery.html` | Before/after slider, process stages, photo grid |
 | `contact.html` | Call / WhatsApp, enquiry form, PIN check, service areas, FAQ |
 | `book.html` | 3-step booking: vehicle → place & time (PIN checked) → details and payment choice |
-| `societies.html` | Society/bulk quote form (saved to the Sheet's Society leads tab) |
+| `societies.html` | Society/bulk quote form (saved to the database; owner sees them in the staff app's Inbox) |
 | `doorstep-car-wash-<area>.html` | One landing page per service area for Google search, generated from `src/areas.json` |
 | `review.html?b=ID` | Customer feedback form; approved reviews show on Home and Gallery |
 | `ops.html` | Staff app: day plan, bookings, customers due, inbox, numbers, team (email sign-in) |
@@ -36,11 +36,11 @@ Bookings, enquiries, society requests and reviews are saved in a Supabase databa
 5. **Authentication → URL Configuration**: Site URL = the site's address; add `https://littlegasp.github.io/vroombrite/ops.html` under Redirect URLs (needed for "Forgot password?" emails).
 6. Put the Project URL and publishable key in `src/config.js` and rebuild.
 
-When a customer confirms, WhatsApp also opens with the booking filled in. If Supabase is ever unreachable, the website falls back to the old Google Sheet script (`SITE.sheetUrl`), and if that fails too, the customer is asked to send the WhatsApp message.
+When a customer confirms, WhatsApp also opens with the booking filled in. If Supabase is ever unreachable, the customer is asked to send that WhatsApp message instead.
 
 ## Google Sheet copy (nightly)
 The Sheet is now a read-only copy for viewing and backups; make changes in the staff app.
-1. Create a **new** Google Sheet (e.g. "Vroombrite Copy"). Keep the old Sheet and its script as they are: they are the website's fallback. In the new Sheet: **Extensions → Apps Script**, replace everything with `google-apps-script/SheetCopy.gs`, save, reload the Sheet.
+1. In the "Vroombrite Bookings" Sheet (or a new one): **Extensions → Apps Script**, replace everything with `google-apps-script/SheetCopy.gs`, save, reload the Sheet.
 2. **Vroombrite → Set copy key** and paste the key from the staff app (**Team → Google Sheet copy key**).
 3. **Vroombrite → Turn on nightly copy** (about 2 am), then **Copy now** to test.
 
