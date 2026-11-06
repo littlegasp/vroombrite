@@ -22,8 +22,9 @@ const REVIEW_COLS  = ["Received","Booking ID","Name","Rating","Review","Area","A
 const CREDIT_COLS  = ["Created","Referrer mobile","Friend mobile","Friend booking ID","Credit (₹)","Status","Used on booking"];
 
 /* Offers — keep in step with PROMOS / REFERRAL in src/app.js */
-const PROMOS = { WELCOME50: { off: 50, firstOnly: true } };
-const REFERRAL = { friendOff: 50, referrerCredit: 50 };
+/* min = minimum order value (package + add-ons, before discount) */
+const PROMOS = { WELCOME50: { off: 50, firstOnly: true, min: 299 } };
+const REFERRAL = { friendOff: 50, referrerCredit: 50, min: 299 };
 const SLOT_ORDER = ["6–8 AM","8–10 AM","10 AM–1 PM","2–5 PM","5–8 PM"];
 
 /* =============================== WRITE =============================== */
@@ -62,6 +63,8 @@ function saveBooking_(d, now) {
   let promo = clean_(d.promo || "");
   let discount = Number(d.discount) || 0;
   if (discount > 0 && prior > 0) promo = (promo || "Discount") + " — not first wash, check";
+  const minNeed = promo.indexOf("Referral") === 0 ? REFERRAL.min : ((PROMOS[String(d.promo || "").toUpperCase()] || {}).min || 0);
+  if (discount > 0 && (Number(d.total) || 0) + discount < minNeed) promo = (promo || "Discount") + " — below ₹" + minNeed + " minimum, check";
   append_("Bookings", BOOKING_COLS, {
     Received: now, "Booking ID": d.id, Status: "New", Vehicle: d.vehicle, "Number plate": d.plate, Package: d.package, Extras: d.addons,
     Date: d.date, Slot: d.slot, Address: d.address, Area: d.area, PIN: "'" + clean_(d.pin), Name: d.name, Mobile: tel_(phone),
@@ -125,14 +128,14 @@ function check_(p) {
     const c = PROMOS[String(p.code).trim().toUpperCase()];
     if (!c) return { ok: true, valid: false, reason: "unknown" };
     if (c.firstOnly && first === false) return { ok: true, valid: false, reason: "not_first" };
-    return { ok: true, valid: true, off: c.off };
+    return { ok: true, valid: true, off: c.off, min: c.min || 0 };
   }
   if (p.ref) {
     const ref = digits_(p.ref);
     if (ref === phone) return { ok: true, valid: false, reason: "self" };
     if (first === false) return { ok: true, valid: false, reason: "not_first" };
     if (bookingsFor_(ref).length === 0) return { ok: true, valid: false, reason: "unknown_ref" };
-    return { ok: true, valid: true, off: REFERRAL.friendOff };
+    return { ok: true, valid: true, off: REFERRAL.friendOff, min: REFERRAL.min };
   }
   return { ok: true, valid: false, reason: "empty" };
 }

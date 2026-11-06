@@ -58,8 +58,9 @@ const PLANS = {
 const AREAS = /*@@AREAS@@*/[];   // filled from src/areas.json by build.py — edit the areas there
 const SLOTS = ["6–8 AM","8–10 AM","10 AM–1 PM","2–5 PM","5–8 PM"];
 /* Offers — keep in step with PROMOS / REFERRAL in google-apps-script/Code.gs */
-const PROMOS = { WELCOME50: { off: 50, label: "₹50 off your first wash" } };
-const REFERRAL = { friendOff: 50, referrerCredit: 50 };
+/* min = minimum order value (package + add-ons, before discount) for the ₹50 to apply */
+const PROMOS = { WELCOME50: { off: 50, min: 299, label: "₹50 off your first wash" } };
+const REFERRAL = { friendOff: 50, referrerCredit: 50, min: 299 };
 const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
 
 /* ========================================================= */
@@ -228,7 +229,9 @@ function renderPick(){
 }
 function extraById(id){ return addonList().concat(DETAIL).find(a=>a.id===id); }
 function subtotal(){ return PRICE[priceKey(B.veh,B.size)][B.pkg] + [...B.adds].reduce((s,id)=>s+(extraById(id)?.p||0),0); }
-function discount(){ return B.offer && B.offer.ok ? Math.min(B.offer.off, subtotal()) : 0; }
+function offerMin(){ if(!B.offer) return 0; return (B.offer.type==="ref" ? REFERRAL.min : (PROMOS[B.offer.value]||{}).min) || 0; }
+function belowMin(){ return !!(B.offer && B.offer.ok && subtotal() < offerMin()); }
+function discount(){ return B.offer && B.offer.ok && !belowMin() ? Math.min(B.offer.off, subtotal()) : 0; }
 function total(){ return subtotal() - discount(); }
 function vehText(){ return B.veh==="bike" ? "Bike / Scooter" : "Car · "+SIZE_LABEL[B.size]; }
 function whenText(){ const d=$("b-date").value; if(!d) return "—"; const sl=document.querySelector('input[name="slot"]:checked'); return new Date(d+"T00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"})+(sl?", "+sl.value:""); }
@@ -262,6 +265,9 @@ function updateSum(){
   const pin=$("b-pin").value, hit=areaForPin(pin); $("sWhere").textContent= hit ? `${hit.a} · ${pin}` : "—";
   $("sPay").textContent=payText();
   const dsc=discount(); $("sDiscRow").hidden=!dsc; $("sDisc").textContent="−"+rupee(dsc);
+  if(B.offer && B.offer.ok){ const m=$("offerMsg");
+    if(belowMin()){ m.className="pinmsg no"; m.textContent=`${B.offer.type==="ref"?"The referral discount":B.offer.value} needs a minimum order of ${rupee(offerMin())}. Add ${rupee(offerMin()-subtotal())} more (a bigger package or an add-on) and it applies automatically.`; }
+    else { m.className="pinmsg ok"; m.textContent=B.offer.msg; } }
   $("sTot").textContent=rupee(total());
 }
 /* first-wash code or friend referral: one ₹50 discount, checked against the bookings Sheet */
@@ -283,7 +289,7 @@ async function checkOffer(){
   const why={not_first:"This offer is for your first Vroombrite wash only.", unknown_ref:"We couldn't find a customer with that mobile number. Check it with your friend.", self:"You can't use your own number as the referral.", unknown:"That code isn't valid."};
   if(r && r.ok && r.valid===false){ m.className="pinmsg no"; m.textContent=why[r.reason]||"This offer can't be applied."; }
   else { B.offer={type, value: ref||code, off, ok:true}; m.className="pinmsg ok";
-    m.textContent = (r && r.valid===true ? "✓ " : "✓ Applied. We'll confirm it with your booking. ") + "₹"+off+" off" + (type==="ref" ? " — and your friend gets ₹"+REFERRAL.referrerCredit+" credit." : " your first wash."); }
+    B.offer.msg = (r && r.valid===true ? "✓ " : "✓ Applied. We'll confirm it with your booking. ") + "₹"+off+" off" + (type==="ref" ? " — and your friend gets ₹"+REFERRAL.referrerCredit+" credit." : " your first wash."); }
   updateSum();
 }
 function checkBookPin(){
@@ -339,10 +345,10 @@ if(bform){
     const data={type:"booking", id, vehicle:vehText(), plate:$("b-plate").value.trim(), package:PKG[B.veh][B.pkg].n, addons:addsText(),
       date:$("b-date").value, slot:(document.querySelector('input[name="slot"]:checked')||{}).value||"", address:$("b-addr").value.trim(), area, pin,
       name, phone:ph, notes:$("b-notes").value.trim(), total:total(), payment: payMode()==="online" ? "Online UPI · pending" : "After service",
-      discount:discount(), promo: B.offer&&B.offer.ok ? (B.offer.type==="ref" ? "Referral" : B.offer.value) : "", ref: B.offer&&B.offer.ok&&B.offer.type==="ref" ? B.offer.value : ""};
+      discount:discount(), promo: discount()>0 ? (B.offer.type==="ref" ? "Referral" : B.offer.value) : "", ref: discount()>0 && B.offer.type==="ref" ? B.offer.value : ""};
     const msg=`Hi ${SITE.name}, I'd like to book a doorstep wash.\n\nBooking ID: ${id}\nVehicle: ${data.vehicle}${data.plate?" ("+data.plate+")":""}\nPackage: ${data.package}\nAdd-ons: ${data.addons}\nWhen: ${whenText()}\nAddress: ${data.address}, ${area} ${pin}\nName: ${name}\nMobile: ${ph}${data.notes?"\nNotes: "+data.notes:""}\n\n${data.discount?`Offer: ${data.promo==="Referral"?"Referred by "+data.ref:data.promo} (−${rupee(data.discount)})\n`:""}Estimated total: ${rupee(data.total)}\nPayment: ${payText()}`;
     const url=waLink(msg); $("waAgain").href=url; $("doneId").textContent=id;
-    $("referShare").href="https://wa.me/?text="+encodeURIComponent(`I just booked a doorstep car wash with ${SITE.name}, they come to your parking with their own water and power. Book here and enter my number ${ph} as "Referred by" to get ₹${REFERRAL.friendOff} off your first wash: ${location.origin}${location.pathname.replace(/[^/]*$/,"")}${PREVIEW?"#book":"book.html"}`);
+    $("referShare").href="https://wa.me/?text="+encodeURIComponent(`I just booked a doorstep car wash with ${SITE.name}, they come to your parking with their own water and power. Book here and enter my number ${ph} as "Referred by" to get ₹${REFERRAL.friendOff} off your first wash (on orders of ₹${REFERRAL.min}+): ${location.origin}${location.pathname.replace(/[^/]*$/,"")}${PREVIEW?"#book":"book.html"}`);
     $$(".step",bform).forEach(s=>s.hidden=true); $("prog").hidden=true; $("done").hidden=false;
     const online = payMode()==="online" && !!SITE.upiId;
     $("payBox").hidden=!online;
