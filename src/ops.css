@@ -558,3 +558,18 @@ table.mini td.num{text-align:right}
 .menu .route li > .btn,.menu .mv-row > .btn{width:auto;flex:none;min-height:36px}
 .menu .mv-row{display:flex;flex-direction:row;align-items:center;gap:10px;padding:10px 0}
 .menu .mv-row .lr-main{flex:1;min-width:0}
+
+/* ---- batch 3: plans and societies ---- */
+.pill.st-plan{background:var(--sage-tint);color:var(--sage)}
+.c-row{align-items:flex-start}
+.c-row .lr-main{gap:2px}
+.c-prog{display:flex;flex-direction:column;gap:3px;margin-top:6px;max-width:320px}
+.c-prog small{font-size:12px;color:var(--muted)}
+.prog.sm{height:6px;flex:none;width:100%}
+.lr-end b small{font-size:11px;font-weight:500;color:var(--muted);margin-left:2px}
+.dark-card .prog{background:rgba(255,255,255,.14)}
+#cForm .chips{margin-bottom:6px}
+#cForm textarea{font-family:var(--sans)}
+details.card > summary{cursor:pointer;list-style:none}
+details.card > summary::-webkit-details-marker{display:none}
+#cForm{display:flex;flex-direction:column;gap:12px} #cForm .opt-h{margin:4px 0 -4px} #cForm .chips{margin:0}

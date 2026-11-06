@@ -2,6 +2,9 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["7 Nov 2026", "Owner: new Plans screen for monthly plans and society contracts. Adding one books all the month's visits on its fixed days; you mark the month paid once."],
+  ["7 Nov 2026", "Plan and society visits show on Jobs like any booking, with nothing to collect. A society visit's checklist is its list of vehicles."],
+  ["7 Nov 2026", "Owner: Start contract on a society request in Inbox fills in the society for you."],
   ["7 Nov 2026", "Start wash timer: tap Start wash when you begin and Mark washed when you finish. Analytics shows the average time per package and per washer."],
   ["7 Nov 2026", "Checklist on every job, made from the package (same steps as the website) plus its add-ons. Tick as you go."],
   ["7 Nov 2026", "Saved note for a customer (gate code, parking spot): save it once and it shows on all their bookings."],
@@ -91,6 +94,20 @@ const GUIDE = [
   { id: "search", role: "all", title: "Search and the bell", body: `
 <p><b>Search</b> (Ctrl K on a laptop, the magnifier on a phone) finds bookings, customers and screens. Use the arrow keys and Enter on a laptop.</p>
 <p>The <b>bell</b> lists new bookings that came in since you last looked (the owner also sees new Inbox items). The app also shows a note at the bottom and vibrates when a new booking arrives.</p>` },
+
+  { id: "plans", role: "owner", title: "Plans and societies", screens: ["plans", "c"], body: `
+<p><b>Plans</b> (in the menu; on a phone under More) holds monthly plans for customers and contracts with societies. Each has fixed days, a time slot and a price a month.</p>
+<ol><li>Tap <b>Plan</b> (or <b>Society</b>). Fill in the customer, vehicle and plan (washes and price fill in from the website's plans; change them if you agreed something else), the days, time and washer.</li>
+<li>For a society, list its vehicles, one per line: <b>flat · vehicle · plate</b>. Or open its request in <b>Inbox</b> and tap <b>Start contract</b>; the details fill in and the request is marked Won.</li>
+<li>Keep <b>Book this month's visits now</b> ticked. The app books every visit for the month on the chosen days, from today on. A plan stops at its number of washes; a society gets every chosen day.</li></ol>
+<p>Visits show on <b>Jobs</b> like any booking, with <b>Nothing to collect</b>. Washers do them as usual (On the way, Start wash, Mark washed). On a society visit the checklist is the list of vehicles, so washers tick each car as it's done.</p>
+<p>On a plan's page:</p>
+<ul><li><b>This month</b>: how many washes are done and left, and whether the month is paid. Tap <b>Paid by UPI</b> or <b>Paid in cash</b> once for the whole month. <b>Payment reminder</b> opens WhatsApp with the amount and your UPI ID.</li>
+<li><b>Create next month</b> books the next month's visits. Do this when the customer renews; <b>Ask to renew</b> sends them a ready message first. Home lists plans ending in 3 days or less and months not paid.</li>
+<li><b>Extra visit</b> adds a make-up wash in the current month (after a rained-off or cancelled one).</li>
+<li><b>Edit</b> changes days, time, washer, price or the vehicle list. Changes apply to months you create after that; to move visits already booked, open each one or use <b>Move day</b> on Jobs.</li>
+<li><b>End plan</b> removes visits from today on that aren't done; past visits and months stay. <b>Delete for good</b> is for mistakes only.</li></ul>
+<p>Analytics counts a plan's money when you mark the month paid (Collected says how much came from plans).</p>` },
 
   { id: "customers", role: "owner", title: "Customers", body: `
 <p><b>All customers</b> lists every customer by mobile number: washes, amount paid, last wash and next booking. Tap one to see their bookings, call or message them, or start a <b>New booking</b> with their details filled in.</p>

@@ -37,6 +37,7 @@ const I = {
   home: ic('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>'),
   jobs: ic('<path d="M4 17h2l2-6h8l2 6h2"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/><path d="M9 7c0-1.5 1-3 3-3s3 1.5 3 3"/>'),
   board: ic('<rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/>'),
+  repeat: ic('<path d="M4 9a7 7 0 0 1 12-4l3 3M20 4v4h-4M20 15a7 7 0 0 1-12 4l-3-3M4 20v-4h4"/>'),
   users: ic('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/>'),
   inbox: ic('<path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>'),
   chart: ic('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
@@ -152,6 +153,7 @@ const NAV = [
   {id:"jobs", t:"Jobs", i:I.jobs},
   {id:"bookings", t:"Bookings", i:I.board},
   {id:"customers", t:"Customers", i:I.users, owner:true},
+  {id:"plans", t:"Plans", i:I.repeat, owner:true, badge:()=>S.planCount||0},
   {id:"inbox", t:"Inbox", i:I.inbox, owner:true, badge:()=>S.inboxCount||0},
   {label:"Business", owner:true},
   {id:"analytics", t:"Analytics", i:I.chart, owner:true},
@@ -159,19 +161,19 @@ const NAV = [
   {label:"Support"},
   {id:"help", t:"Help", i:I.help}
 ];
-const allowed = id => id==="b" || NAV.some(n => n.id===id && (!n.owner || isOwner()));
+const allowed = id => id==="b" || (id==="c" && isOwner()) || NAV.some(n => n.id===id && (!n.owner || isOwner()));
 const homeView = () => isOwner() ? "home" : "jobs";
 function setHTML(el, h){ if(el._h!==h){ el.innerHTML=h; el._h=h; } }
 /* same for a part of a screen: writes to .innerHTML are skipped when nothing changed */
 const box = el => new Proxy({}, { get:(t,k)=>{ const v=el[k]; return typeof v==="function" ? v.bind(el) : v; }, set:(t,k,v)=>{ if(k==="innerHTML") setHTML(el, v); else el[k]=v; return true; } });
 function drawNav(){
-  const cur = S.v==="b" ? (S.from||"bookings") : S.v;
+  const cur = S.v==="b" ? (S.from||"bookings") : S.v==="c" ? "plans" : S.v;
   setHTML($("nav"), NAV.filter(n => !n.owner || isOwner()).map(n => n.label ? `<div class="nav-label">${n.label}</div>`
     : `<button type="button" class="nav-link${n.id===cur?" on":""}" data-go="${n.id}" title="${n.t}"><span class="nav-ic">${n.i}</span><span class="nav-tx">${n.t}</span>${n.badge&&n.badge()?`<span class="nav-badge">${n.badge()}</span>`:""}</button>`).join(""));
   const tabs = isOwner()
     ? [["home","Home",I.home],["jobs","Jobs",I.jobs],["new","New",I.plus],["bookings","Bookings",I.board],["more","More",I.menu]]
     : [["jobs","Jobs",I.jobs],["bookings","Bookings",I.board],["new","New",I.plus],["help","Help",I.help],["more","Me",I.user]];
-  const inMore = ["customers","inbox","analytics","settings"].concat(isOwner()?["help"]:[]);
+  const inMore = ["customers","plans","inbox","analytics","settings"].concat(isOwner()?["help"]:[]);
   setHTML($("tabbar"), tabs.map(([id,l,i]) => `<button type="button" data-tab="${id}" class="${id==="new"?"tb-new":""}${id===cur||(id==="more"&&inMore.includes(cur))?" on":""}">${i}<span>${l}</span>${id==="more"&&S.inboxCount?`<i class="tb-dot">${S.inboxCount}</i>`:""}${id==="home"&&S.attnCount?`<i class="tb-dot">${S.attnCount}</i>`:""}</button>`).join(""));
   $("whoAv").textContent = (S.me&&S.me.name||"?").trim().charAt(0).toUpperCase();
   $("whoName").textContent = S.me ? S.me.name : ""; $("whoRole").textContent = isOwner() ? "Owner" : "Washer";
@@ -186,7 +188,7 @@ document.addEventListener("click", e => {
 });
 function moreSheet(){
   if(!isOwner()) return accountSheet();
-  openSheet("More", `<div class="more-grid">${NAV.filter(n=>n.id && ["customers","inbox","analytics","settings","help"].includes(n.id)).map(n=>`<button class="btn" type="button" data-go="${n.id}">${n.i}<span>${n.t}</span>${n.badge&&n.badge()?`<span class="nav-badge">${n.badge()}</span>`:""}</button>`).join("")}
+  openSheet("More", `<div class="more-grid">${NAV.filter(n=>n.id && ["customers","plans","inbox","analytics","settings","help"].includes(n.id)).map(n=>`<button class="btn" type="button" data-go="${n.id}">${n.i}<span>${n.t}</span>${n.badge&&n.badge()?`<span class="nav-badge">${n.badge()}</span>`:""}</button>`).join("")}
     <button class="btn" type="button" data-account>${I.user}<span>My account</span></button></div>`);
 }
 function go(path){ const h="#"+path; if(location.hash===h) route(); else location.hash=h; }
@@ -198,7 +200,7 @@ function route(){
   if(view==="b" && S.v!=="b") S.from = S.v || homeView();
   S.v=view; S.arg=arg; closePop(); drawNav();
   if(view==="settings" && arg) S.setTab=arg;
-  const fn = {home:vHome, jobs:vJobs, bookings:vBookings, b:vBooking, customers:vCustomers, inbox:vInbox, analytics:vAnalytics, settings:vSettings, help:vHelp}[view];
+  const fn = {home:vHome, jobs:vJobs, bookings:vBookings, b:vBooking, c:vContract, plans:vPlans, customers:vCustomers, inbox:vInbox, analytics:vAnalytics, settings:vSettings, help:vHelp}[view];
   if(painted!==S.v+"/"+S.arg){ painted=""; $("view")._h=""; scrollTo(0,0); } fn();
 }
 /* Draw a screen only when its content changed. The entrance animation and count-up play only the
@@ -245,6 +247,8 @@ const DEFAULT_T = {
   lead:["Society request","Hi {first_name}, this is {brand}. Thanks for your society quote request for {society}. When can we visit to see the parking and share a group price?"],
   enquiry:["Reply to a message","Hi {first_name}, this is {brand}. Thanks for your message. "],
   moved:["Moved (rain day)","Hi {first_name}, this is {brand}. Because of the weather we've moved your {package} to {date}, {slot}. If that doesn't suit you, reply here with a better day and time. Sorry for the change!"],
+  plan_renew:["Plan renewal","Hi {first_name}, this is {brand}. Your {plan} plan ends on {end}. Shall we continue next month? It's {price} for {washes}. Just reply YES and we'll keep the same days and time."],
+  plan_pay:["Plan payment due","Hi {first_name}, a gentle reminder from {brand}: {price} for your {plan} plan ({period}) is due. You can pay by UPI to {upi}. Thank you!"],
   noanswer:["Couldn't reach you","Hi {first_name}, this is {brand}. We tried calling about your {package} on {date}. Please reply here or call us back when free."]
 };
 function templates(){ const map={}; Object.keys(DEFAULT_T).forEach((k,i)=>map[k]={key:k,title:DEFAULT_T[k][0],body:DEFAULT_T[k][1],position:i}); (SET.templates||[]).forEach(t=>map[t.key]=t); return Object.values(map).sort((a,b)=>a.position-b.position); }
@@ -255,11 +259,12 @@ const MSG_ACTION = {confirm:"confirm", onway:"on_way", review:"review_asked", re
 
 /* ============================== bookings: shared bits ============================== */
 const SOURCE = {website:"Website", phone:"Phone", whatsapp:"WhatsApp", walk_in:"Walk-in", society:"Society", instagram:"Instagram", repeat:"Repeat", other:"Other"};
-const isPaid = j => /^paid/.test(j.payment);
+const isPaid = j => /^paid/.test(j.payment) || j.payment==="covered";
+const planTag = j => j.plan ? `${esc(j.plan.kind==="society"?"Society":j.plan.name||"Plan")} · visit ${j.plan.n} of ${j.plan.of}` : "Plan";
 const colOf = j => j.status==="cancelled" ? "cancelled" : j.status==="done" ? (isPaid(j)?"done":"collect") : j.status;
 const PILL = {new:["st-new","New"], confirmed:["st-confirmed","Confirmed"], on_way:["st-on_way","On the way"], collect:["st-collect","To collect"], done:["st-done","Done"], cancelled:["st-cancelled","Cancelled"]};
 const pill = j => { const p=PILL[colOf(j)]; return `<span class="pill ${p[0]}">${p[1]}</span>`; };
-const payPill = j => isPaid(j) ? `<span class="pill st-done">${j.payment==="paid_upi"?"Paid · UPI":"Paid · cash"}</span>` : j.payment==="refunded" ? `<span class="tag">Refunded</span>` : j.pay_mode==="online" ? `<span class="pill st-collect">UPI pending</span>` : `<span class="tag">Pay after</span>`;
+const payPill = j => j.payment==="covered" ? `<span class="pill st-plan">${planTag(j)}</span>` : isPaid(j) ? `<span class="pill st-done">${j.payment==="paid_upi"?"Paid · UPI":"Paid · cash"}</span>` : j.payment==="refunded" ? `<span class="tag">Refunded</span>` : j.pay_mode==="online" ? `<span class="pill st-collect">UPI pending</span>` : `<span class="tag">Pay after</span>`;
 const ord = n => n+(["th","st","nd","rd"][(n%100>10&&n%100<14)?0:n%10]||"th");
 function nextStep(j, big){
   const lg = big?" lg":"";
@@ -287,7 +292,8 @@ function card(j, hero){
     ${j.cust_note?`<p class="note saved">${I.pin}<span>${esc(j.cust_note)}</span></p>`:""}${j.notes?`<p class="note">${esc(j.notes)}</p>`:""}
     ${j.status==="on_way"?checkHTML(j, true):""}
     ${j.credit>0 && j.status!=="cancelled"?`<div class="credit"><span>${rupee(j.credit)} referral credit — take it off the bill</span><button class="btn sm" data-act="use_credit">Mark used</button></div>`:""}
-    <div class="money"><span>${j.discount>0?esc(discLabel(j))+" −"+rupee(j.discount):"To collect"}</span><b class="num">${j.discount>0?`<s>${rupee(j.subtotal)}</s>`:""}${rupee(j.total)}</b></div>
+    ${j.payment==="covered"?`<div class="money"><span>${j.plan&&j.plan.pay==="pending"?"Month's payment due · ":""}${j.plan?j.plan.left+" left this month":""}</span><b>Nothing to collect</b></div>`
+      :`<div class="money"><span>${j.discount>0?esc(discLabel(j))+" −"+rupee(j.discount):"To collect"}</span><b class="num">${j.discount>0?`<s>${rupee(j.subtotal)}</s>`:""}${rupee(j.total)}</b></div>`}
     ${steps(j)}
     <div class="next">${nextStep(j, true)}</div>
     <div class="quick"><a class="btn" href="${tel(j.phone)}" data-call>${I.call}Call</a><a class="btn" target="_blank" rel="noopener" href="${mapUrl(j)}">${I.map}Map</a><button class="btn" type="button" data-chat>${I.chat}Chat</button><button class="btn" type="button" data-open="${esc(j.id)}">${I.more}Open</button></div>
@@ -297,7 +303,7 @@ function jrow(j, showDate){
   const cls = j.status==="cancelled" ? " off" : (j.status==="done" && isPaid(j)) ? " done" : "";
   return `<button type="button" class="jrow${cls}" data-open="${esc(j.id)}"><span class="rt">${esc(showDate?relDay(j.wash_date):j.slot)}</span>
     <span class="lr-main"><b>${esc(j.name)}</b><span>${esc(vehShort(j.vehicle))} · ${esc(j.package)}${j.area?" · "+esc(j.area):""}${j.assigned_name?" · "+esc(first(j.assigned_name)):""}</span></span>
-    <span class="lr-end"><b class="num">${rupee(j.total)}</b>${pill(j)}</span></button>`;
+    <span class="lr-end"><b class="num">${j.payment==="covered"?'<span class="muted small">Plan</span>':rupee(j.total)}</b>${pill(j)}</span></button>`;
 }
 
 /* one store of bookings for every screen */
@@ -381,7 +387,7 @@ document.addEventListener("click", e => {
   if(host && e.target.closest("[data-call]")) return setTimeout(()=>callSheet(host.dataset.id), 400);
   const o = e.target.closest("[data-open]"); if(o && !o.classList.contains("jrow-inplace")){ closeSheet(); closePop(); go("b/"+encodeURIComponent(o.dataset.open)); }
 });
-const DRAW = () => ({home:dHome, jobs:dJobs, bookings:dBookings, b:dBooking});
+const DRAW = () => ({home:dHome, jobs:dJobs, bookings:dBookings, b:dBooking, c:dContract});
 function redraw(){ const f=DRAW()[S.v]; if(f) f(); }
 
 /* celebration (Studio "booked" confetti) */
@@ -392,11 +398,168 @@ function celebrate(from){
     d.style.cssText=`left:${cx}px;top:${cy}px;background:${cols[i%5]};--x:${Math.cos(a)*s}px;--y:${Math.sin(a)*s-60}px;--r:${Math.random()*720-360}deg`; document.body.appendChild(d); setTimeout(()=>d.remove(),1200); }
 }
 
+/* ============================== PLANS & SOCIETIES (owner) ============================== */
+let PLANS_L=store.get("vb.plans")||null, CT={}, PTAB="plan";
+const WD=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], wdText = a => (a||[]).length===7 ? "Every day" : (a||[]).map(d=>WD[d-1]).join(", ");
+async function loadPlans(){ try{ PLANS_L=await rpc("owner_contracts"); store.set("vb.plans",PLANS_L); S.planCount=PLANS_L.filter(c=>c.status==="active" && (c.renew||c.due>0)).length; drawNav(); }catch(e){ quiet(e); } }
+async function vPlans(){ dPlans(); await loadPlans(); if(S.v==="plans") dPlans(); }
+function prog(done, total){ return `<div class="prog sm"><i style="width:${total?Math.round(done/total*100):0}%"></i></div>`; }
+function cRow(c){
+  const cur=c.cur, payPill = c.due>0 ? `<span class="pill st-collect">Due ${rupee(c.due)}</span>` : cur ? `<span class="pill st-done">Paid</span>` : "";
+  const renew = c.status==="active" && c.renew ? `<span class="pill st-new">${c.last_end?"Ends "+relDay(c.last_end).toLowerCase():"Start first month"}</span>` : "";
+  return `<button type="button" class="list-row c-row" data-go="c/${c.id}"><span class="lr-main"><b>${esc(c.name)} ${c.status==="ended"?'<span class="tag">Ended</span>':""}</b>
+    <span>${esc(c.kind==="society"?c.vehicles+" vehicles":(c.vehicle||"")+(c.plate?" · "+c.plate:""))} · ${esc(c.plan_name||"")} · ${wdText(c.weekdays)}, ${esc(c.slot)}${c.assigned_name?" · "+esc(first(c.assigned_name)):""}</span>
+    ${cur?`<span class="c-prog">${prog(cur.done, cur.planned)}<small>${cur.done}/${cur.planned} washed · ${fmtDay(cur.period_start,{day:"numeric",month:"short"})} – ${fmtDay(cur.period_end,{day:"numeric",month:"short"})}</small></span>`:""}</span>
+    <span class="lr-end"><b class="num">${rupee(c.price)}<small>/month</small></b><span class="row" style="gap:4px;justify-content:flex-end">${renew}${payPill}</span></span></button>`;
+}
+function dPlans(){
+  if(S.v!=="plans") return;
+  const all=PLANS_L||[], list=all.filter(c=>c.kind===PTAB), act=list.filter(c=>c.status==="active"), ended=list.filter(c=>c.status!=="active");
+  const n=k=>all.filter(c=>c.kind===k && c.status==="active").length, mrr=all.filter(c=>c.status==="active").reduce((a,c)=>a+c.price,0), due=all.reduce((a,c)=>a+(c.due||0),0);
+  let html = pageHead("Plans", "Monthly plans and society contracts", `<button class="btn" type="button" data-cnew="society">${I.plus}Society</button><button class="btn primary" type="button" data-cnew="plan">${I.plus}Plan</button>`)
+    + `<div class="seg"><button type="button" data-ptab="plan" class="${PTAB==="plan"?"on":""}">Customer plans<em>${n("plan")||""}</em></button><button type="button" data-ptab="society" class="${PTAB==="society"?"on":""}">Societies<em>${n("society")||""}</em></button></div>`;
+  if(!PLANS_L){ V().innerHTML = html + skel(3,90); return; }
+  html += `<div class="grid grid-kpi">${kpi("Active",act.length)}${kpi("Monthly value",rupee(mrr),"all active plans and societies")}${kpi("Payment due",rupee(due),"",due?"warn":"")}${kpi("Need next month",all.filter(c=>c.status==="active"&&c.renew).length,"ends in 3 days or less")}</div>`;
+  html += act.length ? `<section class="card"><div class="list">${act.map(cRow).join("")}</div></section>`
+    : `<section class="card empty"><b>No ${PTAB==="plan"?"customer plans":"society contracts"} yet</b>${PTAB==="plan"?"When a customer takes a monthly plan, add it here. The app books all the month's washes on their fixed days.":"When a society says yes, add its vehicles and days here, or tap Start contract on its request in Inbox."}<div style="margin-top:14px"><button class="btn primary" type="button" data-cnew="${PTAB}">${I.plus}${PTAB==="plan"?"New plan":"New society contract"}</button></div></section>`;
+  if(ended.length) html += `<details class="card"><summary class="small muted"><b>Ended · ${ended.length}</b> · tap to show</summary><div class="list">${ended.map(cRow).join("")}</div></details>`;
+  V().innerHTML = html;
+}
+document.addEventListener("click", e => {
+  const t=e.target.closest("[data-ptab]"); if(t){ PTAB=t.dataset.ptab; dPlans(); }
+  const n=e.target.closest("[data-cnew]"); if(n) contractForm(null, {kind:n.dataset.cnew});
+  const l=e.target.closest("[data-lead2c]"); if(l){ const x=(INB&&INB.leads||[]).find(y=>String(y.id)===l.dataset.lead2c); if(x) contractForm(null, {kind:"society", name:x.society, contact_name:x.contact_name, phone:x.phone, area:x.area, pin:x.pin, notes:[x.days?"Prefers: "+x.days:"", x.notes].filter(Boolean).join(" · "), lead_id:x.id, cars:x.cars, bikes:x.bikes}); }
+});
+
+/* one plan / society */
+async function vContract(){ dContract(); try{ CT[S.arg]=await rpc("owner_contract",{p_id:+S.arg}); remember(CT[S.arg].visits); if(S.v==="c") dContract(); }catch(e){ quiet(e); if(S.v==="c" && !CT[S.arg]) V().innerHTML=pageHead("Not found","","","Back"); } }
+const cCtx = (c, per) => ({first_name:first(c.contact_name||c.name), name:c.name, brand:SITE.name, plan:c.plan_name||"monthly", end:per?fmtDay(per.period_end,{day:"numeric",month:"short"}):"",
+  price:rupee(per?per.price:c.price), washes:c.kind==="society"?wdText(c.weekdays).toLowerCase()+" washes":c.washes+" washes", period:per?`${fmtDay(per.period_start,{day:"numeric",month:"short"})} – ${fmtDay(per.period_end,{day:"numeric",month:"short"})}`:"", upi:SITE.upiId});
+function dContract(){
+  if(S.v!=="c") return; const c=CT[S.arg];
+  if(!c){ V().innerHTML = pageHead("Plan", "Loading…", "", "Back") + skel(2,200); return; }
+  const cur=c.cur, last=(c.periods||[])[0], visits=(c.visits||[]).map(j=>JOBS.get(j.id)||j), up=visits.filter(j=>j.wash_date>=istToday() && j.status!=="cancelled"), active=c.status==="active";
+  const dueP=(c.periods||[]).filter(p=>p.payment==="pending" && p.period_start<=istToday());
+  V().innerHTML = `<div style="display:flex;flex-direction:column;gap:16px" data-cid="${c.id}">` + pageHead(esc(c.name), `${c.kind==="society"?"Society contract":"Monthly plan"} · ${esc(c.plan_name||"")} · since ${fmtDay(c.start_date,{day:"numeric",month:"short",year:"numeric"})}`,
+      `${c.status==="ended"?'<span class="tag">Ended</span>':'<span class="pill st-done">Active</span>'}<button class="btn sm" type="button" data-cedit>Edit</button>`, "Back")
+    + `<div class="split"><div class="wide">
+      <section class="dark-card"><div class="label">${cur?(cur.period_start>istToday()?"Next month":"This month"):"No month started"}</div>
+        ${cur?`<div class="big" style="font-size:22px">${fmtDay(cur.period_start,{day:"numeric",month:"short"})} – ${fmtDay(cur.period_end,{day:"numeric",month:"short"})}</div>
+          ${prog(cur.done,cur.planned)}<div class="muted small">${cur.done} of ${cur.planned} washed · ${cur.left} to go</div>
+          <div class="row">${cur.payment==="pending"?`<span class="pill st-collect">${rupee(cur.price)} not paid</span><button class="btn coral sm" type="button" data-cpay="${cur.id}" data-how="paid_upi">Paid by UPI</button><button class="btn coral sm" type="button" data-cpay="${cur.id}" data-how="paid_cash">Paid in cash</button><a class="btn sm" target="_blank" rel="noopener" href="${wa(c.phone, fill("plan_pay", cCtx(c,cur)))}">${I.chat}Payment reminder</a>`
+            :`<span class="pill st-done">${cur.payment==="paid_upi"?"Paid by UPI":"Paid in cash"} · ${rupee(cur.price)}</span><button class="btn sm" type="button" data-cpay="${cur.id}" data-how="pending">Undo</button>`}</div>`
+        :`<p class="muted small">Create the first month to book its visits.</p>`}
+        ${active?`<div class="row" style="margin-top:6px"><button class="btn primary" type="button" data-cperiod>${I.repeat}${last?"Create next month":"Create first month"}${last?` (from ${fmtDay(addDays(last.period_end,1),{day:"numeric",month:"short"})})`:""}</button>${last?`<a class="btn" target="_blank" rel="noopener" href="${wa(c.phone, fill("plan_renew", cCtx(c,last)))}">${I.chat}Ask to renew</a>`:""}</div>`:""}</section>
+      <section class="card"><div class="card-head"><h2>Visits</h2>${active&&cur?`<button class="btn sm" type="button" data-caddv>${I.plus}Extra visit</button>`:""}</div>
+        ${up.length?`<div class="list">${up.map(j=>jrow(j,true)).join("")}</div>`:`<p class="muted small">No upcoming visits.${active?" Create the next month above.":""}</p>`}
+        ${visits.length>up.length?`<details style="margin-top:10px"><summary class="small muted">Earlier and cancelled · ${visits.length-up.length}</summary><div class="list">${visits.filter(j=>!up.includes(j)).map(j=>jrow(j,true)).join("")}</div></details>`:""}</section>
+      ${c.kind==="society"?`<section class="card"><div class="card-head"><h2>Vehicles · ${c.vehicle_list.length}</h2><button class="btn sm" type="button" data-cedit>Edit list</button></div>
+        ${c.vehicle_list.length?`<table class="mini"><tbody>${c.vehicle_list.map(v=>`<tr><td><b>${esc(v.flat)}</b></td><td>${esc(v.vehicle)}</td><td class="muted">${esc(v.plate)}</td></tr>`).join("")}</tbody></table>`:'<p class="muted small">No vehicles yet. Each visit uses this list as its checklist.</p>'}
+        <p class="small muted" style="margin-top:8px">Changes apply to months created after the change.</p></section>`:""}
+    </div><div class="narrow">
+      <section class="card"><div class="card-head"><h2>Details</h2></div><dl class="dl">
+        <dt>${c.kind==="society"?"Contact":"Customer"}</dt><dd><b>${esc(c.contact_name||c.name)}</b><br><span class="muted">${esc(fmtPhone(c.phone))}</span></dd>
+        <dt>Address</dt><dd>${esc([c.address,c.area,c.pin].filter(Boolean).join(", "))||"–"}</dd>
+        ${c.kind==="plan"?`<dt>Vehicle</dt><dd>${esc(c.vehicle)}${c.plate?" · <b>"+esc(c.plate)+"</b>":""}</dd><dt>Washes</dt><dd>${c.washes} a month · ${esc(c.package)}</dd>`:`<dt>Each visit</dt><dd>${esc(c.package)}</dd>`}
+        <dt>Days</dt><dd>${wdText(c.weekdays)} · ${esc(c.slot)}</dd><dt>Price</dt><dd><b>${rupee(c.price)}</b> a month</dd><dt>Washer</dt><dd>${esc(c.assigned_name||"Nobody yet")}</dd>
+        ${c.notes?`<dt>Notes</dt><dd>${esc(c.notes)}</dd>`:""}</dl>
+        <div class="contact-acts" style="margin-top:12px"><a class="btn" href="${tel(c.phone)}">${I.call}Call</a><a class="btn wa" target="_blank" rel="noopener" href="${wa(c.phone,"")}">${I.chat}WhatsApp</a></div></section>
+      <section class="card"><div class="card-head"><h2>Months</h2></div>${(c.periods||[]).length?`<div class="list">${c.periods.map(p=>`<div class="list-row" style="cursor:default"><div class="lr-main"><b>${fmtDay(p.period_start,{day:"numeric",month:"short"})} – ${fmtDay(p.period_end,{day:"numeric",month:"short"})}</b><span>${p.done}/${p.planned} washed · ${rupee(p.price)}</span></div>${p.payment==="pending"?(p.period_start<=istToday()?'<span class="pill st-collect">Due</span>':'<span class="tag">Not due yet</span>'):'<span class="pill st-done">Paid</span>'}</div>`).join("")}</div>`:'<p class="muted small">None yet.</p>'}
+        ${dueP.length>1?`<p class="small" style="margin-top:8px">${dueP.length} months not paid · ${rupee(c.due)}</p>`:""}</section>
+      <section class="card"><div class="card-head"><h2>${active?"End":"Turn back on"}</h2></div><div class="menu">
+        ${active?`<button class="btn" type="button" data-cend="end">End ${c.kind==="society"?"contract":"plan"}</button><p class="small muted">Removes visits from today on that aren't done. Past visits and months stay.</p>`
+          :`<button class="btn" type="button" data-con>Turn back on</button>`}
+        <button class="btn danger" type="button" data-cend="delete">Delete for good</button><p class="small muted">For mistakes only: removes it, its months and its upcoming visits.</p></div></section>
+    </div></div></div>`;
+}
+async function cCall(fn, args, msg){ try{ const r=await rpc(fn,args); if(r && r.id && r.periods){ CT[r.id]=r; remember(r.visits); } if(msg) toast(typeof msg==="function"?msg(r):msg); dContract(); loadPlans(); return r; }catch(x){ toast(x.message, true); } }
+document.addEventListener("click", async e => {
+  if(S.v!=="c") return; const c=CT[S.arg]; if(!c) return;
+  const pay=e.target.closest("[data-cpay]"); if(pay) return cCall("owner_pay_period",{p_period:+pay.dataset.cpay, p_how:pay.dataset.how}, pay.dataset.how==="pending"?"Marked not paid":"Month marked paid");
+  if(e.target.closest("[data-cperiod]")){ const b=e.target.closest("[data-cperiod]"); b.disabled=true; return cCall("owner_contract_period",{p_id:c.id, p_start:null}, r=>`Month created · ${r.created} visit${r.created===1?"":"s"} booked`); }
+  if(e.target.closest("[data-cedit]")) return contractForm(c);
+  if(e.target.closest("[data-con]")) return cCall("owner_save_contract",{p:Object.assign({}, cPayload(c), {status:"active"})}, "Turned back on");
+  if(e.target.closest("[data-caddv]")) return openSheet("Extra visit", `<form id="cvForm" class="menu"><p class="muted small">For a make-up wash in this month (after a cancelled or rained-off visit). Nothing to collect.</p>
+      <div class="form-grid"><label class="field">Day<input type="date" id="cvDay" min="${istToday()}" max="${c.cur.period_end}" value="${istToday()}"></label><label class="field">Time<select id="cvSlot">${SLOTS.map(x=>`<option${x===c.slot?" selected":""}>${esc(x)}</option>`).join("")}</select></label></div>
+      <button class="btn primary lg" type="submit">Add visit</button></form>`);
+  const end=e.target.closest("[data-cend]"); if(end){
+    if(!end.dataset.sure){ end.dataset.sure="1"; end.textContent=end.dataset.cend==="delete"?"Tap again to delete for good":"Tap again to end it"; setTimeout(()=>{ if(end.isConnected){ delete end.dataset.sure; dContract(); } },4000); return; }
+    try{ const r=await rpc("owner_end_contract",{p_id:c.id, p_delete:end.dataset.cend==="delete"}); removeFiles(r.photos).catch(()=>{});
+      toast((end.dataset.cend==="delete"?"Deleted":"Ended")+(r.removed?` · ${r.removed} upcoming visit${r.removed>1?"s":""} removed`:"")); DAY=null; cache.set("day."+istToday(), null);
+      if(end.dataset.cend==="delete"){ delete CT[c.id]; await loadPlans(); go("plans"); } else { vContract(); loadPlans(); } }catch(x){ toast(x.message, true); }
+  }
+});
+document.addEventListener("submit", async e => {
+  if(e.target.id!=="cvForm") return; e.preventDefault(); const c=CT[S.arg];
+  try{ const j=await rpc("owner_add_visit",{p_period:c.cur.id, p_day:$("cvDay").value, p_slot:$("cvSlot").value}); remember([j]); closeSheet(); toast("Visit added · "+relDay(j.wash_date)+", "+j.slot); vContract(); }catch(x){ toast(x.message, true); }
+});
+
+/* add / edit form */
+const cPayload = c => ({id:c.id, kind:c.kind, name:c.name, contact_name:c.contact_name, phone:c.phone, address:c.address, area:c.area, pin:c.pin, vehicle_type:c.vehicle_type, vehicle:c.vehicle, plate:c.plate,
+  plan_name:c.plan_name, package:c.package, washes:c.washes, weekdays:c.weekdays, slot:c.slot, price:c.price, assigned_to:c.assigned_to||"", start_date:c.start_date, notes:c.notes, status:c.status});
+let CF=null;
+function contractForm(c, pre){
+  const v=Object.assign({kind:"plan", weekdays:[], slot:SLOTS[1], start_date:istToday(), vehicle_type:"car", vehicle:"Car · Hatchback", status:"active"}, c||{}, pre||{});
+  const soc=v.kind==="society", size=sizeOf(v.vehicle||""), type=soc?"car":(v.vehicle_type==="bike"||size==="bike"?"bike":"car");
+  CF={id:c&&c.id, kind:v.kind, lead_id:v.lead_id||null, type, size: size||"hatch"};
+  const plans=PLANS[type]||[], wd=v.weekdays||[];
+  const vehTxt=(c&&c.vehicle_list||[]).map(x=>[x.flat,x.vehicle,x.plate].filter(Boolean).join(" · ")).join("\n");
+  openSheet(c?`Edit ${soc?"society contract":"plan"}`:(soc?"New society contract":"New monthly plan"), `<form id="cForm" class="bform">
+    <div class="form-grid">
+      <label class="field">${soc?"Society name":"Customer name"}<input id="cName" required maxlength="80" value="${esc(v.name||"")}"></label>
+      ${soc?`<label class="field">Contact person<input id="cContact" maxlength="80" value="${esc(v.contact_name||"")}" placeholder="Secretary / manager"></label>`:""}
+      <label class="field">Mobile<input id="cPhone" required inputmode="tel" maxlength="14" value="${esc(v.phone||"")}"></label>
+      <label class="field wide">Address<input id="cAddr" maxlength="300" value="${esc(v.address||"")}"></label>
+      <label class="field">Area<input id="cArea" maxlength="60" value="${esc(v.area||"")}" list="areaList"></label><label class="field">PIN<input id="cPin" maxlength="6" inputmode="numeric" value="${esc(v.pin||"")}"></label></div>
+    ${soc?"":`<p class="opt-h">Vehicle</p><div class="chips" id="cVeh">${[["hatch","Hatchback"],["sedan","Sedan"],["suv","SUV / MUV"],["bike","Bike"]].map(([k,l])=>`<button type="button" class="chip${(type==="bike"?"bike":CF.size)===k?" on":""}" data-cveh="${k}">${l}</button>`).join("")}</div>
+      <div class="form-grid"><label class="field">Number plate<input id="cPlate" maxlength="20" value="${esc(v.plate||"")}"></label>
+      <label class="field">Plan<select id="cPlan">${plans.map(x=>`<option value="${esc(x.n)}" data-w="${x.w}" data-p="${x.p}"${x.n===v.plan_name?" selected":""}>${esc(x.n)} · ${x.w} washes · ${rupee(x.p)}</option>`).join("")}<option value="Custom"${v.plan_name&&!plans.some(x=>x.n===v.plan_name)?" selected":""}>Custom</option></select></label>
+      <label class="field">Washes a month<input id="cWashes" type="number" min="1" max="31" value="${v.washes||(plans[0]||{}).w||4}"></label>
+      <label class="field">Each visit<select id="cPkg">${(PKG[type]||[]).map(x=>`<option${x.n===(v.package||PKG[type][0].n)?" selected":""}>${esc(x.n)}</option>`).join("")}</select></label></div>`}
+    <p class="opt-h">Days</p><div class="chips" id="cDays">${WD.map((d,i)=>`<button type="button" class="chip${wd.includes(i+1)?" on":""}" data-cwd="${i+1}">${d}</button>`).join("")}</div>
+    <div class="form-grid"><label class="field">Time<select id="cSlot">${SLOTS.map(x=>`<option${x===v.slot?" selected":""}>${esc(x)}</option>`).join("")}</select></label>
+      <label class="field">Price a month (₹)<input id="cPrice" type="number" min="0" inputmode="numeric" value="${v.price!=null?v.price:(soc?"":(plans[0]||{}).p||"")}"></label>
+      <label class="field">Washer<select id="cWasher"><option value="">Nobody yet</option>${(SET.team||[]).filter(t=>t.active!==false).map(t=>`<option value="${t.id}"${t.id===v.assigned_to?" selected":""}>${esc(t.name)}</option>`).join("")}</select></label>
+      <label class="field">Starts<input type="date" id="cStart" value="${esc(v.start_date)}"${c?" disabled":""}></label>
+      ${soc?`<label class="field">Each visit<input id="cPkgS" maxlength="60" value="${esc(v.package||"Society wash")}"></label>`:""}</div>
+    ${soc?`<label class="field">Vehicles, one per line: flat · vehicle · plate${v.cars||v.bikes?` <span class="muted">(request said ${v.cars||0} cars, ${v.bikes||0} bikes)</span>`:""}<textarea id="cVehicles" rows="6" placeholder="A-101 · Swift · MH02 AB 1234&#10;A-102 · Activa">${esc(vehTxt)}</textarea></label>`:""}
+    <label class="field">Notes (shows on every visit)<input id="cNotes" maxlength="500" value="${esc(v.notes||"")}" placeholder="${soc?"Washing area near gate 2, water from the society tap":"Car in B2, slot 14"}"></label>
+    ${c?"":`<label class="tick"><input type="checkbox" id="cFirst" checked> Book this month's visits now</label>`}
+    <div class="alert warn" id="cErr" hidden></div>
+    <button class="btn primary lg" type="submit" id="cSave">${c?"Save":soc?"Add society":"Add plan"}</button></form>`);
+}
+document.addEventListener("click", e => {
+  if(!$("cForm")) return;
+  const d=e.target.closest("[data-cwd]"); if(d){ d.classList.toggle("on"); return; }
+  const v=e.target.closest("[data-cveh]"); if(v){ const k=v.dataset.cveh, t=k==="bike"?"bike":"car"; if(t!==CF.type){ const keep=cFormValues(); CF.type=t; contractForm(CF.id?CT[CF.id]:null, Object.assign(keep,{vehicle:t==="bike"?"Bike / Scooter":"Car · "+SIZE_LABEL[k], vehicle_type:t, plan_name:"", washes:null, price:null, package:""})); }
+    else { $$("[data-cveh]").forEach(x=>x.classList.toggle("on", x===v)); CF.size=k; } }
+});
+document.addEventListener("change", e => { if(e.target.id==="cPlan"){ const o=e.target.selectedOptions[0]; if(o.dataset.w){ $("cWashes").value=o.dataset.w; $("cPrice").value=o.dataset.p; } } });
+function cFormValues(){
+  const soc=CF.kind==="society", val=id=>($(id)||{}).value||"";
+  return {id:CF.id, kind:CF.kind, lead_id:CF.lead_id, name:val("cName").trim(), contact_name:soc?val("cContact").trim():"", phone:digits(val("cPhone")).slice(-10), address:val("cAddr").trim(), area:val("cArea").trim(), pin:val("cPin").trim(),
+    vehicle_type:CF.type, vehicle:soc?"":(CF.type==="bike"?"Bike / Scooter":"Car · "+SIZE_LABEL[CF.size]), plate:soc?"":val("cPlate").trim(),
+    plan_name:soc?"Society contract":(val("cPlan")==="Custom"?"Custom plan":val("cPlan")), package:soc?(val("cPkgS").trim()||"Society wash"):val("cPkg"), washes:soc?null:+val("cWashes"),
+    weekdays:$$("[data-cwd].on").map(x=>+x.dataset.cwd), slot:val("cSlot"), price:+val("cPrice")||0, assigned_to:val("cWasher"), start_date:val("cStart"), notes:val("cNotes").trim(),
+    vehicles: soc ? val("cVehicles").split(/\n/).map(l=>l.trim()).filter(Boolean).map(l=>{ const p=l.split(/\s*[·|,;]\s*|\s{2,}|\t/); return {flat:p[0]||"", vehicle:p[1]||"", plate:p.slice(2).join(" ")}; }) : undefined};
+}
+document.addEventListener("submit", async e => {
+  if(e.target.id!=="cForm") return; e.preventDefault(); const p=cFormValues(), err=$("cErr"), b=$("cSave"), first=$("cFirst")&&$("cFirst").checked;
+  const m=[]; if(!p.name) m.push("a name"); if(!/^[6-9]\d{9}$/.test(p.phone)) m.push("a 10-digit mobile"); if(!p.weekdays.length) m.push("at least one day");
+  if(p.kind==="plan" && p.weekdays.length*4 < p.washes) m.push(`more days (${p.washes} washes need about ${Math.ceil(p.washes/4)} days a week)`);
+  if(m.length){ err.hidden=false; err.textContent="Please add "+m.join(", ")+"."; return; }
+  b.disabled=true; b.textContent="Saving…";
+  try{ let r=await rpc("owner_save_contract",{p}); if(first) r=await rpc("owner_contract_period",{p_id:r.id, p_start:null});
+    CT[r.id]=r; remember(r.visits); closeSheet(); toast(CF.id?"Saved":first?`Added · ${r.created} visit${r.created===1?"":"s"} booked`:"Added"); loadPlans(); if(p.lead_id && INB){ const l=INB.leads.find(x=>x.id===p.lead_id); if(l) l.status="won"; }
+    if(S.v==="c" && S.arg===String(r.id)) dContract(); else go("c/"+r.id); }
+  catch(x){ b.disabled=false; b.textContent="Try again"; err.hidden=false; err.textContent=x.message; }
+});
+
 /* ============================== HOME (owner) ============================== */
 let OV=null, ATTN=null, CAL=null, DAYC={};
 async function vHome(){
   OV=cache.get("numbers"); ATTN=cache.get("attn"); CAL=cache.get("cal."+S.calMonth); if(ATTN){ remember(ATTN.recent); remember(ATTN.unconfirmed); remember(ATTN.unpaid); } dHome();
-  try{ const [o,a,c]=await Promise.all([rpc("owner_overview"), rpc("owner_attention"), rpc("staff_month",{p_month:S.calMonth})]); OV=o; ATTN=a; CAL=c;
+  try{ const [o,a,c]=await Promise.all([rpc("owner_overview"), rpc("owner_attention"), rpc("staff_month",{p_month:S.calMonth}), loadPlans()]); OV=o; ATTN=a; CAL=c;
     cache.set("numbers",o); cache.set("attn",a); cache.set("cal."+S.calMonth,c); remember(a.recent, true); remember(a.unconfirmed); remember(a.unpaid); setCounts(); if(S.v==="home") dHome(); }
   catch(e){ quiet(e); }
 }
@@ -412,6 +575,7 @@ function dHome(){
     ...up.map(j=>`<div class="list-row" data-id="${esc(j.id)}"><span class="lr-main" data-open="${esc(j.id)}"><b>${esc(j.name)} <span class="pill st-collect">Collect ${rupee(j.total)}</span></b><span>Washed ${relDay(j.wash_date)} · ${esc(j.package)}</span></span><button class="btn sm" type="button" data-open="${esc(j.id)}">Open</button></div>`),
     ATTN.unassigned?`<button class="list-row" type="button" data-go="bookings"><span class="lr-main"><b>${ATTN.unassigned} job${ATTN.unassigned>1?"s":""} in the next 3 days with no washer</b><span>Open a booking and choose a washer</span></span>${I.fwd}</button>`:"",
     ATTN.due?`<button class="list-row" type="button" data-go="customers" data-cumode="due"><span class="lr-main"><b>${ATTN.due} customer${ATTN.due>1?"s":""} due for a wash</b><span>Last wash 12+ days ago, nothing booked</span></span><span class="pill st-confirmed">Rebook</span></button>`:"",
+    ...(PLANS_L||[]).filter(c=>c.status==="active" && (c.renew||c.due>0)).map(c=>`<button class="list-row" type="button" data-go="c/${c.id}"><span class="lr-main"><b>${esc(c.name)} <span class="pill st-plan">${esc(c.kind==="society"?"Society":c.plan_name||"Plan")}</span></b><span>${[c.due>0?"Payment due "+rupee(c.due):"", c.renew?(c.last_end?"Month ends "+relDay(c.last_end).toLowerCase():"First month not started"):""].filter(Boolean).join(" · ")}</span></span>${I.fwd}</button>`),
     S.inboxCount?`<button class="list-row" type="button" data-go="inbox"><span class="lr-main"><b>${S.inboxCount} new in Inbox</b><span>${[OV.new_leads?OV.new_leads+" society":"",OV.new_enquiries?OV.new_enquiries+" message":"",OV.pending_reviews?OV.pending_reviews+" review":""].filter(Boolean).join(" · ")}</span></span><span class="nav-badge">${S.inboxCount}</span></button>`:""
   ].filter(Boolean);
   const recent = ATTN.recent.map(j=>JOBS.get(j.id)||j);
@@ -588,11 +752,13 @@ function dBooking(){
           <form class="row" id="noteForm" style="margin-bottom:16px"><input class="input" id="noteIn" placeholder="Add a note (gate code, parking slot…)" maxlength="500" autocomplete="off" style="flex:1;min-width:180px"><button class="btn" type="submit">Add note</button></form>
           <ol class="timeline" id="hist">${histHTML(j.id)}</ol></section>
       </div><div class="narrow">
-        <section class="dark-card"><div class="label">${isPaid(j)?"Paid":"To collect"}</div><div class="big num">${rupee(j.total)}${j.discount>0?`<s>${rupee(j.subtotal)}</s>`:""}</div>
+        ${j.payment==="covered"?`<section class="dark-card"><div class="label">Covered by ${j.plan&&j.plan.kind==="society"?"society contract":"monthly plan"}</div><div class="big" style="font-size:24px">${j.plan?esc(j.plan.kind==="society"?j.name:j.plan.name):"Plan"}</div>
+          ${j.plan?`<div class="muted small">Visit ${j.plan.n} of ${j.plan.of} · ${j.plan.left} left this month (to ${fmtDay(j.plan.end,{day:"numeric",month:"short"})})</div><div class="row">${j.plan.pay==="pending"?'<span class="pill st-collect">Month not paid yet</span>':'<span class="pill st-done">Month paid</span>'}${isOwner()?`<button class="btn sm" type="button" data-go="c/${j.plan.contract}">Open ${j.plan.kind==="society"?"contract":"plan"}</button>`:""}</div>`:""}
+          <div class="muted small">Nothing to collect at the visit.</div></section>`:`<section class="dark-card"><div class="label">${isPaid(j)?"Paid":"To collect"}</div><div class="big num">${rupee(j.total)}${j.discount>0?`<s>${rupee(j.subtotal)}</s>`:""}</div>
           ${j.discount>0?`<div class="muted small">${esc(discLabel(j))} −${rupee(j.discount)}</div>`:""}
           ${j.credit>0&&j.status!=="cancelled"?`<div class="alert ok">${rupee(j.credit)} referral credit. Take it off the bill. <button class="btn sm" data-act="use_credit" style="margin-top:6px">Mark used</button></div>`:""}
           ${j.status!=="cancelled"?(isPaid(j)?`<div class="row"><span class="pill st-done">${j.payment==="paid_upi"?"Paid by UPI":"Paid in cash"}</span><button class="btn sm" data-act="unpaid">Undo</button></div>`:`<div class="row"><button class="btn sm" type="button" data-qr>${I.qr}UPI QR</button><button class="btn coral sm" data-act="paid_upi">Paid by UPI</button><button class="btn coral sm" data-act="paid_cash">Paid in cash</button></div>`):""}
-          <div class="muted small">${j.pay_mode==="online"?"Customer chose to pay online (UPI)":"Pay after the wash"}</div></section>
+          <div class="muted small">${j.pay_mode==="online"?"Customer chose to pay online (UPI)":"Pay after the wash"}</div></section>`}
         <section class="card"><div class="card-head"><h2>Customer</h2>${j.visits?`<span class="pill st-confirmed">${ord(j.visits+1)} visit</span>`:""}</div>
           <p><b>${esc(j.name)}</b><br><span class="muted">${esc(fmtPhone(j.phone))}</span></p>
           <div class="cnote">${j.cust_note?`<p class="note saved">${I.pin}<span>${esc(j.cust_note)}</span></p>`:`<p class="muted small">No saved note. Save things like the gate code or parking spot once, and they show on every booking.</p>`}<button class="link-btn small" type="button" data-cnote>${j.cust_note?"Edit saved note":"Add a saved note"}</button></div>
@@ -664,7 +830,7 @@ function pkgItems(name, seen){
       const q=PKG[t].find(x=>x.n.toLowerCase().startsWith(m[1].toLowerCase())); return q && !(seen||[]).includes(q.n) ? pkgItems(q.n, [...(seen||[]), name]) : []; }); }
   return [];
 }
-function checklist(j){ const ex=String(j.extras||"").split(/\s*,\s*/).filter(x=>x && x!=="None"); return [...new Set([...pkgItems(j.package), ...ex, "Final walk-round with the customer"])]; }
+function checklist(j){ if(Array.isArray(j.items) && j.items.length) return j.items; const ex=String(j.extras||"").split(/\s*,\s*/).filter(x=>x && x!=="None"); return [...new Set([...pkgItems(j.package), ...ex, "Final walk-round with the customer"])]; }
 const ckCount = j => { const it=checklist(j); return `${it.filter(x=>(j.checks||[]).includes(x)).length}/${it.length}`; };
 function checkHTML(j, inCard){
   const has=j.checks||[], list=`<div class="cklist">${checklist(j).map(x=>`<label class="ck${has.includes(x)?" on":""}"><input type="checkbox" data-check="${esc(x)}" ${has.includes(x)?"checked":""}><span>${esc(x)}</span></label>`).join("")}</div>`;
@@ -1091,7 +1257,7 @@ function dInbox(){
   const empty=t=>`<section class="card empty"><b>${t}</b></section>`;
   if(S.inTab==="leads") html += INB.leads.length ? `<div class="grid grid-3">${INB.leads.map(l=>`<section class="card"><div class="card-head"><h2>${esc(l.society)}</h2><span class="tag">${fmtDay(String(l.created_at).slice(0,10))}</span></div>
       <p class="small">${esc(l.contact_name)}${l.role?" · "+esc(l.role):""}<br><span class="muted">${esc(l.area||"")} ${esc(l.pin)} · ${l.cars} cars · ${l.bikes} bikes</span></p>${l.days?`<p class="small muted">Prefers: ${esc(l.days)}</p>`:""}${l.notes?`<p class="small" style="margin-top:6px">${esc(l.notes)}</p>`:""}
-      <div style="margin:12px 0">${pills("lead",l.id,l.status,LEAD_ST)}</div><div class="row"><a class="btn wa sm" target="_blank" rel="noopener" href="${wa(l.phone, fill("lead",{first_name:first(l.contact_name), brand:SITE.name, society:l.society}))}">WhatsApp</a><a class="btn sm" href="${tel(l.phone)}">Call</a></div></section>`).join("")}</div>` : empty("No society requests yet");
+      <div style="margin:12px 0">${pills("lead",l.id,l.status,LEAD_ST)}</div><div class="row"><a class="btn wa sm" target="_blank" rel="noopener" href="${wa(l.phone, fill("lead",{first_name:first(l.contact_name), brand:SITE.name, society:l.society}))}">WhatsApp</a><a class="btn sm" href="${tel(l.phone)}">Call</a><button class="btn sm" type="button" data-lead2c="${l.id}">${I.repeat}Start contract</button></div></section>`).join("")}</div>` : empty("No society requests yet");
   if(S.inTab==="enquiries") html += INB.enquiries.length ? `<div class="grid grid-3">${INB.enquiries.map(q=>`<section class="card"><div class="card-head"><h2>${esc(q.name||"Customer")}</h2><span class="tag">${fmtDay(String(q.created_at).slice(0,10))}</span></div>
       <p style="white-space:pre-wrap">${esc(q.message)}</p><div style="margin:12px 0">${pills("enquiry",q.id,q.status,ENQ_ST)}</div><div class="row"><a class="btn wa sm" target="_blank" rel="noopener" href="${wa(q.phone, fill("enquiry",{first_name:first(q.name), brand:SITE.name}))}">Reply on WhatsApp</a><a class="btn sm" href="${tel(q.phone)}">Call</a><button class="btn sm" type="button" data-newfor="${q.phone}">New booking</button></div></section>`).join("")}</div>` : empty("No messages yet");
   if(S.inTab==="reviews") html += INB.reviews.length ? `<div class="grid grid-3">${INB.reviews.map(r=>`<section class="card"><div class="card-head"><span class="stars">${"★".repeat(r.rating)}<i>${"★".repeat(5-r.rating)}</i></span>${r.approved?'<span class="pill st-done">On website</span>':'<span class="pill st-collect">Waiting</span>'}</div>
@@ -1143,7 +1309,7 @@ function dAnalytics(){
   const k=(l,v,d,cls)=>`<div class="kpi${cls?" "+cls:""}"><div class="label">${l}</div><div class="value num">${v}</div>${d}</div>`;
   const max=Math.max(1,...AN.series.map(x=>x.count)), t=istToday(), step=Math.ceil(AN.series.length/12);
   const fun=[["Booked",c.booked],["Confirmed",c.confirmed],["Washed",c.washed],["Paid",c.paid],["Review asked",c.review_asked],["Reviewed",c.reviews]], fmax=Math.max(1,c.booked);
-  html += `<div class="grid grid-kpi">${k("Bookings",c.booked,delta(c.booked,p.booked))}${k("Washed",c.washed,delta(c.washed,p.washed))}${k("Collected",rupee(c.collected),delta(c.collected,p.collected,false,true))}${k("Average bill",rupee(c.avg_ticket),delta(c.avg_ticket,p.avg_ticket,false,true))}
+  html += `<div class="grid grid-kpi">${k("Bookings",c.booked,delta(c.booked,p.booked))}${k("Washed",c.washed,delta(c.washed,p.washed))}${k("Collected",rupee(c.collected),delta(c.collected,p.collected,false,true)+(c.plans_collected?`<div class="knote">incl. ${rupee(c.plans_collected)} from plans</div>`:""))}${k("Average bill",rupee(c.avg_ticket),delta(c.avg_ticket,p.avg_ticket,false,true))}
       ${k("New customers",c.new_customers,delta(c.new_customers,p.new_customers))}${k("Cancelled",c.cancelled,delta(c.cancelled,p.cancelled,true),c.cancelled?"warn":"")}${k("Discounts given",rupee(c.discounts),delta(c.discounts,p.discounts,true,true))}${k("Profit",rupee(profit),delta(profit,pprofit,false,true),profit<0?"warn":"good")}</div>
     <section class="card"><div class="card-head"><h2>Bookings per day</h2><span class="small muted">Booked ${rupee(c.booked_value)} · collected ${rupee(c.collected)}</span></div>
       <div class="bars">${AN.series.map(x=>`<div class="b${x.count?"":" zero"}${x.date===t?" now":""}" title="${fmtDay(x.date)}: ${x.count} booking${x.count===1?"":"s"}, ${rupee(x.amount)} paid"><em>${x.count||""}</em><i style="height:${Math.round(x.count/max*100)}%"></i></div>`).join("")}</div>
