@@ -55,6 +55,10 @@ const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["6 Nov 2026", "No internet (basement parking)? Taps like Washed, Paid and notes are saved on your phone and sent by themselves when the internet is back. An orange bar shows how many are waiting."],
+  ["6 Nov 2026", "Before and after photos on every booking, and one tap to send them to the customer."],
+  ["6 Nov 2026", "UPI QR button: the customer scans it on your phone and the amount is already filled in."],
+  ["6 Nov 2026", "Owner: Settings → Slots & days off. Set how many website bookings each time can take, a weekly day off, and close a day or a time for holidays or rain. The website shows Full or Closed."],
   ["6 Nov 2026", "Screens no longer flash or jump when they refresh in the background; they only change when something new comes in."],
   ["6 Nov 2026", "New look, same as Studio CRM's layout in Vroombrite colours: a menu on the left (laptop) or tabs at the bottom (phone), light and dark look."],
   ["6 Nov 2026", "Owner: Home shows what needs attention, the month's calendar and recent bookings. Analytics compares any period with the one before."],
@@ -106,6 +110,8 @@ const GUIDE = [
 <li><b>Next step</b> has the one button you need now.</li>
 <li><b>The job</b>: day, time, vehicle, package, address (Map), notes, washer. Tap <b>Edit</b> to change it. Washers can change the number plate and notes; the owner can change everything, including day, time and price.</li>
 <li>The money box shows what to collect, any discount or referral credit, and the paid buttons (with <b>Undo</b>).</li>
+<li><b>UPI QR</b>: tap it and show your screen to the customer. They scan it with Google Pay, PhonePe, Paytm or any UPI app; the amount and booking ID are filled in. When their app says paid, tap <b>They've paid · Paid by UPI</b>. Always check the money has come in before you tap.</li>
+<li><b>Photos</b>: tap <b>Before</b> when you arrive and <b>After</b> when you finish. Take the photo or pick it from your gallery. Photos need internet. Tap <b>Send photos to …</b> to share them with the customer: on a phone pick WhatsApp and their chat, or send links that work for 7 days. You can delete your own photos (tap ✕ twice); the owner can delete any.</li>
 <li><b>Customer</b>: Call, WhatsApp, Map and <b>Calendar</b> (adds the job to your phone's calendar).</li>
 <li><b>History and notes</b>: every step with who did it and when, including messages, calls and changes. Add notes like gate codes here.</li>
 <li><b>More</b>: send a reminder, ask for a review, cancel or reopen.</li></ul>
@@ -115,7 +121,7 @@ const GUIDE = [
 <ol><li>Tap <b>+</b> (phone) or <b>New booking</b> (laptop).</li>
 <li>Fastest: copy the customer's WhatsApp message, paste it in the box at the top and tap <b>Fill</b>. Check what it filled.</li>
 <li>Choose the vehicle, package and any add-ons. The price fills in by itself; you can change it. To give a discount, enter it with a reason.</li>
-<li>Pick the day and time. If that time already has bookings, a yellow note says who.</li>
+<li>Pick the day and time. Each time shows how many bookings it has (for example 2/3). If a time is <b>full</b> or the day is <b>closed</b>, a yellow note says so. You can still save it if you've agreed it with the customer.</li>
 <li>Enter the address and PIN code (the area fills in by itself), choose where the booking came from and tap <b>Save booking</b>.</li></ol>
 <p>After saving you can send the confirmation on WhatsApp in one tap. Bookings a washer adds are given to that washer.</p>` },
 
@@ -142,7 +148,8 @@ const GUIDE = [
 <p>You can't switch off, demote or delete your own login.</p>` },
 
   { id: "settings", role: "owner", title: "Settings", body: `
-<ul><li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {days}, {society}, {brand}.</li>
+<ul><li><b>Slots &amp; days off</b>: how many website bookings each time (6–8 AM, 8–10 AM…) can take in a day; leave it empty for no limit. When a time is full, the website shows it as <b>Full</b> and the customer picks another. Tick a <b>weekly day off</b> if you don't work that day. Use <b>Close a day or a time</b> for holidays, heavy rain or a big society job, and <b>Open again</b> to undo it. Bookings already made on a closed day stay; move or cancel them yourself. You can always add bookings yourself; the app only warns you.</li>
+<li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {days}, {society}, {brand}.</li>
 <li><b>Offers</b>: change WELCOME50 and the referral offer (amount, minimum order, first wash only, on/off), or add a new code like DIWALI100. The website uses the new amounts straight away.</li>
 <li><b>Monthly costs</b>: ads, supplies, fuel, washer pay and other costs. Analytics then shows profit and cost per wash.</li>
 <li><b>Team notice</b>: one line everyone sees at the top of Home and Jobs ("Rain today, carry covers"). Clear it when done.</li>
@@ -160,7 +167,7 @@ const GUIDE = [
 <p><b>Reviews</b>: nothing shows on the website until you tap <b>Show on website</b>.</p>` },
 
   { id: "delete", role: "owner", title: "Deleting a booking and customers' privacy", body: `
-<p>Delete only test or spam bookings: open it → <b>Edit</b> → <b>Delete booking</b>. It removes the booking, its history and its review for good. The activity log keeps a line without the customer's details.</p>
+<p>Delete only test or spam bookings: open it → <b>Edit</b> → <b>Delete booking</b>. It removes the booking, its history, its photos and its review for good. The activity log keeps a line without the customer's details.</p>
 <p>The app has customers' names, mobiles and addresses. Don't share screenshots or downloads outside the business. If a phone with the app is lost, switch that login off in Settings → Team.</p>` },
 
   { id: "account", role: "all", title: "My account and password", body: `
@@ -169,7 +176,8 @@ const GUIDE = [
 
   { id: "problems", role: "all", title: "Something looks wrong?", body: `
 <ul><li>Tap <b>Refresh now</b> in your account.</li>
-<li>"Couldn't save": check your internet and tap again. The screen goes back to how it was until it saves.</li>
+<li><b>No internet</b>: keep working. Taps like On the way, Washed, Paid and notes are kept on your phone; an orange bar says how many are waiting. They send by themselves when the internet is back (or tap <b>Try now</b>). Don't sign out or clear the browser while the bar is showing. Photos and new bookings need internet.</li>
+<li>"Couldn't save": the server refused the change (for example someone else already changed the booking). Check the booking and try again.</li>
 <li>Still stuck: send a screenshot to the owner.</li></ul>` }
 ];
 
@@ -180,7 +188,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "c96555ca08";
+const BUILD_ID = "547bb8a55e";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";
@@ -231,7 +239,9 @@ const I = {
   back: ic('<path d="M15 18l-6-6 6-6"/>'),
   fwd: ic('<path d="M9 18l6-6-6-6"/>'),
   note: ic('<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'),
-  search: ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>')
+  search: ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'),
+  qr: ic('<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/>'),
+  cam: ic('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>')
 };
 
 /* ============================== Supabase ============================== */
@@ -246,7 +256,7 @@ async function auth(path, body, method){
 function keep(j){ session = {access_token:j.access_token, refresh_token:j.refresh_token, expires_at:j.expires_at || Math.floor(Date.now()/1000)+(+j.expires_in||3600), email:(j.user||{}).email || (session||{}).email}; store.set("vb.session", session); }
 let refreshing = null;
 async function refresh(){ if(!session) throw new Error("signed out"); refreshing = refreshing || auth("token?grant_type=refresh_token", {refresh_token:session.refresh_token}).then(keep).finally(()=>refreshing=null); return refreshing; }
-async function fresh(){ if(session && session.expires_at*1000 - Date.now() < 60e3){ try{ await refresh(); }catch(e){ signedOut(); } } }
+async function fresh(){ if(session && session.expires_at*1000 - Date.now() < 60e3){ try{ await refresh(); }catch(e){ if(e instanceof TypeError) return; signedOut(); } } }
 let offlineSaid=false;
 async function rpc(fn, args, retried){
   await fresh();
@@ -268,6 +278,18 @@ async function teamAdmin(body){
   if(!r.ok) throw new Error(j.error || j.message || NOFN);
   return j;
 }
+/* Storage (job photos, private bucket) */
+const BUCKET = "job-photos";
+async function storage(path, opt){
+  await fresh();
+  const r = await fetch(URL_+"/storage/v1/"+path, Object.assign({}, opt, {headers:Object.assign({apikey:KEY, Authorization:"Bearer "+session.access_token}, (opt||{}).headers)}));
+  const j = await r.json().catch(()=>null);
+  if(!r.ok){ const e=new Error((j&&(j.message||j.error))||("Error "+r.status)); e.status=r.status; throw e; }
+  return j;
+}
+const signUrls = (paths, secs) => paths.length ? storage("object/sign/"+BUCKET, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({expiresIn:secs||3600, paths})})
+  .then(list => list.map(x => ({path:x.path, url: x.signedURL ? URL_+"/storage/v1"+x.signedURL : ""}))) : Promise.resolve([]);
+const removeFiles = paths => paths && paths.length ? storage("object/"+BUCKET, {method:"DELETE", headers:{"Content-Type":"application/json"}, body:JSON.stringify({prefixes:paths})}) : Promise.resolve([]);
 function signedOut(){ session=null; store.set("vb.session",null); show("login"); throw new Error("signed out"); }
 const quiet = e => { if(e && e.message!=="signed out" && e.status) toast(e.message, true); };
 
@@ -423,7 +445,7 @@ function nextStep(j, big){
   if(j.status==="new") return `<a class="btn wa${lg}" data-act="confirm" target="_blank" rel="noopener" href="${wa(j.phone, fill("confirm", jobCtx(j)))}">Confirm on WhatsApp</a>`;
   if(j.status==="confirmed") return `<a class="btn wa${lg}" data-act="on_way" target="_blank" rel="noopener" href="${wa(j.phone, fill("onway", jobCtx(j)))}">Send "On my way"</a>`;
   if(j.status==="on_way") return `<button class="btn primary${lg}" data-act="done">Mark washed</button>`;
-  if(!isPaid(j)) return `<button class="btn coral${lg}" data-act="paid_upi">Paid by UPI</button><button class="btn coral${lg}" data-act="paid_cash">Paid in cash</button>`;
+  if(!isPaid(j)) return `<button class="btn${lg}" type="button" data-qr>${I.qr}UPI QR</button><button class="btn coral${lg}" data-act="paid_upi">Paid by UPI</button><button class="btn coral${lg}" data-act="paid_cash">Paid in cash</button>`;
   if(!j.review_asked_at) return `<a class="btn${lg}" data-act="review_asked" target="_blank" rel="noopener" href="${wa(j.phone, fill("review", jobCtx(j)))}">Ask for a review</a>`;
   return `<button class="btn${lg}" disabled>All done ✓</button>`;
 }
@@ -457,7 +479,7 @@ const JOBS = new Map(), PINGED = new Set();
 let SINCE = store.get("vb.since"), NOTES = store.get("vb.notes")||[];
 function remember(list, live){
   const fresh=[]; let newest = SINCE;
-  (list||[]).forEach(j => { JOBS.set(j.id, j); if(live && SINCE && j.created_at > SINCE) fresh.push(j); if(!newest || j.created_at > newest) newest = j.created_at; });
+  (list||[]).forEach(j => { JOBS.set(j.id, withQueued(j)); if(live && SINCE && j.created_at > SINCE) fresh.push(j); if(!newest || j.created_at > newest) newest = j.created_at; });
   if(live && newest && newest !== SINCE){ SINCE = newest; store.set("vb.since", SINCE); }
   const ping = fresh.filter(j => j.created_by!==(S.me&&S.me.id) && !PINGED.has(j.id)); ping.forEach(j=>PINGED.add(j.id));
   if(ping.length){ NOTES.unshift(...ping.map(j=>({id:j.id, at:j.created_at, text:`New booking: ${j.name}`, sub:`${relDay(j.wash_date)}, ${j.slot} · ${j.package}`}))); NOTES=NOTES.slice(0,30); store.set("vb.notes", NOTES);
@@ -472,13 +494,47 @@ const OPTIMISTIC = {
 };
 const DONE_MSG = {confirm:"Confirmed", on_way:"Marked on the way", done:"Marked washed", paid_upi:"Paid by UPI", paid_cash:"Paid in cash", unpaid:"Marked not paid",
   cancel:"Booking cancelled", reopen:"Booking reopened", reminded:"Reminder noted", review_asked:"Review request noted", use_credit:"Credit marked used"};
+/* Offline: a change made without internet waits on this phone (in order) and is sent when the internet is back. */
+let QUEUE = store.get("vb.queue")||[], flushing=false;
+const netDown = e => !!e && !e.status && e.message!=="signed out";
+function saveQueue(){ store.set("vb.queue", QUEUE); drawSync(); }
+function queueAdd(item){ QUEUE.push(Object.assign({at:new Date().toISOString()}, item)); saveQueue(); }
+function withQueued(j){ QUEUE.forEach(q => { if(q.fn==="staff_update" && q.id===j.id && OPTIMISTIC[q.action]) j=Object.assign({}, j, OPTIMISTIC[q.action](j)); }); return j; }
+function drawSync(){ const b=$("syncBar"); if(!b) return; const n=QUEUE.length; b.hidden=!n; if(n) $("syncTx").textContent=`${n} change${n>1?"s":""} saved on this phone. ${n>1?"They":"It"} will sync when the internet is back.`; }
+async function flush(){
+  if(flushing || !QUEUE.length || !session) return; flushing=true; let sent=0;
+  try{
+    while(QUEUE.length){
+      const q=QUEUE[0];
+      try{
+        if(q.fn==="staff_update"){ const f=await rpc("staff_update",{p_id:q.id, p_action:q.action}); QUEUE.shift(); JOBS.set(f.id, withQueued(f)); }
+        else { await rpc(q.fn, q.args); QUEUE.shift(); }
+        sent++;
+      }catch(e){
+        if(netDown(e) || e.message==="signed out") break;            // still offline: keep it for later
+        QUEUE.shift(); toast(`Couldn't save "${q.label}" for ${q.name||q.id}: ${e.message}`, true);   // refused by the server: drop it
+      }
+      saveQueue();
+    }
+  } finally { flushing=false; saveQueue(); }
+  if(sent){ toast(`Synced ${sent} change${sent>1?"s":""}`); HIST={}; redraw(); if(S.v==="b") loadHist(S.arg); }
+}
+/* A note, call or message for the history: sent now, or kept for later when offline. */
+function logLater(id, kind, detail, label){
+  const save = () => queueAdd({fn:"staff_log", id, name:(JOBS.get(id)||{}).name, label:label||"Note", args:{p_id:id, p_kind:kind, p_detail:detail}});
+  if(QUEUE.length){ save(); flush(); return Promise.resolve("queued"); }
+  return rpc("staff_log",{p_id:id, p_kind:kind, p_detail:detail}).then(()=>"ok", e => { if(netDown(e)){ save(); return "queued"; } throw e; });
+}
+window.addEventListener("online", () => flush());
 async function act(id, action, from){
   const before = JOBS.get(id); if(!before) return false;
   JOBS.set(id, Object.assign({}, before, OPTIMISTIC[action](before)));
   redraw(); toast(DONE_MSG[action] + (/^paid/.test(action)?" · "+rupee(before.total):""));
   if(/^paid/.test(action)) celebrate(from);
+  const later = () => { queueAdd({fn:"staff_update", id, action, name:before.name, label:DONE_MSG[action]}); toast(DONE_MSG[action]+" · saved on this phone, will sync when online"); return true; };
+  if(QUEUE.length){ later(); flush(); return true; }
   try{ const f = await rpc("staff_update", {p_id:id, p_action:action}); JOBS.set(id, f); delete HIST[id]; redraw(); if(S.v==="b") loadHist(id); return true; }
-  catch(e){ if(e.message==="signed out") return false; JOBS.set(id, before); redraw(); toast("Couldn't save. Check your internet and try again.", true); return false; }
+  catch(e){ if(e.message==="signed out") return false; if(netDown(e)) return later(); JOBS.set(id, before); redraw(); toast(e.message||"Couldn't save. Try again.", true); return false; }
 }
 document.addEventListener("click", e => {
   const host = e.target.closest("[data-id]"), a = e.target.closest("[data-act]");
@@ -654,7 +710,7 @@ async function moveTo(id, to, el){
   if(to==="on_way" && from==="new") seq.unshift("confirm");
   for(const a of seq){ if(!await act(id,a)) return; }
 }
-function paySheet(id){ const j=JOBS.get(id); openSheet(`How did ${first(j.name)} pay?`, `<div class="menu" data-id="${esc(id)}"><p class="muted">${rupee(j.total)} · ${esc(j.package)}</p><button class="btn coral" data-act="paid_upi">Paid by UPI</button><button class="btn coral" data-act="paid_cash">Paid in cash</button><button class="btn" type="button" data-close>Not paid yet</button></div>`); }
+function paySheet(id){ const j=JOBS.get(id); openSheet(`How did ${first(j.name)} pay?`, `<div class="menu" data-id="${esc(id)}"><p class="muted">${rupee(j.total)} · ${esc(j.package)}</p><button class="btn" type="button" data-qr>${I.qr}Show UPI QR to scan</button><button class="btn coral" data-act="paid_upi">Paid by UPI</button><button class="btn coral" data-act="paid_cash">Paid in cash</button><button class="btn" type="button" data-close>Not paid yet</button></div>`); }
 function confirmSheet(title, sub, label, fn){ openSheet(title, `<div class="menu"><p class="muted">${esc(sub)}</p><button class="btn danger" type="button" id="cfYes">${esc(label)}</button><button class="btn" type="button" data-close>Keep it</button></div>`); $("cfYes").onclick=()=>{ closeSheet(); fn(); }; }
 
 /* ============================== BOOKING PAGE ============================== */
@@ -662,7 +718,7 @@ let HIST={};
 async function vBooking(){
   const id=S.arg; dBooking();
   if(!JOBS.has(id)){ try{ const r=await rpc("staff_bookings",{p_query:id, p_from:addDays(istToday(),-365), p_limit:5}); remember(r); }catch(e){ quiet(e); } if(!JOBS.has(id)){ V().innerHTML = pageHead("Booking not found", "It may have been deleted.", "", "Back"); return; } dBooking(); }
-  loadHist(id);
+  loadHist(id); loadPhotos(id);
 }
 async function loadHist(id){ try{ HIST[id]=await rpc("booking_history",{p_id:id}); }catch(e){ HIST[id]=HIST[id]||[]; } if(S.v==="b" && S.arg===id && $("hist")) $("hist").innerHTML=histHTML(id); }
 function histHTML(id){ const h=HIST[id]; if(!h) return '<li><div class="skel" style="height:40px;width:100%"></div></li>'; if(!h.length) return '<li class="muted">Nothing yet.</li>';
@@ -688,6 +744,8 @@ function dBooking(){
           <dt>Washer</dt><dd>${isOwner()?`<select class="input" data-assign style="max-width:260px"><option value="">Nobody yet</option>${(SET.team||[]).map(t=>`<option value="${t.id}" ${t.id===j.assigned_to?"selected":""}>${esc(t.name)}${t.role==="owner"?" (owner)":""}</option>`).join("")}</select>`:esc(j.assigned_name||"Nobody yet")}</dd>
           <dt>Came from</dt><dd>${esc(SOURCE[j.source]||j.source)}</dd>
           ${j.promo_note&&j.promo!=="MANUAL"?`<dt>Offer note</dt><dd>${esc(j.promo_note)}</dd>`:""}</dl></section>
+        <section class="card"><div class="card-head"><h2>Photos</h2><div class="row"><label class="btn sm">${I.cam}Before<input type="file" accept="image/*" data-photo="before" multiple hidden></label><label class="btn sm">${I.cam}After<input type="file" accept="image/*" data-photo="after" multiple hidden></label></div></div>
+          <div id="photos">${photosHTML(j.id)}</div><button class="btn wa" type="button" id="phSend" data-phsend style="margin-top:12px"${(PH[j.id]||[]).length?"":" hidden"}>${I.chat}Send photos to ${esc(first(j.name))}</button></section>
         <section class="card"><div class="card-head"><h2>History and notes</h2></div>
           <form class="row" id="noteForm" style="margin-bottom:16px"><input class="input" id="noteIn" placeholder="Add a note (gate code, parking slot…)" maxlength="500" autocomplete="off" style="flex:1;min-width:180px"><button class="btn" type="submit">Add note</button></form>
           <ol class="timeline" id="hist">${histHTML(j.id)}</ol></section>
@@ -695,7 +753,7 @@ function dBooking(){
         <section class="dark-card"><div class="label">${isPaid(j)?"Paid":"To collect"}</div><div class="big num">${rupee(j.total)}${j.discount>0?`<s>${rupee(j.subtotal)}</s>`:""}</div>
           ${j.discount>0?`<div class="muted small">${esc(discLabel(j))} −${rupee(j.discount)}</div>`:""}
           ${j.credit>0&&j.status!=="cancelled"?`<div class="alert ok">${rupee(j.credit)} referral credit. Take it off the bill. <button class="btn sm" data-act="use_credit" style="margin-top:6px">Mark used</button></div>`:""}
-          ${j.status!=="cancelled"?(isPaid(j)?`<div class="row"><span class="pill st-done">${j.payment==="paid_upi"?"Paid by UPI":"Paid in cash"}</span><button class="btn sm" data-act="unpaid">Undo</button></div>`:`<div class="row"><button class="btn coral sm" data-act="paid_upi">Paid by UPI</button><button class="btn coral sm" data-act="paid_cash">Paid in cash</button></div>`):""}
+          ${j.status!=="cancelled"?(isPaid(j)?`<div class="row"><span class="pill st-done">${j.payment==="paid_upi"?"Paid by UPI":"Paid in cash"}</span><button class="btn sm" data-act="unpaid">Undo</button></div>`:`<div class="row"><button class="btn sm" type="button" data-qr>${I.qr}UPI QR</button><button class="btn coral sm" data-act="paid_upi">Paid by UPI</button><button class="btn coral sm" data-act="paid_cash">Paid in cash</button></div>`):""}
           <div class="muted small">${j.pay_mode==="online"?"Customer chose to pay online (UPI)":"Pay after the wash"}</div></section>
         <section class="card"><div class="card-head"><h2>Customer</h2>${j.visits?`<span class="pill st-confirmed">${ord(j.visits+1)} visit</span>`:""}</div>
           <p><b>${esc(j.name)}</b><br><span class="muted">${esc(fmtPhone(j.phone))}</span></p>
@@ -722,7 +780,7 @@ document.addEventListener("change", async e => {
 document.addEventListener("submit", async e => {
   if(e.target.id!=="noteForm") return; e.preventDefault(); const id=S.arg, v=$("noteIn").value.trim(); if(!v) return;
   $("noteIn").value=""; (HIST[id]=HIST[id]||[]).unshift({at:new Date().toISOString(), who:S.me.name, kind:"note", detail:v}); $("hist").innerHTML=histHTML(id);
-  try{ await rpc("staff_log",{p_id:id, p_kind:"note", p_detail:v}); toast("Note added"); } catch(err){ toast("Couldn't save the note", true); loadHist(id); }
+  try{ const r=await logLater(id, "note", v, "Note"); toast(r==="queued"?"Note saved on this phone, will sync when online":"Note added"); } catch(err){ toast("Couldn't save the note", true); loadHist(id); }
 });
 const SLOT_H = {"6–8 AM":[6,8], "8–10 AM":[8,10], "10 AM–1 PM":[10,13], "2–5 PM":[14,17], "5–8 PM":[17,20]};
 function ics(j){
@@ -740,7 +798,7 @@ function chatSheet(id){
 }
 $("sheetBody").addEventListener("click", e => {
   const a=e.target.closest("[data-msg]"); if(!a) return; const id=a.closest("[data-msgfor]").dataset.msgfor, k=a.dataset.msg, j=JOBS.get(id); closeSheet(); if(!k) return;
-  const action=MSG_ACTION[k], title=templates().find(t=>t.key===k).title, log=()=>rpc("staff_log",{p_id:id,p_kind:"message",p_detail:"Sent: "+title}).then(()=>{ delete HIST[id]; if(S.v==="b") loadHist(id); }).catch(()=>{});
+  const action=MSG_ACTION[k], title=templates().find(t=>t.key===k).title, log=()=>logLater(id, "message", "Sent: "+title, "Message").then(()=>{ delete HIST[id]; if(S.v==="b") loadHist(id); }).catch(()=>{});
   if(action==="confirm" && j.status!=="new") return log();
   if(action==="on_way" && ["on_way","done","cancelled"].includes(j.status)) return log();
   if(action) return act(id, action);
@@ -754,10 +812,93 @@ function callSheet(id){
 }
 $("sheetBody").addEventListener("click", e => {
   const b=e.target.closest("[data-out]"); if(!b) return; const id=b.closest("[data-callfor]").dataset.callfor; closeSheet();
-  rpc("staff_log",{p_id:id, p_kind:"call", p_detail:"Call: "+b.dataset.out}).then(()=>{ toast("Call noted"); delete HIST[id]; if(S.v==="b") loadHist(id); }).catch(()=>toast("Couldn't save", true));
+  logLater(id, "call", "Call: "+b.dataset.out, "Call").then(r=>{ toast(r==="queued"?"Call saved on this phone, will sync when online":"Call noted"); delete HIST[id]; if(S.v==="b") loadHist(id); }).catch(()=>toast("Couldn't save", true));
 });
 
 /* ============================== NEW / EDIT BOOKING ============================== */
+/* Before/after photos: shrunk on the phone to about 1280 px, kept in the private "job-photos" Storage bucket. */
+const PH={}, UPL={};
+async function setPhotos(id, rows, local){
+  const known=new Map((PH[id]||[]).map(p=>[p.path,p.url])); Object.entries(local||{}).forEach(([k,v])=>known.set(k,v));
+  const need=rows.filter(r=>!known.get(r.path)).map(r=>r.path);
+  try{ (await signUrls(need)).forEach(x=>known.set(x.path,x.url)); }catch(e){}
+  PH[id]=rows.map(r=>Object.assign({}, r, {url:known.get(r.path)||""})); drawPhotos(id);
+}
+async function loadPhotos(id){ try{ await setPhotos(id, await rpc("staff_photos",{p_id:id})); }catch(e){ PH[id]=PH[id]||[]; drawPhotos(id); } }
+function photosHTML(id){
+  const ph=PH[id], up=UPL[id]||0;
+  if(!ph) return `<div class="skel" style="height:90px"></div>`;
+  if(!ph.length && !up) return `<p class="muted small">No photos yet. Take a <b>Before</b> photo when you arrive and an <b>After</b> photo when you finish.</p>`;
+  return `<div class="photos">${ph.map(p=>`<figure><a href="${esc(p.url)}" target="_blank" rel="noopener">${p.url?`<img src="${esc(p.url)}" alt="${p.kind} photo" loading="lazy">`:""}</a><figcaption><span class="pill ${p.kind==="after"?"st-done":"st-new"}">${p.kind==="after"?"After":"Before"}</span>${p.mine||isOwner()?`<button type="button" class="ph-del" data-delphoto="${p.id}" aria-label="Delete photo">✕</button>`:""}</figcaption></figure>`).join("")}${Array.from({length:up},()=>'<figure class="uploading"><span>Uploading…</span></figure>').join("")}</div>`;
+}
+function drawPhotos(id){ if(S.v!=="b" || S.arg!==id) return; const el=$("photos"); if(el) setHTML(el, photosHTML(id)); const b=$("phSend"); if(b) b.hidden=!(PH[id]||[]).length; }
+async function shrink(file){
+  let img; try{ img=await createImageBitmap(file, {imageOrientation:"from-image"}); }
+  catch(e){ img=await new Promise((ok,no)=>{ const i=new Image(); i.onload=()=>ok(i); i.onerror=()=>no(new Error("Couldn't read that photo")); i.src=URL.createObjectURL(file); }); }
+  const k=Math.min(1, 1280/Math.max(img.width, img.height)), c=document.createElement("canvas"); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  return new Promise((ok,no)=>c.toBlob(b=>b?ok(b):no(new Error("Couldn't read that photo")), "image/jpeg", 0.8));
+}
+async function addPhotos(id, kind, files){
+  if(!navigator.onLine) return toast("Photos need internet. Take them with the camera now and add them here when you're back online.", true);
+  const list=[...files].slice(0,6); UPL[id]=(UPL[id]||0)+list.length; drawPhotos(id); let ok=0;
+  for(const f of list){
+    try{
+      const blob=await shrink(f), path=`${id}/${kind}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}.jpg`;
+      await storage("object/"+BUCKET+"/"+path, {method:"POST", headers:{"Content-Type":"image/jpeg", "x-upsert":"false"}, body:blob});
+      UPL[id]--; await setPhotos(id, await rpc("staff_add_photo",{p_id:id, p_path:path, p_kind:kind}), {[path]:URL.createObjectURL(blob)}); ok++;
+    }catch(e){ UPL[id]--; drawPhotos(id); if(e.message!=="signed out") toast(netDown(e)?"Upload stopped: no internet":(e.message||"Couldn't upload the photo"), true); }
+  }
+  if(ok){ toast(ok===1?"Photo added":ok+" photos added"); delete HIST[id]; if(S.v==="b") loadHist(id); }
+}
+document.addEventListener("change", e => { const f=e.target.closest("[data-photo]"); if(!f || !f.files.length) return; const id=f.closest("[data-id]").dataset.id; addPhotos(id, f.dataset.photo, f.files); f.value=""; });
+document.addEventListener("click", async e => {
+  const d=e.target.closest("[data-delphoto]"); if(!d) return; e.preventDefault();
+  if(!d.dataset.sure){ d.dataset.sure="1"; d.textContent="Delete?"; d.classList.add("sure"); setTimeout(()=>{ if(d.isConnected){ delete d.dataset.sure; d.textContent="✕"; d.classList.remove("sure"); } }, 3000); return; }
+  const id=S.arg, p=(PH[id]||[]).find(x=>String(x.id)===d.dataset.delphoto); if(!p) return;
+  try{ await removeFiles([p.path]); await setPhotos(id, await rpc("staff_delete_photo",{p_photo:p.id})); toast("Photo deleted"); delete HIST[id]; loadHist(id); }
+  catch(x){ if(x.message!=="signed out") toast(x.message||"Couldn't delete", true); }
+});
+/* Send photos: share the files (phones) or WhatsApp links that work for 7 days. Both are prepared before the tap. */
+let PHSHARE=null;
+async function sendPhotos(id){
+  const j=JOBS.get(id), ph=PH[id]||[]; if(!j || !ph.length) return;
+  const text=`Hi ${first(j.name)}, here are the photos of your ${vehShort(j.vehicle).toLowerCase()} from the ${j.package}. Thank you for choosing ${SITE.name}!`;
+  const share=!!(navigator.share && navigator.canShare);
+  openSheet("Send photos to "+first(j.name), `<div class="menu" data-phfor="${esc(id)}"><p class="muted small">${ph.length} photo${ph.length>1?"s":""} (${ph.filter(p=>p.kind==="before").length} before, ${ph.filter(p=>p.kind==="after").length} after).</p>
+    ${share?`<button class="btn wa" type="button" data-phshare disabled>Preparing photos…</button><p class="small muted">Then pick WhatsApp and ${esc(first(j.name))}'s chat.</p>`:""}
+    <a class="btn${share?"":" wa"}" target="_blank" rel="noopener" data-phlinks aria-disabled="true">Preparing links…</a><p class="small muted">Opens ${esc(first(j.name))}'s chat with links to the photos. The links stop working after 7 days.</p></div>`);
+  PHSHARE={id, text, files:null};
+  signUrls(ph.map(p=>p.path), 7*86400).then(list=>{ const a=document.querySelector("[data-phlinks]"); if(!a) return;
+    a.href=wa(j.phone, text+"\n\n"+ph.map((p,i)=>`${p.kind==="after"?"After":"Before"} ${i+1}: ${(list.find(x=>x.path===p.path)||{}).url}`).join("\n")); a.removeAttribute("aria-disabled"); a.textContent="Send links on WhatsApp"; })
+    .catch(()=>{ const a=document.querySelector("[data-phlinks]"); if(a) a.textContent="Couldn't make links. Check the internet."; });
+  if(share) Promise.all(ph.map((p,i)=>fetch(p.url).then(r=>r.blob()).then(b=>new File([b], `${j.id}-${p.kind}-${i+1}.jpg`, {type:"image/jpeg"}))))
+    .then(files=>{ const b=document.querySelector("[data-phshare]"); if(!b) return; if(!navigator.canShare({files})){ b.remove(); return; } PHSHARE.files=files; b.disabled=false; b.textContent="Share the photos"; })
+    .catch(()=>{ const b=document.querySelector("[data-phshare]"); if(b) b.remove(); });
+}
+document.addEventListener("click", e => {
+  if(e.target.closest("[data-phsend]")) return sendPhotos(S.arg);
+  const sh=e.target.closest("[data-phshare]");
+  if(sh && PHSHARE && PHSHARE.files){ const {id, text, files}=PHSHARE; navigator.share({files, text}).then(()=>{ logLater(id, "message", "Sent photos", "Message").then(()=>{ delete HIST[id]; if(S.v==="b") loadHist(id); }).catch(()=>{}); closeSheet(); }).catch(()=>{}); return; }
+  const ln=e.target.closest("[data-phlinks]");
+  if(ln){ if(ln.getAttribute("aria-disabled")){ e.preventDefault(); return; } const id=ln.closest("[data-phfor]").dataset.phfor; closeSheet(); logLater(id, "message", "Sent photos", "Message").then(()=>{ delete HIST[id]; if(S.v==="b") loadHist(id); }).catch(()=>{}); }
+});
+
+/* UPI QR for the customer to scan on the washer's phone */
+const upiUrl = j => "upi://pay?pa="+encodeURIComponent(SITE.upiId)+"&pn="+encodeURIComponent(SITE.upiName||SITE.name)+"&am="+j.total+"&cu=INR&tn="+encodeURIComponent("Booking "+j.id);
+function qrSheet(id){
+  const j=JOBS.get(id); if(!j) return; if(!SITE.upiId) return toast("No UPI ID set yet", true);
+  let svg=""; try{ const q=qrcode(0,"M"); q.addData(upiUrl(j)); q.make(); svg=q.createSvgTag({cellSize:6, margin:2, scalable:true}); }catch(e){}
+  openSheet("Scan to pay", `<div class="menu qr-sheet" data-id="${esc(id)}"><div class="qr-box">${svg||`<p class="muted">Couldn't draw the QR code. Give the customer the UPI ID below.</p>`}</div>
+    <div class="qr-amt num">${rupee(j.total)}</div><p class="muted small" style="text-align:center">${esc(j.name)} · ${esc(j.id)}<br>The customer scans this with Google Pay, PhonePe, Paytm or any UPI app. The amount is filled in.</p>
+    <div class="keybox"><span style="flex:1">${esc(SITE.upiId)}</span><button class="btn sm" type="button" data-copyupi>Copy</button></div>
+    ${isPaid(j)?'<span class="pill st-done">Already paid</span>':`<button class="btn coral lg" data-act="paid_upi">They've paid · Paid by UPI</button>`}</div>`, "qr:"+id);
+}
+document.addEventListener("click", e => {
+  const q=e.target.closest("[data-qr]"); if(q){ const h=q.closest("[data-id]"); if(h){ e.preventDefault(); qrSheet(h.dataset.id); } return; }
+  if(e.target.closest("[data-copyupi]")) navigator.clipboard.writeText(SITE.upiId).then(()=>toast("UPI ID copied")).catch(()=>{});
+});
+
 const VEH = [["hatch","Car · Hatchback","Hatchback"],["sedan","Car · Sedan","Sedan"],["suv","Car · SUV / MUV","SUV / MUV"],["bike","Bike / Scooter","Bike / Scooter"]];
 const SOURCES = ["phone","whatsapp","walk_in","society","instagram","repeat","other"];
 const sizeOf = v => { const x=VEH.find(a=>a[1]===v); return x?x[0]: /bike|scooter/i.test(v)?"bike": /suv|muv/i.test(v)?"suv": /sedan/i.test(v)?"sedan":"hatch"; };
@@ -799,12 +940,29 @@ function calc(){
   const sub=+$("fSub").value||0, d=Math.min(+$("fDisc").value||0, sub);
   $("fTotal").innerHTML = sub ? `Customer pays <b class="num">${rupee(sub-d)}</b>${d?` <s>${rupee(sub)}</s>`:""}` : "Pick a package";
 }
+/* Slot limits and days off (Settings → Slots & days off) */
+function closedWhy(info, d, slot){
+  if(!info) return null;
+  const c=(info.closures||[]).find(x=>x.day===d && (!x.slot || x.slot===slot)); if(c) return c.reason||"Closed";
+  const wd=String(info.closed_weekdays||"").split(",").filter(Boolean), dow=((new Date(d+"T12:00:00Z").getUTCDay()+6)%7)+1;
+  return wd.includes(String(dow)) ? "Weekly day off" : null;
+}
 async function clash(){
-  const el=$("fClash"); if(!el) return; const d=$("fDate").value, sl=($("fSlot").querySelector(".on")||{}).dataset; if(!d||!sl||!sl.slot){ el.hidden=true; return; }
-  let day=cache.get("day."+d); try{ day=await rpc("staff_day",{p_date:d}); cache.set("day."+d,day); }catch(e){}
-  if(!$("fClash")) return;
-  const same=((day&&day.jobs)||[]).filter(x=>x.slot===sl.slot && x.status!=="cancelled" && x.id!==F.id);
-  el.hidden=!same.length; if(same.length) el.innerHTML=`Already ${same.length} booking${same.length>1?"s":""} at ${esc(sl.slot)} on ${fmtDay(d)}: ${same.map(x=>esc(first(x.name))+(x.assigned_name?" ("+esc(first(x.assigned_name))+")":"")).join(", ")}`;
+  const el=$("fClash"); if(!el) return; const d=$("fDate").value, sl=($("fSlot").querySelector(".on")||{}).dataset;
+  if(!d){ el.hidden=true; return; }
+  let day=cache.get("day."+d), info=cache.get("slots."+d);
+  await Promise.all([rpc("staff_day",{p_date:d}).then(r=>{ day=r; cache.set("day."+d,r); }).catch(()=>{}), rpc("staff_slots",{p_from:d, p_to:d}).then(r=>{ info=r; cache.set("slots."+d,r); }).catch(()=>{})]);
+  if(!$("fClash") || $("fDate").value!==d) return;
+  const jobs=((day&&day.jobs)||[]).filter(x=>x.status!=="cancelled" && x.id!==F.id), cap=sl2=>((info&&info.caps)||[]).find(c=>c.slot===sl2);
+  $$("#fSlot .chip").forEach(c=>{ const s=c.dataset.slot, n=jobs.filter(x=>x.slot===s).length, k=cap(s), why=closedWhy(info,d,s);
+    const tag = why ? "closed" : k&&k.cap!=null ? (n>=k.cap?"full":`${n}/${k.cap}`) : n ? String(n) : "";
+    c.innerHTML=esc(s)+(tag?`<small class="slot-tag${why||(k&&k.cap!=null&&n>=k.cap)?" bad":""}">${tag}</small>`:""); });
+  if(!sl||!sl.slot){ el.hidden=true; return; }
+  const same=jobs.filter(x=>x.slot===sl.slot), k=cap(sl.slot), why=closedWhy(info,d,sl.slot), msg=[];
+  if(why) msg.push(`<b>${fmtDay(d)}${(info.closures||[]).some(x=>x.day===d&&x.slot)?" at "+esc(sl.slot):""} is closed</b> (${esc(why)}). You can still save it.`);
+  else if(k && k.cap!=null && same.length>=k.cap) msg.push(`<b>${esc(sl.slot)} is full</b>: ${same.length} of ${k.cap} booked. You can still save it.`);
+  if(same.length) msg.push(`Already at ${esc(sl.slot)} on ${fmtDay(d)}: ${same.map(x=>esc(first(x.name))+(x.assigned_name?" ("+esc(first(x.assigned_name))+")":"")).join(", ")}`);
+  el.hidden=!msg.length; el.innerHTML=msg.join("<br>");
 }
 $("sheetBody").addEventListener("click", e => {
   if(!$("bform")) return;
@@ -906,12 +1064,12 @@ $("sheetBody").addEventListener("submit", async e => {
       <a class="btn wa" target="_blank" rel="noopener" href="${wa(j.phone, fill("confirm", jobCtx(j)))}" ${j.status==="new"?'data-act="confirm"':""} data-sentconf>Send confirmation on WhatsApp</a>
       <button class="btn" type="button" data-open="${esc(j.id)}">Open the booking</button><button class="btn" type="button" data-new>Add another</button></div>`);
     if(S.v==="jobs"){ S.day=j.wash_date; vJobs(); } else if(S.v==="bookings"){ BK=null; vBookings(); } else if(S.v==="home") vHome();
-  }catch(x){ if(x.message==="signed out") return; err.hidden=false; err.textContent=x.message||"Couldn't save. Try again."; btn.disabled=false; btn.textContent=F.editing?"Save changes":"Save booking"; }
+  }catch(x){ if(x.message==="signed out") return; err.hidden=false; err.textContent=netDown(x)?"No internet, so this isn't saved yet. Keep this screen open and tap Save again when you're back online.":(x.message||"Couldn't save. Try again."); btn.disabled=false; btn.textContent=F.editing?"Save changes":"Save booking"; }
 });
-document.addEventListener("click", e => { const b=e.target.closest("[data-sentconf]"); if(b && !b.dataset.act){ const id=b.closest("[data-id]").dataset.id; rpc("staff_log",{p_id:id,p_kind:"message",p_detail:"Sent: Confirm booking"}).catch(()=>{}); } });
+document.addEventListener("click", e => { const b=e.target.closest("[data-sentconf]"); if(b && !b.dataset.act){ const id=b.closest("[data-id]").dataset.id; logLater(id, "message", "Sent: Confirm booking", "Message").catch(()=>{}); } });
 async function delBooking(b){
   if(!b.dataset.sure){ b.dataset.sure="1"; b.textContent="Tap again to delete for good"; setTimeout(()=>{ if(b.isConnected){ delete b.dataset.sure; b.textContent="Delete booking"; } },4000); return; }
-  try{ await rpc("owner_delete_booking",{p_id:F.id}); const j=JOBS.get(F.id); JOBS.delete(F.id); if(j) cache.set("day."+j.wash_date,null); closeSheet(); toast("Booking deleted"); if(S.v==="b") go(S.from||homeView()); else route(); }
+  try{ const r=await rpc("owner_delete_booking",{p_id:F.id}); removeFiles(r&&r.photos).catch(()=>{}); delete PH[F.id]; const j=JOBS.get(F.id); JOBS.delete(F.id); if(j) cache.set("day."+j.wash_date,null); closeSheet(); toast("Booking deleted"); if(S.v==="b") go(S.from||homeView()); else route(); }
   catch(e){ toast(e.message, true); }
 }
 
@@ -1042,14 +1200,15 @@ function dAnalytics(){
 document.addEventListener("click", e => { const a=e.target.closest("[data-an]"); if(a){ S.an=a.dataset.an; store.set("vb.an",S.an); AN=null; vAnalytics(); } });
 
 /* ============================== SETTINGS (owner) — Team inside, like Studio CRM ============================== */
-let TEAM=null, OFFERS=null, COSTS=null, AUDIT=null;
-const SET_TABS=[["team","Team"],["messages","WhatsApp messages"],["offers","Offers"],["costs","Monthly costs"],["notice","Team notice"],["data","Data & activity"]];
+let TEAM=null, OFFERS=null, COSTS=null, AUDIT=null, SLOTSET=null;
+const SET_TABS=[["team","Team"],["slots","Slots & days off"],["messages","WhatsApp messages"],["offers","Offers"],["costs","Monthly costs"],["notice","Team notice"],["data","Data & activity"]];
 async function vSettings(){
   if(!SET_TABS.some(t=>t[0]===S.setTab)) S.setTab="team";
   TEAM=TEAM||cache.get("team"); dSettings();
   try{
     if(S.setTab==="team"){ TEAM=await rpc("owner_team"); cache.set("team",TEAM); }
     if(S.setTab==="offers") OFFERS=await rpc("owner_offers");
+    if(S.setTab==="slots") SLOTSET=await rpc("staff_slots",{p_from:istToday(), p_to:addDays(istToday(),120)});
     if(S.setTab==="costs") COSTS=await rpc("owner_costs",{p_month:S.setMonth});
     if(S.setTab==="data"){ const r=await Promise.all([rpc("owner_audit",{p_limit:150}), rpc("owner_team")]); AUDIT=r[0]; TEAM=r[1]; }
     await refreshSettings(); dSettings();
@@ -1057,7 +1216,8 @@ async function vSettings(){
 }
 const AUD = {export:"Downloaded bookings", booking_deleted:"Deleted a booking", login_added:"Added a login", login_switched_on:"Switched a login on", login_switched_off:"Switched a login off",
   login_role:"Changed access", login_password:"Set a new password", login_edited:"Changed a login", login_deleted:"Deleted a login", messages_saved:"Changed WhatsApp messages",
-  notice_posted:"Posted the team notice", notice_cleared:"Cleared the team notice", offers_saved:"Changed an offer", costs_saved:"Saved monthly costs"};
+  notice_posted:"Posted the team notice", notice_cleared:"Cleared the team notice", offers_saved:"Changed an offer", costs_saved:"Saved monthly costs",
+  slots_saved:"Changed slot limits or days off", day_closed:"Closed a day", day_reopened:"Opened a day again"};
 const COST_CATS=[["ads","Ads (Meta, Google)"],["supplies","Shampoo, cloths, supplies"],["fuel","Fuel and travel"],["pay","Washer pay"],["other","Other"]];
 function dSettings(){
   if(S.v!=="settings") return;
@@ -1071,6 +1231,18 @@ function dSettings(){
       <p class="small muted" style="margin-top:10px">Tap a person to change their details, access or password, send their login on WhatsApp, switch them off or delete them.</p></section>
       <section class="card"><div class="card-head"><h2>Who can do what</h2></div><dl class="dl small"><dt>Washer</dt><dd>Jobs, Bookings, New booking and Help. Can change only the number plate and notes of a booking. Sees jobs given to them first.</dd><dt>Owner</dt><dd>Everything, including money, customers, Analytics, Settings and logins.</dd></dl></section>`;
   }
+  if(tab==="slots"){ const X=SLOTSET, wd=X?String(X.closed_weekdays||"").split(","):[], DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+    const cnt=(d,sl)=>((X&&X.counts)||[]).filter(c=>c.date===d && (!sl||c.slot===sl)).reduce((a,c)=>a+c.n,0);
+    body = !X ? skel(2,180) : `<div class="grid grid-2"><section class="card"><div class="card-head"><h2>Bookings per time slot</h2></div>
+      <p class="small muted" style="margin-bottom:12px">How many website bookings each time can take in a day. When a time is full, the website shows <b>Full</b> and the customer picks another. Leave it empty for no limit. You can still add bookings yourself; the app only warns you.</p>
+      <div class="form-grid">${X.caps.map(c=>`<label class="field">${esc(c.slot)}<input type="number" min="0" max="50" inputmode="numeric" data-cap="${esc(c.slot)}" value="${c.cap==null?"":c.cap}" placeholder="No limit"></label>`).join("")}</div>
+      <p class="opt-h" style="margin:16px 0 8px">Weekly day off</p><div class="chips">${DAYS.map((d,i)=>`<button type="button" class="chip${wd.includes(String(i+1))?" on":""}" data-wd="${i+1}" aria-pressed="${wd.includes(String(i+1))}">${d}</button>`).join("")}</div>
+      <button class="btn primary" type="button" id="stSlotSave" style="margin-top:16px">Save</button></section>
+    <section class="card"><div class="card-head"><h2>Close a day or a time</h2></div><p class="small muted" style="margin-bottom:12px">For a holiday, heavy rain or a big society job. The website stops taking bookings for it. Bookings already made stay; move or cancel them yourself.</p>
+      <div class="form-grid"><label class="field">Day<input type="date" id="stCloseDay" min="${istToday()}" value="${addDays(istToday(),1)}"></label><label class="field">Time<select id="stCloseSlot"><option value="">Whole day</option>${X.caps.map(c=>`<option value="${esc(c.slot)}">${esc(c.slot)}</option>`).join("")}</select></label><label class="field">Reason (only the team sees it)<input id="stCloseWhy" maxlength="120" placeholder="e.g. Diwali"></label></div>
+      <button class="btn primary" type="button" id="stClose" style="margin-top:14px">Close it</button>
+      <p class="opt-h" style="margin:18px 0 4px">Closed days coming up</p>
+      ${X.closures.length?X.closures.map(c=>{ const n=cnt(c.day,c.slot); return `<div class="list-row" style="cursor:default"><div class="lr-main"><b>${relDay(c.day)}${relDay(c.day).length<10?", "+fmtDay(c.day,{day:"numeric",month:"short"}):""}</b><span>${c.slot?esc(c.slot):"Whole day"}${c.reason?" · "+esc(c.reason):""}${n?` · <b class="warn-tx">${n} booking${n>1?"s":""} already</b>`:""}</span></div><button class="btn sm" type="button" data-reopen="${c.id}">Open again</button></div>`; }).join(""):'<p class="muted small">Nothing closed.</p>'}</section></div>`; }
   if(tab==="messages") body = `<section class="card"><div class="card-head"><h2>WhatsApp messages</h2><button class="btn primary sm" type="button" id="stTplSave">Save messages</button></div><p class="small muted" style="margin-bottom:12px">Words in curly brackets are filled in for each customer: {first_name} {package} {vehicle} {date} {slot} {address} {id} {total} {review_link} {book_link} {days} {society} {brand}</p>
     <div class="grid grid-2">${templates().map(t=>`<label class="field">${esc(t.title)}<textarea data-tpl="${t.key}" rows="4" maxlength="1000">${esc(t.body)}</textarea></label>`).join("")}</div></section>`;
   if(tab==="offers") body = !OFFERS ? skel(2,140) : `<section class="card"><div class="card-head"><h2>Offers and codes</h2></div><p class="small muted" style="margin-bottom:12px">The website and bookings use these straight away. Minimum order is the package plus add-ons before the discount.</p><div class="grid grid-2">${OFFERS.map(o=>offerRow(o)).join("")+offerRow(null)}</div></section>`;
@@ -1085,7 +1257,7 @@ function dSettings(){
       <div class="keybox"><span id="sheetKey" style="flex:1">${TEAM?esc(TEAM.sheet_copy_key):"…"}</span><button class="btn sm" type="button" id="copyKey">Copy</button></div></section></div>
     <section class="card"><div class="card-head"><h2>Activity log</h2></div><p class="small muted" style="margin-bottom:12px">Who changed logins, offers or messages, downloaded or deleted data. Customers' details are never shown here.</p>
       ${AUDIT?(AUDIT.length?`<ol class="timeline">${AUDIT.map(a=>`<li><span class="dot"></span><div>${esc(AUD[a.action]||a.action)}${a.detail?" · "+esc(a.detail):""}<small>${esc(a.actor_name||"")} · ${fmtTime(a.at)}</small></div></li>`).join("")}</ol>`:'<p class="muted">Nothing yet.</p>'):skel(1,120)}</section>`;
-  V().innerHTML = pageHead("Settings", "Team, messages, offers, costs and data") + `<div class="seg">${SET_TABS.map(([k,l])=>`<button type="button" data-settab="${k}" class="${tab===k?"on":""}">${l}</button>`).join("")}</div>` + body;
+  V().innerHTML = pageHead("Settings", "Team, slots and days off, messages, offers, costs and data") + `<div class="seg">${SET_TABS.map(([k,l])=>`<button type="button" data-settab="${k}" class="${tab===k?"on":""}">${l}</button>`).join("")}</div>` + body;
 }
 function offerRow(o){
   const isRef = o && o.code==="REFERRAL";
@@ -1109,6 +1281,14 @@ document.addEventListener("click", async e => {
       const p={code:box.dataset.offer||v("code").value.trim().toUpperCase(), amount:+v("amount").value, min_order:+v("min_order").value||0, first_wash_only:v("first_wash_only").checked, active:v("active").checked};
       if(v("referrer_credit")) p.referrer_credit=+v("referrer_credit").value||0; OFFERS=await rpc("owner_save_offer",{p}); toast("Offer saved"); dSettings(); }
     if(t.id==="stCostSave"){ const p={}; $$("[data-cost]").forEach(x=>p[x.dataset.cost]=x.value===""?0:+x.value); COSTS=await rpc("owner_save_costs",{p_month:S.setMonth, p}); cache.set("numbers",null); Object.keys(AN_RANGES).forEach(k=>cache.set("an."+k,null)); toast("Costs saved"); dSettings(); }
+    if(t.closest("[data-wd]")){ const b=t.closest("[data-wd]"); b.classList.toggle("on"); b.setAttribute("aria-pressed", b.classList.contains("on")); return; }
+    if(t.id==="stSlotSave"){ t.disabled=true; SLOTSET=await rpc("owner_save_slots",{p:{caps:$$("[data-cap]").map(x=>({slot:x.dataset.cap, cap:x.value===""?null:+x.value})), closed_weekdays:$$("[data-wd].on").map(x=>x.dataset.wd)}});
+      SLOTSET=await rpc("staff_slots",{p_from:istToday(), p_to:addDays(istToday(),120)}); toast("Saved. The website uses this straight away."); dSettings(); }
+    if(t.id==="stClose"){ const d=$("stCloseDay").value; if(!d) return toast("Pick a day", true); t.disabled=true;
+      const r=await rpc("owner_close_day",{p_day:d, p_slot:$("stCloseSlot").value||null, p_reason:$("stCloseWhy").value.trim()});
+      SLOTSET=await rpc("staff_slots",{p_from:istToday(), p_to:addDays(istToday(),120)}); dSettings();
+      toast(r.bookings?`Closed. ${r.bookings} booking${r.bookings>1?"s are":" is"} already on it — move or cancel ${r.bookings>1?"them":"it"}.`:"Closed. The website won't take bookings for it.", !!r.bookings); }
+    const ro=t.closest("[data-reopen]"); if(ro){ ro.disabled=true; await rpc("owner_reopen_day",{p_id:+ro.dataset.reopen}); SLOTSET=await rpc("staff_slots",{p_from:istToday(), p_to:addDays(istToday(),120)}); toast("Open again"); dSettings(); }
     if(t.id==="stExport") return exportCsv(t);
     if(t.id==="copyKey") navigator.clipboard.writeText($("sheetKey").textContent).then(()=>toast("Key copied")).catch(()=>{});
   }catch(x){ if(x.message!=="signed out") toast(x.message||"Couldn't save", true); t.disabled=false; }
@@ -1320,18 +1500,19 @@ async function start(){
   const wasOpen = !$("shell").hidden;
   show("app"); drawNav(); if(!wasOpen) route();
   await refreshSettings(); drawNav(); redraw();
-  pingCheck(); if(isOwner() && S.v!=="home") rpc("owner_overview").then(o=>{ OV=o; cache.set("numbers",o); setCounts(); }).catch(()=>{});
+  drawSync(); flush(); pingCheck(); if(isOwner() && S.v!=="home") rpc("owner_overview").then(o=>{ OV=o; cache.set("numbers",o); setCounts(); }).catch(()=>{});
   setTimeout(()=>tour(), 600);
 }
 
 /* live: refresh the open screen every 30 s while visible, and when coming back to the app */
 async function pingCheck(){ try{ remember(await rpc("staff_bookings",{p_query:"", p_from:istToday(), p_limit:200}), true); }catch(e){} }
 const LIVE = {home:()=>vHome(), jobs:()=>vJobs(), bookings:()=>vBookings()};
-setInterval(() => { if(document.hidden || !session || !S.me || $("shell").hidden) return; pingCheck(); if(LIVE[S.v] && $("sheet").hidden && $("finder").hidden && !document.activeElement.matches("input,textarea,select")) LIVE[S.v](); }, 30000);
+setInterval(() => { if(document.hidden || !session || !S.me || $("shell").hidden) return; flush(); pingCheck(); if(LIVE[S.v] && $("sheet").hidden && $("finder").hidden && !document.activeElement.matches("input,textarea,select")) LIVE[S.v](); }, 30000);
 document.addEventListener("visibilitychange", () => { if(!document.hidden && session && S.me && !$("shell").hidden){ refreshSettings(); pingCheck(); if(LIVE[S.v] && $("sheet").hidden) LIVE[S.v](); checkVersion(); } });
 async function checkVersion(){ if(!BUILD_ID) return; try{ const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"}); const j=await r.json(); if(j.build && j.build!==BUILD_ID) $("updBar").hidden=false; }catch(e){} }
 setInterval(checkVersion, 5*60e3);
 $("updBtn").addEventListener("click", () => location.reload());
+$("syncBtn").addEventListener("click", () => { if(!navigator.onLine) return toast("Still no internet", true); flush(); });
 
 /* ============================== go ============================== */
 const hash = new URLSearchParams(location.hash.slice(1));

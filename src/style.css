@@ -351,6 +351,8 @@ h2.big{font-size:clamp(2.1rem,5.2vw,4.1rem);line-height:1.02;letter-spacing:-.03
 .chips span{display:block;padding:10px 14px;border-radius:8px;border:1px solid var(--line);font-size:.86rem;font-weight:600;cursor:pointer;color:#C6CCCF}
 .chips input:checked + span{background:var(--lime);color:var(--ink);border-color:var(--lime)}
 .chips input:focus-visible + span{outline:2px solid var(--lime);outline-offset:2px}
+.chips input:disabled + span{opacity:.5;cursor:not-allowed;border-style:dashed}
+.chips span small{display:block;font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--coral);margin-top:2px}
 .pkgpick{display:flex;flex-direction:column;gap:10px}
 .pkgpick label{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;border-radius:10px;border:1px solid var(--line);cursor:pointer}
 .pkgpick label:has(input:checked){border-color:var(--lime);background:rgba(201,243,106,.06)}

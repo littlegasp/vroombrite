@@ -89,7 +89,7 @@ async function apiGet(params){
 async function saveToSheet(payload){
   if(USE_DB){
     const fn={booking:"create_booking", enquiry:"submit_enquiry", society:"submit_society_lead", review:"submit_review"}[payload.type];
-    try{ const j=await rpc(fn,{p:payload}); return j&&j.ok ? "ok" : "fail"; }catch(e){ console.warn(e); return "fail"; }
+    try{ const j=await rpc(fn,{p:payload}); return j&&j.ok ? "ok" : "fail"; }catch(e){ console.warn(e); return /^slot (full|closed)/.test(e.message) ? "full" : "fail"; }
   }
   if(!SITE.sheetUrl) return "skipped";
   try{
@@ -324,13 +324,29 @@ function showStep(n){
   B.step=n; $$(".step",bform).forEach(s=>s.hidden=+s.dataset.step!==n); $("done").hidden=true;
   $("prog").hidden=false; $("stepLbl").textContent=`STEP 0${n} / 03`; $("stepBar").style.width=(n/3*100)+"%";
 }
+/* Time slots: full, closed and already-started slots can't be picked (the database also refuses them). */
+const AVAIL={}, SLOT_TAG={full:"Full", closed:"Closed", past:"Gone"};
+async function loadAvail(from){
+  if(!USE_DB) return;
+  try{ (await rpc("slot_availability",{p_from:from, p_days:31})).forEach(d=>AVAIL[d.date]=d.slots); renderSlots(); }catch(e){ /* offline: every slot stays open; the database still checks */ }
+}
+function renderSlots(){
+  const box=$("slotChips"); if(!box) return;
+  const d=$("b-date").value, st=AVAIL[d]||{}, cur=(document.querySelector('input[name="slot"]:checked')||{}).value;
+  const open=SLOTS.filter(s=>!st[s]||st[s]==="open"), pick=open.includes(cur)?cur:open[0];
+  box.innerHTML=SLOTS.map((s,i)=>{ const x=st[s]&&st[s]!=="open"?st[s]:""; return `<label${x?' class="off"':""}><input type="radio" name="slot" value="${s}" id="slot-${i}" ${s===pick?"checked":""} ${x?"disabled":""}><span>${s}${x?`<small>${SLOT_TAG[x]||"Full"}</small>`:""}</span></label>`; }).join("");
+  const none=!open.length; let m=$("slotNone"); if(!m){ m=document.createElement("p"); m.id="slotNone"; m.className="pinmsg no"; m.style.marginTop="8px"; box.after(m); }
+  m.textContent=none?(Object.values(st).every(v=>v==="closed")?"We're not washing on this day. Please pick another date.":"No times left on this day. Please pick another date."):""; m.hidden=!none;
+  if(typeof updateSum==="function") updateSum();
+}
 if(bform){
   const on=!!SITE.upiId;
   $("payPick").innerHTML=`<label><span><input type="radio" name="pay" value="after" id="pay-after" checked><b>Pay after the wash</b><small>UPI or cash, once you've checked the shine. No advance needed.</small></span><strong class="tagp">Standard</strong></label>
     <label${on?"":' class="off"'}><span><input type="radio" name="pay" value="online" id="pay-online" ${on?"":"disabled"}><b>Pay online now</b><small>${on?"Pay by UPI from any app right after you confirm.":"Online payment is coming soon."}</small></span><strong class="tagp alt">${on?"UPI":"Soon"}</strong></label>`;
-  $("slotChips").innerHTML=SLOTS.map((s,i)=>`<label><input type="radio" name="slot" value="${s}" id="slot-${i}" ${i===0?"checked":""}><span>${s}</span></label>`).join("");
   const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
   const tm=new Date(); tm.setDate(tm.getDate()+1); $("b-date").min=iso(new Date()); $("b-date").value=iso(tm);
+  renderSlots(); loadAvail(iso(new Date()));
+  $("b-date").addEventListener("change",()=>{ const d=$("b-date").value; renderSlots(); if(d && !AVAIL[d]) loadAvail(d); });
   ["b-code","b-ref","b-phone"].forEach(id=>$(id).addEventListener("input",queueOffer));
   $("applyOffer").addEventListener("click",()=>{ setChecking(true); runOffer(); });
   $("b-code").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); setChecking(true); runOffer(); } });
@@ -348,6 +364,7 @@ if(bform){
     if(e.target.closest("[data-next]")){
       if(B.step===2){
         const m=[]; if(!$("b-addr").value.trim()) m.push("your building or society"); if(!B.pinOk) m.push("a PIN code we cover"); if(!$("b-date").value) m.push("a date");
+        else if(!document.querySelector('input[name="slot"]:checked')) m.push("a time slot that's still free (or another date)");
         $("err2").textContent=m.length?"Please add "+m.join(", ")+".":""; $("err2").hidden=!m.length; if(m.length) return;
       }
       showStep(B.step+1); bform.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});
@@ -381,6 +398,7 @@ if(bform){
     const st=$("saveState"); st.hidden=true;
     const res=await saveToSheet(data);
     if(res==="ok"){ st.className="status ok"; st.textContent="Saved to our booking list."; st.hidden=false; }
+    else if(res==="full"){ st.className="status warn"; st.textContent="That time just got fully booked. Please still press send in WhatsApp and we'll reply with the nearest free time."; st.hidden=false; delete AVAIL[data.date]; loadAvail(data.date); }
     else if(res==="fail"){ st.className="status warn"; st.textContent="We couldn't save this online, so please press send in WhatsApp to confirm."; st.hidden=false; }
   });
   $("newBooking").addEventListener("click",()=>{ B.adds.clear(); B.offer=null; $("b-code").value=""; $("b-ref").value=""; $("offerMsg").textContent=""; renderPick(); showStep(1); });

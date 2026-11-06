@@ -2,6 +2,10 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["6 Nov 2026", "No internet (basement parking)? Taps like Washed, Paid and notes are saved on your phone and sent by themselves when the internet is back. An orange bar shows how many are waiting."],
+  ["6 Nov 2026", "Before and after photos on every booking, and one tap to send them to the customer."],
+  ["6 Nov 2026", "UPI QR button: the customer scans it on your phone and the amount is already filled in."],
+  ["6 Nov 2026", "Owner: Settings → Slots & days off. Set how many website bookings each time can take, a weekly day off, and close a day or a time for holidays or rain. The website shows Full or Closed."],
   ["6 Nov 2026", "Screens no longer flash or jump when they refresh in the background; they only change when something new comes in."],
   ["6 Nov 2026", "New look, same as Studio CRM's layout in Vroombrite colours: a menu on the left (laptop) or tabs at the bottom (phone), light and dark look."],
   ["6 Nov 2026", "Owner: Home shows what needs attention, the month's calendar and recent bookings. Analytics compares any period with the one before."],
@@ -53,6 +57,8 @@ const GUIDE = [
 <li><b>Next step</b> has the one button you need now.</li>
 <li><b>The job</b>: day, time, vehicle, package, address (Map), notes, washer. Tap <b>Edit</b> to change it. Washers can change the number plate and notes; the owner can change everything, including day, time and price.</li>
 <li>The money box shows what to collect, any discount or referral credit, and the paid buttons (with <b>Undo</b>).</li>
+<li><b>UPI QR</b>: tap it and show your screen to the customer. They scan it with Google Pay, PhonePe, Paytm or any UPI app; the amount and booking ID are filled in. When their app says paid, tap <b>They've paid · Paid by UPI</b>. Always check the money has come in before you tap.</li>
+<li><b>Photos</b>: tap <b>Before</b> when you arrive and <b>After</b> when you finish. Take the photo or pick it from your gallery. Photos need internet. Tap <b>Send photos to …</b> to share them with the customer: on a phone pick WhatsApp and their chat, or send links that work for 7 days. You can delete your own photos (tap ✕ twice); the owner can delete any.</li>
 <li><b>Customer</b>: Call, WhatsApp, Map and <b>Calendar</b> (adds the job to your phone's calendar).</li>
 <li><b>History and notes</b>: every step with who did it and when, including messages, calls and changes. Add notes like gate codes here.</li>
 <li><b>More</b>: send a reminder, ask for a review, cancel or reopen.</li></ul>
@@ -62,7 +68,7 @@ const GUIDE = [
 <ol><li>Tap <b>+</b> (phone) or <b>New booking</b> (laptop).</li>
 <li>Fastest: copy the customer's WhatsApp message, paste it in the box at the top and tap <b>Fill</b>. Check what it filled.</li>
 <li>Choose the vehicle, package and any add-ons. The price fills in by itself; you can change it. To give a discount, enter it with a reason.</li>
-<li>Pick the day and time. If that time already has bookings, a yellow note says who.</li>
+<li>Pick the day and time. Each time shows how many bookings it has (for example 2/3). If a time is <b>full</b> or the day is <b>closed</b>, a yellow note says so. You can still save it if you've agreed it with the customer.</li>
 <li>Enter the address and PIN code (the area fills in by itself), choose where the booking came from and tap <b>Save booking</b>.</li></ol>
 <p>After saving you can send the confirmation on WhatsApp in one tap. Bookings a washer adds are given to that washer.</p>` },
 
@@ -89,7 +95,8 @@ const GUIDE = [
 <p>You can't switch off, demote or delete your own login.</p>` },
 
   { id: "settings", role: "owner", title: "Settings", body: `
-<ul><li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {days}, {society}, {brand}.</li>
+<ul><li><b>Slots &amp; days off</b>: how many website bookings each time (6–8 AM, 8–10 AM…) can take in a day; leave it empty for no limit. When a time is full, the website shows it as <b>Full</b> and the customer picks another. Tick a <b>weekly day off</b> if you don't work that day. Use <b>Close a day or a time</b> for holidays, heavy rain or a big society job, and <b>Open again</b> to undo it. Bookings already made on a closed day stay; move or cancel them yourself. You can always add bookings yourself; the app only warns you.</li>
+<li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {days}, {society}, {brand}.</li>
 <li><b>Offers</b>: change WELCOME50 and the referral offer (amount, minimum order, first wash only, on/off), or add a new code like DIWALI100. The website uses the new amounts straight away.</li>
 <li><b>Monthly costs</b>: ads, supplies, fuel, washer pay and other costs. Analytics then shows profit and cost per wash.</li>
 <li><b>Team notice</b>: one line everyone sees at the top of Home and Jobs ("Rain today, carry covers"). Clear it when done.</li>
@@ -107,7 +114,7 @@ const GUIDE = [
 <p><b>Reviews</b>: nothing shows on the website until you tap <b>Show on website</b>.</p>` },
 
   { id: "delete", role: "owner", title: "Deleting a booking and customers' privacy", body: `
-<p>Delete only test or spam bookings: open it → <b>Edit</b> → <b>Delete booking</b>. It removes the booking, its history and its review for good. The activity log keeps a line without the customer's details.</p>
+<p>Delete only test or spam bookings: open it → <b>Edit</b> → <b>Delete booking</b>. It removes the booking, its history, its photos and its review for good. The activity log keeps a line without the customer's details.</p>
 <p>The app has customers' names, mobiles and addresses. Don't share screenshots or downloads outside the business. If a phone with the app is lost, switch that login off in Settings → Team.</p>` },
 
   { id: "account", role: "all", title: "My account and password", body: `
@@ -116,6 +123,7 @@ const GUIDE = [
 
   { id: "problems", role: "all", title: "Something looks wrong?", body: `
 <ul><li>Tap <b>Refresh now</b> in your account.</li>
-<li>"Couldn't save": check your internet and tap again. The screen goes back to how it was until it saves.</li>
+<li><b>No internet</b>: keep working. Taps like On the way, Washed, Paid and notes are kept on your phone; an orange bar says how many are waiting. They send by themselves when the internet is back (or tap <b>Try now</b>). Don't sign out or clear the browser while the bar is showing. Photos and new bookings need internet.</li>
+<li>"Couldn't save": the server refused the change (for example someone else already changed the booking). Check the booking and try again.</li>
 <li>Still stuck: send a screenshot to the owner.</li></ul>` }
 ];
