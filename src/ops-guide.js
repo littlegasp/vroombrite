@@ -2,6 +2,11 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["7 Nov 2026", "Cancelling a booking now asks why (rain, couldn't reach the customer…). Analytics shows the reasons."],
+  ["7 Nov 2026", "Send receipt: once a job is paid, send the customer a receipt link on WhatsApp."],
+  ["7 Nov 2026", "Stock & bills: tap − / + as you use and buy supplies, and add fuel or supply bills with a photo. The owner approves them."],
+  ["7 Nov 2026", "Owner: Settings → Pay works out each washer's pay from a rate per car and per bike, with Mark paid and a statement to send. Washers see their own pay under Me."],
+  ["7 Nov 2026", "Owner: phone alerts for new website bookings (Me → Phone alerts)."],
   ["7 Nov 2026", "Owner: new Plans screen for monthly plans and society contracts. Adding one books all the month's visits on its fixed days; you mark the month paid once."],
   ["7 Nov 2026", "Plan and society visits show on Jobs like any booking, with nothing to collect. A society visit's checklist is its list of vehicles."],
   ["7 Nov 2026", "Owner: Start contract on a society request in Inbox fills in the society for you."],
@@ -77,7 +82,9 @@ const GUIDE = [
 <li><b>Photos</b>: tap <b>Before</b> when you arrive and <b>After</b> when you finish. Take the photo or pick it from your gallery. Photos need internet. Tap <b>Send photos to …</b> to share them with the customer: on a phone pick WhatsApp and their chat, or send links that work for 7 days. You can delete your own photos (tap ✕ twice); the owner can delete any.</li>
 <li><b>Customer</b>: Call, WhatsApp, Map and <b>Calendar</b> (adds the job to your phone's calendar).</li>
 <li><b>History and notes</b>: every step with who did it and when, including messages, calls and changes. Add notes like gate codes here.</li>
-<li><b>More</b>: send a reminder, ask for a review, cancel or reopen.</li></ul>
+<li><b>More</b>: send a reminder, ask for a review, cancel or reopen.</li>
+<li><b>Cancel booking</b> asks why: pick a reason (and add a few words if you like). The reason shows on the booking and in Analytics.</li>
+<li><b>Send receipt</b> (once it's paid): opens WhatsApp with a link to a receipt page showing the booking, the amount and "Paid". It shows the customer's first name only, not their phone or address.</li></ul>
 <p><b>After a call</b> the app asks how it went: <b>Talked</b>, <b>No answer</b> (offers the "Couldn't reach you" WhatsApp message) or <b>Busy</b>. It's saved in the history.</p>` },
 
   { id: "new", role: "all", title: "Adding a booking (phone, WhatsApp, walk-in)", body: `
@@ -108,6 +115,27 @@ const GUIDE = [
 <li><b>Edit</b> changes days, time, washer, price or the vehicle list. Changes apply to months you create after that; to move visits already booked, open each one or use <b>Move day</b> on Jobs.</li>
 <li><b>End plan</b> removes visits from today on that aren't done; past visits and months stay. <b>Delete for good</b> is for mistakes only.</li></ul>
 <p>Analytics counts a plan's money when you mark the month paid (Collected says how much came from plans).</p>` },
+
+  { id: "kit", role: "all", title: "Stock & bills", screens: ["kit"], body: `
+<p><b>Stock & bills</b> is in the menu (on a phone: More, or Me for washers).</p>
+<ul><li><b>Stock</b>: tap <b>−</b> when you use up one (a bottle, a litre, a cloth) and <b>+</b> when you buy more. Items in orange are running low.</li>
+<li>Owner: <b>Edit list</b> to add or remove items and set <b>Warn at</b>: when what's in hand reaches that number, Home shows "Running low".</li>
+<li><b>Add a bill</b>: for fuel or supplies you paid for. Enter the amount, what it was for, and take a photo of the bill. It waits for the owner, and you can delete it until then.</li>
+<li>Owner: <b>Approve</b> or <b>Reject</b> each bill; Home shows how many are waiting. Approved bills count as costs in Analytics (don't enter them again in Monthly costs). Your own bills are approved straight away.</li></ul>` },
+
+  { id: "pay", role: "owner", title: "Washer pay (Settings → Pay)", body: `
+<ol><li>Set each washer's rate <b>per car wash</b> and <b>per bike wash</b>, then <b>Save rates</b>.</li>
+<li>Pick <b>This week</b>, <b>This month</b> or <b>Last month</b>. Each washer shows washes, what they earned and what's still owed. A job counts on the day it was marked washed, for the washer it was given to; a society visit counts each vehicle ticked.</li>
+<li><b>Send statement</b> opens WhatsApp to the washer with the count and amounts (add their mobile in Team first).</li>
+<li>When you've paid them, tap <b>Mark … paid</b> (twice). <b>Paid before</b> lists past payments; <b>Undo</b> if you marked one by mistake.</li></ol>
+<p>Pay you mark paid counts as costs in Analytics, so don't enter washer pay again in Monthly costs. Washers see their own pay under <b>Me → My pay</b>.</p>` },
+
+  { id: "alerts", role: "owner", title: "Phone alerts and nightly backup", body: `
+<p><b>Phone alerts</b>: get a notification when a booking comes in from the website, even with the app closed.</p>
+<ol><li>One-time setup in Supabase: <b>Edge Functions → Deploy a new function → Via editor</b>, name it <b>push</b>, paste the file <b>supabase/functions/push/index.ts</b>, Deploy. Then in the function's settings switch <b>off</b> "Verify JWT with legacy secret".</li>
+<li>iPhone: open the staff app in Safari, tap <b>Share → Add to Home Screen</b>, and open <b>VB Staff</b> from the Home Screen. Android: Chrome works as it is.</li>
+<li>Tap your name / <b>More → My account</b> → <b>Phone alerts</b> → <b>Turn on alerts</b>, and allow notifications. A test alert arrives. Do this on each phone you want alerts on.</li></ol>
+<p><b>Nightly backup</b>: a copy of the database is saved every night at about 2 am in GitHub (Actions → Nightly database backup), locked with your passphrase and kept for 30 days. Photos aren't in it. Setup needs two secrets added in GitHub (Settings → Secrets and variables → Actions): <b>SUPABASE_DB_URL</b> and <b>BACKUP_PASSPHRASE</b>. Never paste them anywhere else.</p>` },
 
   { id: "customers", role: "owner", title: "Customers", body: `
 <p><b>All customers</b> lists every customer by mobile number: washes, amount paid, last wash and next booking. Tap one to see their bookings, call or message them, or start a <b>New booking</b> with their details filled in.</p>
@@ -150,6 +178,7 @@ const GUIDE = [
 
   { id: "account", role: "all", title: "My account and password", body: `
 <p>Tap your name (laptop menu) or <b>Me</b> / <b>More → My account</b> (phone) for <b>Change my password</b>, light or dark look, <b>Refresh now</b> and <b>Sign out</b>. The sun/moon button switches the look too.</p>
+<p>Washers: <b>My pay</b> shows this month's washes and pay, what's still to be paid and your last payment. The owner sees <b>Phone alerts</b> here.</p>
 <p>Forgot your password? On the sign-in screen tap <b>Forgot password?</b> for an email link, or ask the owner to set a new one in Settings → Team.</p>` },
 
   { id: "problems", role: "all", title: "Something looks wrong?", body: `

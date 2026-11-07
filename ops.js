@@ -55,6 +55,11 @@ const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["7 Nov 2026", "Cancelling a booking now asks why (rain, couldn't reach the customer…). Analytics shows the reasons."],
+  ["7 Nov 2026", "Send receipt: once a job is paid, send the customer a receipt link on WhatsApp."],
+  ["7 Nov 2026", "Stock & bills: tap − / + as you use and buy supplies, and add fuel or supply bills with a photo. The owner approves them."],
+  ["7 Nov 2026", "Owner: Settings → Pay works out each washer's pay from a rate per car and per bike, with Mark paid and a statement to send. Washers see their own pay under Me."],
+  ["7 Nov 2026", "Owner: phone alerts for new website bookings (Me → Phone alerts)."],
   ["7 Nov 2026", "Owner: new Plans screen for monthly plans and society contracts. Adding one books all the month's visits on its fixed days; you mark the month paid once."],
   ["7 Nov 2026", "Plan and society visits show on Jobs like any booking, with nothing to collect. A society visit's checklist is its list of vehicles."],
   ["7 Nov 2026", "Owner: Start contract on a society request in Inbox fills in the society for you."],
@@ -130,7 +135,9 @@ const GUIDE = [
 <li><b>Photos</b>: tap <b>Before</b> when you arrive and <b>After</b> when you finish. Take the photo or pick it from your gallery. Photos need internet. Tap <b>Send photos to …</b> to share them with the customer: on a phone pick WhatsApp and their chat, or send links that work for 7 days. You can delete your own photos (tap ✕ twice); the owner can delete any.</li>
 <li><b>Customer</b>: Call, WhatsApp, Map and <b>Calendar</b> (adds the job to your phone's calendar).</li>
 <li><b>History and notes</b>: every step with who did it and when, including messages, calls and changes. Add notes like gate codes here.</li>
-<li><b>More</b>: send a reminder, ask for a review, cancel or reopen.</li></ul>
+<li><b>More</b>: send a reminder, ask for a review, cancel or reopen.</li>
+<li><b>Cancel booking</b> asks why: pick a reason (and add a few words if you like). The reason shows on the booking and in Analytics.</li>
+<li><b>Send receipt</b> (once it's paid): opens WhatsApp with a link to a receipt page showing the booking, the amount and "Paid". It shows the customer's first name only, not their phone or address.</li></ul>
 <p><b>After a call</b> the app asks how it went: <b>Talked</b>, <b>No answer</b> (offers the "Couldn't reach you" WhatsApp message) or <b>Busy</b>. It's saved in the history.</p>` },
 
   { id: "new", role: "all", title: "Adding a booking (phone, WhatsApp, walk-in)", body: `
@@ -161,6 +168,27 @@ const GUIDE = [
 <li><b>Edit</b> changes days, time, washer, price or the vehicle list. Changes apply to months you create after that; to move visits already booked, open each one or use <b>Move day</b> on Jobs.</li>
 <li><b>End plan</b> removes visits from today on that aren't done; past visits and months stay. <b>Delete for good</b> is for mistakes only.</li></ul>
 <p>Analytics counts a plan's money when you mark the month paid (Collected says how much came from plans).</p>` },
+
+  { id: "kit", role: "all", title: "Stock & bills", screens: ["kit"], body: `
+<p><b>Stock & bills</b> is in the menu (on a phone: More, or Me for washers).</p>
+<ul><li><b>Stock</b>: tap <b>−</b> when you use up one (a bottle, a litre, a cloth) and <b>+</b> when you buy more. Items in orange are running low.</li>
+<li>Owner: <b>Edit list</b> to add or remove items and set <b>Warn at</b>: when what's in hand reaches that number, Home shows "Running low".</li>
+<li><b>Add a bill</b>: for fuel or supplies you paid for. Enter the amount, what it was for, and take a photo of the bill. It waits for the owner, and you can delete it until then.</li>
+<li>Owner: <b>Approve</b> or <b>Reject</b> each bill; Home shows how many are waiting. Approved bills count as costs in Analytics (don't enter them again in Monthly costs). Your own bills are approved straight away.</li></ul>` },
+
+  { id: "pay", role: "owner", title: "Washer pay (Settings → Pay)", body: `
+<ol><li>Set each washer's rate <b>per car wash</b> and <b>per bike wash</b>, then <b>Save rates</b>.</li>
+<li>Pick <b>This week</b>, <b>This month</b> or <b>Last month</b>. Each washer shows washes, what they earned and what's still owed. A job counts on the day it was marked washed, for the washer it was given to; a society visit counts each vehicle ticked.</li>
+<li><b>Send statement</b> opens WhatsApp to the washer with the count and amounts (add their mobile in Team first).</li>
+<li>When you've paid them, tap <b>Mark … paid</b> (twice). <b>Paid before</b> lists past payments; <b>Undo</b> if you marked one by mistake.</li></ol>
+<p>Pay you mark paid counts as costs in Analytics, so don't enter washer pay again in Monthly costs. Washers see their own pay under <b>Me → My pay</b>.</p>` },
+
+  { id: "alerts", role: "owner", title: "Phone alerts and nightly backup", body: `
+<p><b>Phone alerts</b>: get a notification when a booking comes in from the website, even with the app closed.</p>
+<ol><li>One-time setup in Supabase: <b>Edge Functions → Deploy a new function → Via editor</b>, name it <b>push</b>, paste the file <b>supabase/functions/push/index.ts</b>, Deploy. Then in the function's settings switch <b>off</b> "Verify JWT with legacy secret".</li>
+<li>iPhone: open the staff app in Safari, tap <b>Share → Add to Home Screen</b>, and open <b>VB Staff</b> from the Home Screen. Android: Chrome works as it is.</li>
+<li>Tap your name / <b>More → My account</b> → <b>Phone alerts</b> → <b>Turn on alerts</b>, and allow notifications. A test alert arrives. Do this on each phone you want alerts on.</li></ol>
+<p><b>Nightly backup</b>: a copy of the database is saved every night at about 2 am in GitHub (Actions → Nightly database backup), locked with your passphrase and kept for 30 days. Photos aren't in it. Setup needs two secrets added in GitHub (Settings → Secrets and variables → Actions): <b>SUPABASE_DB_URL</b> and <b>BACKUP_PASSPHRASE</b>. Never paste them anywhere else.</p>` },
 
   { id: "customers", role: "owner", title: "Customers", body: `
 <p><b>All customers</b> lists every customer by mobile number: washes, amount paid, last wash and next booking. Tap one to see their bookings, call or message them, or start a <b>New booking</b> with their details filled in.</p>
@@ -203,6 +231,7 @@ const GUIDE = [
 
   { id: "account", role: "all", title: "My account and password", body: `
 <p>Tap your name (laptop menu) or <b>Me</b> / <b>More → My account</b> (phone) for <b>Change my password</b>, light or dark look, <b>Refresh now</b> and <b>Sign out</b>. The sun/moon button switches the look too.</p>
+<p>Washers: <b>My pay</b> shows this month's washes and pay, what's still to be paid and your last payment. The owner sees <b>Phone alerts</b> here.</p>
 <p>Forgot your password? On the sign-in screen tap <b>Forgot password?</b> for an email link, or ask the owner to set a new one in Settings → Team.</p>` },
 
   { id: "problems", role: "all", title: "Something looks wrong?", body: `
@@ -219,7 +248,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "f529d7a12b";
+const BUILD_ID = "c5c6def28a";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";
@@ -251,6 +280,9 @@ const I = {
   home: ic('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>'),
   jobs: ic('<path d="M4 17h2l2-6h8l2 6h2"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/><path d="M9 7c0-1.5 1-3 3-3s3 1.5 3 3"/>'),
   board: ic('<rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/>'),
+  box: ic('<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>'),
+  bell2: ic('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
+  receipt: ic('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'),
   repeat: ic('<path d="M4 9a7 7 0 0 1 12-4l3 3M20 4v4h-4M20 15a7 7 0 0 1-12 4l-3-3M4 20v-4h4"/>'),
   users: ic('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/>'),
   inbox: ic('<path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>'),
@@ -305,6 +337,15 @@ async function rpc(fn, args, retried){
   return j;
 }
 const NOFN = "The login manager isn't set up yet. In Supabase: Edge Functions → Deploy a new function → Via editor, name it team-admin, paste supabase/functions/team-admin/index.ts and Deploy.";
+async function callFn(name, body){
+  await fresh(); let r;
+  try{ r = await fetch(URL_+"/functions/v1/"+name, {method:"POST", headers:{"Content-Type":"application/json", apikey:KEY, Authorization:"Bearer "+session.access_token}, body:JSON.stringify(body)}); }
+  catch(e){ const x=new Error("No internet"); throw x; }
+  const j = await r.json().catch(()=>({}));
+  if(r.status===404) throw new Error(`The "${name}" function isn't set up in Supabase yet. See Help → Phone alerts.`);
+  if(!r.ok) throw new Error(j.error || j.message || ("Error "+r.status));
+  return j;
+}
 async function teamAdmin(body){
   await fresh(); let r;
   try{ r = await fetch(URL_+"/functions/v1/team-admin", {method:"POST", headers:{"Content-Type":"application/json", apikey:KEY, Authorization:"Bearer "+session.access_token}, body:JSON.stringify(body)}); }
@@ -368,6 +409,7 @@ const NAV = [
   {id:"bookings", t:"Bookings", i:I.board},
   {id:"customers", t:"Customers", i:I.users, owner:true},
   {id:"plans", t:"Plans", i:I.repeat, owner:true, badge:()=>S.planCount||0},
+  {id:"kit", t:"Stock & bills", i:I.box, badge:()=>S.kitCount||0},
   {id:"inbox", t:"Inbox", i:I.inbox, owner:true, badge:()=>S.inboxCount||0},
   {label:"Business", owner:true},
   {id:"analytics", t:"Analytics", i:I.chart, owner:true},
@@ -387,7 +429,7 @@ function drawNav(){
   const tabs = isOwner()
     ? [["home","Home",I.home],["jobs","Jobs",I.jobs],["new","New",I.plus],["bookings","Bookings",I.board],["more","More",I.menu]]
     : [["jobs","Jobs",I.jobs],["bookings","Bookings",I.board],["new","New",I.plus],["help","Help",I.help],["more","Me",I.user]];
-  const inMore = ["customers","plans","inbox","analytics","settings"].concat(isOwner()?["help"]:[]);
+  const inMore = ["customers","plans","kit","inbox","analytics","settings"].concat(isOwner()?["help"]:[]);
   setHTML($("tabbar"), tabs.map(([id,l,i]) => `<button type="button" data-tab="${id}" class="${id==="new"?"tb-new":""}${id===cur||(id==="more"&&inMore.includes(cur))?" on":""}">${i}<span>${l}</span>${id==="more"&&S.inboxCount?`<i class="tb-dot">${S.inboxCount}</i>`:""}${id==="home"&&S.attnCount?`<i class="tb-dot">${S.attnCount}</i>`:""}</button>`).join(""));
   $("whoAv").textContent = (S.me&&S.me.name||"?").trim().charAt(0).toUpperCase();
   $("whoName").textContent = S.me ? S.me.name : ""; $("whoRole").textContent = isOwner() ? "Owner" : "Washer";
@@ -402,7 +444,7 @@ document.addEventListener("click", e => {
 });
 function moreSheet(){
   if(!isOwner()) return accountSheet();
-  openSheet("More", `<div class="more-grid">${NAV.filter(n=>n.id && ["customers","plans","inbox","analytics","settings","help"].includes(n.id)).map(n=>`<button class="btn" type="button" data-go="${n.id}">${n.i}<span>${n.t}</span>${n.badge&&n.badge()?`<span class="nav-badge">${n.badge()}</span>`:""}</button>`).join("")}
+  openSheet("More", `<div class="more-grid">${NAV.filter(n=>n.id && ["customers","plans","kit","inbox","analytics","settings","help"].includes(n.id)).map(n=>`<button class="btn" type="button" data-go="${n.id}">${n.i}<span>${n.t}</span>${n.badge&&n.badge()?`<span class="nav-badge">${n.badge()}</span>`:""}</button>`).join("")}
     <button class="btn" type="button" data-account>${I.user}<span>My account</span></button></div>`);
 }
 function go(path){ const h="#"+path; if(location.hash===h) route(); else location.hash=h; }
@@ -414,7 +456,7 @@ function route(){
   if(view==="b" && S.v!=="b") S.from = S.v || homeView();
   S.v=view; S.arg=arg; closePop(); drawNav();
   if(view==="settings" && arg) S.setTab=arg;
-  const fn = {home:vHome, jobs:vJobs, bookings:vBookings, b:vBooking, c:vContract, plans:vPlans, customers:vCustomers, inbox:vInbox, analytics:vAnalytics, settings:vSettings, help:vHelp}[view];
+  const fn = {home:vHome, jobs:vJobs, bookings:vBookings, b:vBooking, c:vContract, plans:vPlans, kit:vKit, customers:vCustomers, inbox:vInbox, analytics:vAnalytics, settings:vSettings, help:vHelp}[view];
   if(painted!==S.v+"/"+S.arg){ painted=""; $("view")._h=""; scrollTo(0,0); } fn();
 }
 /* Draw a screen only when its content changed. The entrance animation and count-up play only the
@@ -463,6 +505,7 @@ const DEFAULT_T = {
   moved:["Moved (rain day)","Hi {first_name}, this is {brand}. Because of the weather we've moved your {package} to {date}, {slot}. If that doesn't suit you, reply here with a better day and time. Sorry for the change!"],
   plan_renew:["Plan renewal","Hi {first_name}, this is {brand}. Your {plan} plan ends on {end}. Shall we continue next month? It's {price} for {washes}. Just reply YES and we'll keep the same days and time."],
   plan_pay:["Plan payment due","Hi {first_name}, a gentle reminder from {brand}: {price} for your {plan} plan ({period}) is due. You can pay by UPI to {upi}. Thank you!"],
+  receipt:["Receipt","Hi {first_name}, thank you for choosing {brand}! Here is your receipt for {amount}: {link}"],
   noanswer:["Couldn't reach you","Hi {first_name}, this is {brand}. We tried calling about your {package} on {date}. Please reply here or call us back when free."]
 };
 function templates(){ const map={}; Object.keys(DEFAULT_T).forEach((k,i)=>map[k]={key:k,title:DEFAULT_T[k][0],body:DEFAULT_T[k][1],position:i}); (SET.templates||[]).forEach(t=>map[t.key]=t); return Object.values(map).sort((a,b)=>a.position-b.position); }
@@ -594,7 +637,7 @@ async function act(id, action, from){
 document.addEventListener("click", e => {
   const host = e.target.closest("[data-id]"), a = e.target.closest("[data-act]");
   if(a && host){
-    if(a.dataset.act==="cancel" && !a.dataset.sure){ a.dataset.sure="1"; const t=a.textContent; a.textContent="Tap again to cancel"; setTimeout(()=>{ if(a.isConnected){ delete a.dataset.sure; a.textContent=t; } }, 3000); e.preventDefault(); return; }
+    if(a.dataset.act==="cancel"){ e.preventDefault(); return cancelSheet(host.dataset.id); }
     act(host.dataset.id, a.dataset.act, a); if(a.tagName==="BUTTON") e.preventDefault(); if(a.closest("#sheet")) closeSheet(); return;
   }
   if(host && e.target.closest("[data-chat]")) return chatSheet(host.dataset.id);
@@ -769,11 +812,142 @@ document.addEventListener("submit", async e => {
   catch(x){ b.disabled=false; b.textContent="Try again"; err.hidden=false; err.textContent=x.message; }
 });
 
+/* ============================== CANCEL WITH A REASON ============================== */
+const CANCEL_WHY=["Customer cancelled","Couldn't reach the customer","Rain","No access or parking","We couldn't make it","Booked by mistake","Other"];
+function cancelSheet(id){
+  const j=JOBS.get(id); if(!j) return;
+  openSheet(`Cancel ${first(j.name)}'s booking?`, `<form id="cxForm" class="menu" data-for="${esc(id)}"><p class="muted small">${relDay(j.wash_date)}, ${esc(j.slot)} · ${esc(j.package)}. Why is it cancelled?</p>
+    <div class="chips">${CANCEL_WHY.map(r=>`<button type="button" class="chip" data-cxr="${esc(r)}">${esc(r)}</button>`).join("")}</div>
+    <input class="input" id="cxNote" maxlength="60" placeholder="A few words (optional)">
+    <button class="btn danger lg" type="submit" id="cxGo" disabled>Pick a reason</button><button class="btn" type="button" data-close>Keep the booking</button></form>`);
+}
+document.addEventListener("click", e => { const c=e.target.closest("[data-cxr]"); if(!c) return; $$("[data-cxr]").forEach(x=>x.classList.toggle("on", x===c)); const b=$("cxGo"); b.disabled=false; b.textContent="Cancel booking"; });
+document.addEventListener("submit", async e => {
+  if(e.target.id!=="cxForm") return; e.preventDefault(); const id=e.target.dataset.for, on=document.querySelector("[data-cxr].on"); if(!on) return;
+  const note=$("cxNote").value.trim(), reason=on.dataset.cxr+(note?": "+note:""); closeSheet();
+  const r=await bookCall(id, "staff_cancel", {p_id:id, p_reason:reason}, {status:"cancelled", cancel_reason:reason, cancelled_at:new Date().toISOString()}, "Cancel");
+  if(r) toast(r==="queued"?"Cancelled · saved on this phone, will sync when online":"Booking cancelled"); delete HIST[id]; if(S.v==="b" && r==="ok") loadHist(id);
+});
+
+/* ============================== RECEIPT ON WHATSAPP ============================== */
+document.addEventListener("click", async e => {
+  if(!e.target.closest("[data-receipt]")) return; const h=e.target.closest("[data-id]"), j=h&&JOBS.get(h.dataset.id); if(!j) return;
+  openSheet("Send receipt", `<div class="menu"><p class="muted small">A page with the booking, the amount and "Paid". It shows the customer's first name, not their phone or address.</p><a class="btn wa lg" id="rcLink" target="_blank" rel="noopener" aria-disabled="true">Preparing…</a><button class="btn" type="button" id="rcCopy" hidden>Copy link</button></div>`);
+  try{ const r=await rpc("staff_receipt",{p_id:j.id}); const link=new URL(`receipt.html?b=${encodeURIComponent(r.id)}&k=${r.key}`, location.href).href; const a=$("rcLink"); if(!a) return;
+    a.href=wa(j.phone, fill("receipt", Object.assign(jobCtx(j), {amount:rupee(j.total), link}))); a.removeAttribute("aria-disabled"); a.innerHTML=`${I.chat}Send on WhatsApp`; a.onclick=()=>{ closeSheet(); delete HIST[j.id]; if(S.v==="b") setTimeout(()=>loadHist(j.id),300); };
+    const c=$("rcCopy"); c.hidden=false; c.onclick=()=>navigator.clipboard.writeText(link).then(()=>toast("Link copied")); }
+  catch(x){ const a=$("rcLink"); if(a) a.textContent=x.message||"Couldn't make the link"; }
+});
+
+/* ============================== STOCK & BILLS ============================== */
+let KIT=store.get("vb.kit")||null, BILLURL={};
+async function loadKit(){ try{ const [sup,exp]=await Promise.all([rpc("staff_supplies"), rpc("staff_expenses")]); KIT={sup, exp}; store.set("vb.kit",KIT);
+  S.kitCount=(isOwner()?exp.filter(x=>x.status==="pending").length:0)+sup.filter(x=>x.is_low).length; drawNav(); }catch(e){ quiet(e); } }
+async function vKit(){ dKit(); await loadKit(); const need=(KIT?KIT.exp:[]).filter(x=>x.photo && !BILLURL[x.photo]).map(x=>x.photo); if(need.length){ try{ (await signUrls(need)).forEach(x=>BILLURL[x.path]=x.url); }catch(e){} } if(S.v==="kit") dKit(); }
+const EXP_CAT={supplies:"Supplies",fuel:"Fuel",other:"Other"}, qtyTx=n=>String(+(+n).toFixed(2));
+function dKit(){
+  if(S.v!=="kit") return;
+  let html=pageHead("Stock & bills", isOwner()?"Supplies in hand, and bills from the team":"Supplies in hand, and your bills", `<button class="btn primary" type="button" data-expnew>${I.plus}Add a bill</button>`);
+  if(!KIT){ V().innerHTML=html+`<div class="grid grid-2">${skel(2,220)}</div>`; return; }
+  const pend=KIT.exp.filter(x=>x.status==="pending");
+  html+=`<div class="grid grid-2"><section class="card"><div class="card-head"><h2>Stock</h2>${isOwner()?`<button class="btn sm" type="button" data-supedit>Edit list</button>`:""}</div>
+    ${KIT.sup.length?`<div class="list">${KIT.sup.map(x=>`<div class="list-row sup-row${x.is_low?" low":""}" data-sid="${x.id}" style="cursor:default"><div class="lr-main"><b>${esc(x.name)} ${x.is_low?'<span class="pill st-collect">Low</span>':""}</b><span>${x.low>0?"Warn at "+qtyTx(x.low)+" "+esc(x.unit):"No warning set"}${x.by?" · "+esc(first(x.by))+" "+ago(x.updated_at):""}</span></div>
+      <div class="qty"><button class="btn sm" type="button" data-qd="-1" aria-label="Used one">−</button><b class="num">${qtyTx(x.qty)}<small>${esc(x.unit)}</small></b><button class="btn sm" type="button" data-qd="1" aria-label="Added one">+</button></div></div>`).join("")}</div>`
+      :`<p class="muted small">No items yet.${isOwner()?" Tap Edit list to add what you keep in the kit.":""}</p>`}
+    <p class="small muted" style="margin-top:10px">Tap − when you use one up and + when you buy more.${isOwner()?" Set a warning level in Edit list; Home tells you when something runs low.":""}</p></section>
+  <section class="card"><div class="card-head"><h2>Bills</h2>${pend.length&&isOwner()?`<span class="pill st-collect">${pend.length} to approve</span>`:""}</div>
+    ${KIT.exp.length?`<div class="list">${KIT.exp.map(x=>`<div class="list-row bill" data-eid="${x.id}" style="cursor:default">${x.photo?`<a class="bill-ph" href="${esc(BILLURL[x.photo]||"#")}" target="_blank" rel="noopener">${BILLURL[x.photo]?`<img src="${esc(BILLURL[x.photo])}" alt="Bill photo" loading="lazy">`:I.receipt}</a>`:`<span class="bill-ph">${I.receipt}</span>`}
+      <div class="lr-main"><b>${rupee(x.amount)} · ${EXP_CAT[x.category]}</b><span>${fmtDay(x.day,{day:"numeric",month:"short"})}${isOwner()?" · "+esc(first(x.staff_name)):""}${x.note?" · "+esc(x.note):""}</span></div>
+      <div class="bill-act">${x.status==="pending"?(isOwner()?`<button class="btn coral sm" type="button" data-er="approved">Approve</button><button class="btn sm" type="button" data-er="rejected">Reject</button>`:'<span class="pill st-new">Waiting</span>'):x.status==="approved"?'<span class="pill st-done">Approved</span>':'<span class="pill st-cancelled">Rejected</span>'}
+      ${isOwner()||x.status==="pending"?`<button class="link-btn small" type="button" data-edel>Delete</button>`:""}${isOwner()&&x.status!=="pending"?`<button class="link-btn small" type="button" data-er="pending">Undo</button>`:""}</div></div>`).join("")}</div>`
+      :`<p class="muted small">No bills yet. When you buy fuel or supplies for work, tap <b>Add a bill</b> and take a photo of the bill.</p>`}
+    ${isOwner()?'<p class="small muted" style="margin-top:10px">Approved bills count as costs in Analytics.</p>':""}</section></div>`;
+  V().innerHTML=html;
+}
+document.addEventListener("click", async e => {
+  if(S.v!=="kit") return; const t=e.target;
+  const q=t.closest("[data-qd]"); if(q){ const id=+q.closest("[data-sid]").dataset.sid, d=+q.dataset.qd, x=KIT.sup.find(y=>y.id===id); if(!x) return;
+    x.qty=Math.max(0,+x.qty+d); x.is_low=x.low>0&&x.qty<=x.low; dKit();
+    try{ KIT.sup=await rpc("staff_use_supply",{p_id:id, p_delta:d}); store.set("vb.kit",KIT); dKit(); }catch(err){ if(netDown(err)) queueAdd({fn:"staff_use_supply", args:{p_id:id, p_delta:d}, label:(d>0?"Added ":"Used ")+x.name}); else { toast(err.message, true); vKit(); } } return; }
+  if(t.closest("[data-supedit]")) return supSheet();
+  const er=t.closest("[data-er]"); if(er){ const id=+er.closest("[data-eid]").dataset.eid; try{ await rpc("owner_review_expense",{p_id:id, p_status:er.dataset.er}); toast({approved:"Approved",rejected:"Rejected",pending:"Back to waiting"}[er.dataset.er]); vKit(); }catch(x){ toast(x.message,true); } return; }
+  const ed=t.closest("[data-edel]"); if(ed){ if(!ed.dataset.sure){ ed.dataset.sure="1"; ed.textContent="Tap again"; return; } const id=+ed.closest("[data-eid]").dataset.eid;
+    try{ const r=await rpc("staff_delete_expense",{p_id:id}); if(r.photo) removeFiles([r.photo]).catch(()=>{}); toast("Bill deleted"); vKit(); }catch(x){ toast(x.message,true); } return; }
+});
+document.addEventListener("click", e => { if(e.target.closest("[data-expnew]")) expSheet(); });
+function expSheet(){
+  openSheet("Add a bill", `<form id="expForm" class="menu"><div class="chips">${Object.entries(EXP_CAT).map(([k,l],i)=>`<button type="button" class="chip${i===0?" on":""}" data-ecat="${k}">${l}</button>`).join("")}</div>
+    <div class="form-grid"><label class="field">Amount ₹<input type="number" id="expAmt" min="1" max="100000" inputmode="numeric" required></label><label class="field">Day<input type="date" id="expDay" max="${istToday()}" min="${addDays(istToday(),-60)}" value="${istToday()}"></label></div>
+    <label class="field">What for<input id="expNote" maxlength="200" placeholder="e.g. Petrol, 2 L shampoo"></label>
+    <label class="btn" id="expPhLbl">${I.cam}<span id="expPhTx">Take a photo of the bill</span><input type="file" accept="image/*" id="expPh" hidden></label>
+    <div class="alert warn" id="expErr" hidden></div><button class="btn primary lg" type="submit" id="expGo">Add bill</button>
+    <p class="small muted">${isOwner()?"Your own bills are approved straight away.":"The owner approves it. You can delete it until then."}</p></form>`);
+}
+document.addEventListener("click", e => { const c=e.target.closest("[data-ecat]"); if(c) $$("[data-ecat]").forEach(x=>x.classList.toggle("on", x===c)); });
+document.addEventListener("change", e => { if(e.target.id==="expPh" && e.target.files[0]) $("expPhTx").textContent="Photo added ✓ (tap to change)"; });
+document.addEventListener("submit", async e => {
+  if(e.target.id!=="expForm") return; e.preventDefault(); const amt=+$("expAmt").value, err=$("expErr"), b=$("expGo"), f=$("expPh").files[0];
+  if(!(amt>0)){ err.hidden=false; err.textContent="Enter the amount."; return; }
+  b.disabled=true; b.textContent="Saving…"; let photo=null;
+  try{ if(f){ const blob=await shrink(f); photo=`bills/${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}.jpg`; await storage("object/"+BUCKET+"/"+photo, {method:"POST", headers:{"Content-Type":"image/jpeg","x-upsert":"false"}, body:blob}); BILLURL[photo]=URL.createObjectURL(blob); }
+    await rpc("staff_add_expense",{p:{category:(document.querySelector("[data-ecat].on")||{}).dataset.ecat||"other", amount:amt, day:$("expDay").value, note:$("expNote").value.trim(), photo}});
+    closeSheet(); toast(isOwner()?"Bill added":"Bill added · waiting for the owner"); vKit(); }
+  catch(x){ if(photo) removeFiles([photo]).catch(()=>{}); b.disabled=false; b.textContent="Try again"; err.hidden=false; err.textContent=netDown(x)?"No internet. Bills need internet to send the photo; try again when you're back online.":x.message; }
+});
+function supSheet(){
+  const row=x=>`<div class="sup-ed" data-sid="${x.id||""}"><input class="input" data-f="name" maxlength="60" value="${esc(x.name||"")}" placeholder="Item"><input class="input" data-f="unit" maxlength="20" value="${esc(x.unit||"")}" placeholder="unit"><input class="input" type="number" min="0" step="0.5" data-f="qty" value="${x.qty!=null?qtyTx(x.qty):""}" placeholder="In hand"><input class="input" type="number" min="0" step="0.5" data-f="low" value="${x.low?qtyTx(x.low):""}" placeholder="Warn at"><button class="btn sm" type="button" data-supdel aria-label="Remove">✕</button></div>`;
+  openSheet("Stock list", `<form id="supForm" class="menu"><div class="sup-ed head"><span>Item</span><span>Unit</span><span>In hand</span><span>Warn at</span><span></span></div><div id="supRows">${KIT.sup.map(row).join("")}</div>
+    <button class="btn" type="button" id="supAdd">${I.plus}Add an item</button><button class="btn primary lg" type="submit">Save list</button><p class="small muted">"Warn at": Home shows the item as low when what's in hand reaches this. Leave it empty for no warning.</p></form>`);
+  $("supAdd").onclick=()=>{ $("supRows").insertAdjacentHTML("beforeend", row({})); $("supRows").lastElementChild.querySelector("input").focus(); };
+}
+document.addEventListener("click", e => { const d=e.target.closest("[data-supdel]"); if(d){ const r=d.closest(".sup-ed"); if(r.dataset.sid){ r.hidden=true; r.dataset.del="1"; } else r.remove(); } });
+document.addEventListener("submit", async e => {
+  if(e.target.id!=="supForm") return; e.preventDefault();
+  const list=$$("#supRows .sup-ed").map(r=>{ const v=f=>r.querySelector(`[data-f="${f}"]`).value; return r.dataset.del?{id:r.dataset.sid, delete:true}:{id:r.dataset.sid||null, name:v("name").trim(), unit:v("unit").trim(), qty:v("qty")===""?0:+v("qty"), low:v("low")===""?0:+v("low")}; });
+  try{ KIT.sup=await rpc("owner_save_supplies",{p:list}); store.set("vb.kit",KIT); closeSheet(); toast("Stock list saved"); dKit(); loadKit(); }catch(x){ toast(x.message, true); }
+});
+
+/* ============================== PHONE ALERTS (web push) ============================== */
+const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent), standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+async function pushState(){
+  if(isIOS && !standalone) return "ios-install";
+  if(!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return "unsupported";
+  if(Notification.permission==="denied") return "blocked";
+  try{ const reg=await navigator.serviceWorker.getRegistration(); const sub=reg && await reg.pushManager.getSubscription(); return sub?"on":"off"; }catch(e){ return "off"; }
+}
+const b64u = s => { const p="=".repeat((4-s.length%4)%4), b=atob((s+p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from([...b].map(c=>c.charCodeAt(0))); };
+async function pushOn(){
+  if(await Notification.requestPermission()!=="granted") throw new Error("Alerts are blocked. Allow notifications for this app in the phone's settings.");
+  const reg=await navigator.serviceWorker.register("ops-sw.js"); await navigator.serviceWorker.ready;
+  const {key}=await callFn("push",{action:"key"});
+  const sub=(await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64u(key)});
+  const j=sub.toJSON(), dev=isIOS?"iPhone":/Android/.test(navigator.userAgent)?"Android":"Computer";
+  await rpc("staff_push_subscribe",{p:{endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, device:dev}});
+  await callFn("push",{action:"test"}).catch(()=>{});
+}
+async function pushOff(){ const reg=await navigator.serviceWorker.getRegistration(); const sub=reg&&await reg.pushManager.getSubscription(); if(sub){ await rpc("staff_push_unsubscribe",{p_endpoint:sub.endpoint}).catch(()=>{}); await sub.unsubscribe(); } }
+async function drawPushBox(){
+  const el=$("pushBox"); if(!el) return; const st=await pushState(); if(!$("pushBox")) return;
+  el.innerHTML = {on:`<p class="small"><b>On</b> for this phone. You get an alert when a booking comes in from the website.</p><div class="row"><button class="btn sm" type="button" data-push="test">Send a test</button><button class="btn sm" type="button" data-push="off">Turn off</button></div>`,
+    off:`<p class="small muted">Get an alert on this phone when a booking comes in from the website, even when the app is closed.</p><button class="btn primary" type="button" data-push="on">${I.bell2}Turn on alerts</button>`,
+    blocked:`<p class="small">Notifications are blocked for this app. Allow them in your phone's settings, then come back here.</p>`,
+    "ios-install":`<p class="small">On iPhone, alerts work only from the Home Screen app: tap <b>Share</b> → <b>Add to Home Screen</b>, open <b>VB Staff</b> from there, sign in, then turn alerts on here.</p>`,
+    unsupported:`<p class="small muted">This browser can't show alerts. Use Chrome on Android, or the Home Screen app on iPhone.</p>`}[st];
+}
+document.addEventListener("click", async e => {
+  const b=e.target.closest("[data-push]"); if(!b) return; b.disabled=true;
+  try{ if(b.dataset.push==="on"){ await pushOn(); toast("Alerts are on. A test alert is on its way."); }
+    if(b.dataset.push==="off"){ await pushOff(); toast("Alerts are off for this phone"); }
+    if(b.dataset.push==="test"){ const r=await callFn("push",{action:"test"}); toast(r.sent?"Test alert sent":"No phone to send to. Turn alerts off and on again.", !r.sent); } }
+  catch(x){ toast(x.message||"Couldn't change alerts", true); }
+  b.disabled=false; drawPushBox();
+});
+
 /* ============================== HOME (owner) ============================== */
 let OV=null, ATTN=null, CAL=null, DAYC={};
 async function vHome(){
   OV=cache.get("numbers"); ATTN=cache.get("attn"); CAL=cache.get("cal."+S.calMonth); if(ATTN){ remember(ATTN.recent); remember(ATTN.unconfirmed); remember(ATTN.unpaid); } dHome();
-  try{ const [o,a,c]=await Promise.all([rpc("owner_overview"), rpc("owner_attention"), rpc("staff_month",{p_month:S.calMonth}), loadPlans()]); OV=o; ATTN=a; CAL=c;
+  try{ const [o,a,c]=await Promise.all([rpc("owner_overview"), rpc("owner_attention"), rpc("staff_month",{p_month:S.calMonth}), loadPlans(), loadKit()]); OV=o; ATTN=a; CAL=c;
     cache.set("numbers",o); cache.set("attn",a); cache.set("cal."+S.calMonth,c); remember(a.recent, true); remember(a.unconfirmed); remember(a.unpaid); setCounts(); if(S.v==="home") dHome(); }
   catch(e){ quiet(e); }
 }
@@ -789,6 +963,8 @@ function dHome(){
     ...up.map(j=>`<div class="list-row" data-id="${esc(j.id)}"><span class="lr-main" data-open="${esc(j.id)}"><b>${esc(j.name)} <span class="pill st-collect">Collect ${rupee(j.total)}</span></b><span>Washed ${relDay(j.wash_date)} · ${esc(j.package)}</span></span><button class="btn sm" type="button" data-open="${esc(j.id)}">Open</button></div>`),
     ATTN.unassigned?`<button class="list-row" type="button" data-go="bookings"><span class="lr-main"><b>${ATTN.unassigned} job${ATTN.unassigned>1?"s":""} in the next 3 days with no washer</b><span>Open a booking and choose a washer</span></span>${I.fwd}</button>`:"",
     ATTN.due?`<button class="list-row" type="button" data-go="customers" data-cumode="due"><span class="lr-main"><b>${ATTN.due} customer${ATTN.due>1?"s":""} due for a wash</b><span>Last wash 12+ days ago, nothing booked</span></span><span class="pill st-confirmed">Rebook</span></button>`:"",
+    ...(KIT&&KIT.sup.some(x=>x.is_low)?[`<button class="list-row" type="button" data-go="kit"><span class="lr-main"><b>Running low: ${KIT.sup.filter(x=>x.is_low).map(x=>esc(x.name)).join(", ")}</b><span>Buy more, then update Stock &amp; bills</span></span>${I.fwd}</button>`]:[]),
+    ...(KIT&&KIT.exp.some(x=>x.status==="pending")?[`<button class="list-row" type="button" data-go="kit"><span class="lr-main"><b>${KIT.exp.filter(x=>x.status==="pending").length} bill${KIT.exp.filter(x=>x.status==="pending").length>1?"s":""} to approve</b><span>${rupee(KIT.exp.filter(x=>x.status==="pending").reduce((a,x)=>a+x.amount,0))} added by washers</span></span>${I.fwd}</button>`]:[]),
     ...(PLANS_L||[]).filter(c=>c.status==="active" && (c.renew||c.due>0)).map(c=>`<button class="list-row" type="button" data-go="c/${c.id}"><span class="lr-main"><b>${esc(c.name)} <span class="pill st-plan">${esc(c.kind==="society"?"Society":c.plan_name||"Plan")}</span></b><span>${[c.due>0?"Payment due "+rupee(c.due):"", c.renew?(c.last_end?"Month ends "+relDay(c.last_end).toLowerCase():"First month not started"):""].filter(Boolean).join(" · ")}</span></span>${I.fwd}</button>`),
     S.inboxCount?`<button class="list-row" type="button" data-go="inbox"><span class="lr-main"><b>${S.inboxCount} new in Inbox</b><span>${[OV.new_leads?OV.new_leads+" society":"",OV.new_enquiries?OV.new_enquiries+" message":"",OV.pending_reviews?OV.pending_reviews+" review":""].filter(Boolean).join(" · ")}</span></span><span class="nav-badge">${S.inboxCount}</span></button>`:""
   ].filter(Boolean);
@@ -915,7 +1091,7 @@ document.addEventListener("drop", e => { const col=e.target.closest&&e.target.cl
 async function moveTo(id, to, el){
   const j=JOBS.get(id); if(!j) return; const from=colOf(j); if(from===to) return;
   const order=["new","confirmed","on_way","collect","done"];
-  if(to==="cancelled") return confirmSheet(`Cancel ${first(j.name)}'s booking?`, `${relDay(j.wash_date)}, ${j.slot} · ${j.package}`, "Cancel booking", () => act(id,"cancel"));
+  if(to==="cancelled") return cancelSheet(id);
   if(from==="cancelled"){ if(to==="new"||to==="confirmed") return act(id,"reopen"); return toast("Reopen it first: move it to New or Confirmed.", true); }
   if(to==="done"){ if(j.status!=="done"){ if(!await act(id,"done")) return; } return paySheet(id); }
   if(from==="done" && to==="collect") return act(id,"unpaid");
@@ -950,7 +1126,7 @@ function dBooking(){
     + `<div class="split"><div class="wide">
         <section class="dark-card"><div class="label">Next step</div><div class="big" style="font-size:22px">${esc(nextLabel(j))}</div><div class="next">${nextStep(j)}</div></section>
         <section class="card"><div class="card-head"><h2>The job</h2><button class="btn sm" type="button" data-edit>Edit</button></div>
-          <dl class="dl"><dt>When</dt><dd><b>${relDay(j.wash_date)}</b>, ${fmtDay(j.wash_date,{day:"numeric", month:"long"})} · ${esc(j.slot)}</dd>
+          <dl class="dl">${j.status==="cancelled"?`<dt>Cancelled</dt><dd><b>${esc(j.cancel_reason||"No reason given")}</b></dd>`:""}<dt>When</dt><dd><b>${relDay(j.wash_date)}</b>, ${fmtDay(j.wash_date,{day:"numeric", month:"long"})} · ${esc(j.slot)}</dd>
           ${j.started_at?`<dt>Wash time</dt><dd>${j.status==="done"&&took(j)!=null?`<b>${took(j)} min</b> <span class="muted">(started ${clock(j.started_at)})</span>`:`Started ${clock(j.started_at)} · <b class="timer" data-since="${esc(j.started_at)}">${mins(j.started_at)}</b> so far${j.status!=="done"?` <button class="link-btn small" type="button" data-timer="reset">Undo start</button>`:""}`}</dd>`:""}
           <dt>Vehicle</dt><dd>${esc(j.vehicle)}${j.plate?" · <b>"+esc(j.plate)+"</b>":""}</dd>
           <dt>Package</dt><dd>${esc(j.package)}${j.extras?"<br><span class='muted'>+ "+esc(j.extras)+"</span>":""}</dd>
@@ -971,7 +1147,7 @@ function dBooking(){
           <div class="muted small">Nothing to collect at the visit.</div></section>`:`<section class="dark-card"><div class="label">${isPaid(j)?"Paid":"To collect"}</div><div class="big num">${rupee(j.total)}${j.discount>0?`<s>${rupee(j.subtotal)}</s>`:""}</div>
           ${j.discount>0?`<div class="muted small">${esc(discLabel(j))} −${rupee(j.discount)}</div>`:""}
           ${j.credit>0&&j.status!=="cancelled"?`<div class="alert ok">${rupee(j.credit)} referral credit. Take it off the bill. <button class="btn sm" data-act="use_credit" style="margin-top:6px">Mark used</button></div>`:""}
-          ${j.status!=="cancelled"?(isPaid(j)?`<div class="row"><span class="pill st-done">${j.payment==="paid_upi"?"Paid by UPI":"Paid in cash"}</span><button class="btn sm" data-act="unpaid">Undo</button></div>`:`<div class="row"><button class="btn sm" type="button" data-qr>${I.qr}UPI QR</button><button class="btn coral sm" data-act="paid_upi">Paid by UPI</button><button class="btn coral sm" data-act="paid_cash">Paid in cash</button></div>`):""}
+          ${j.status!=="cancelled"?(isPaid(j)?`<div class="row"><span class="pill st-done">${j.payment==="paid_upi"?"Paid by UPI":"Paid in cash"}</span><button class="btn sm" data-act="unpaid">Undo</button><button class="btn sm" type="button" data-receipt>${I.receipt}Send receipt</button></div>`:`<div class="row"><button class="btn sm" type="button" data-qr>${I.qr}UPI QR</button><button class="btn coral sm" data-act="paid_upi">Paid by UPI</button><button class="btn coral sm" data-act="paid_cash">Paid in cash</button></div>`):""}
           <div class="muted small">${j.pay_mode==="online"?"Customer chose to pay online (UPI)":"Pay after the wash"}</div></section>`}
         <section class="card"><div class="card-head"><h2>Customer</h2>${j.visits?`<span class="pill st-confirmed">${ord(j.visits+1)} visit</span>`:""}</div>
           <p><b>${esc(j.name)}</b><br><span class="muted">${esc(fmtPhone(j.phone))}</span></p>
@@ -1497,7 +1673,8 @@ const AN_RANGES = {week:["7 days",()=>[addDays(istToday(),-6),istToday()]], d30:
 let AN=null;
 let DUR=null;
 async function vAnalytics(){ const k="an."+S.an; AN=cache.get(k); DUR=cache.get("dur."+S.an); dAnalytics(); try{ const [f,t]=AN_RANGES[S.an][1]();
-  const [a,d]=await Promise.all([rpc("owner_analytics",{p_from:f, p_to:t}), rpc("owner_durations",{p_from:f, p_to:t}).catch(()=>null)]); AN=a; DUR=d; cache.set(k,AN); cache.set("dur."+S.an,DUR); dAnalytics(); }catch(e){ quiet(e); } }
+  const [a,d,c]=await Promise.all([rpc("owner_analytics",{p_from:f, p_to:t}), rpc("owner_durations",{p_from:f, p_to:t}).catch(()=>null), rpc("owner_cancel_reasons",{p_from:f, p_to:t}).catch(()=>null)]); AN=a; DUR=d; CXR=c; cache.set(k,AN); cache.set("dur."+S.an,DUR); dAnalytics(); }catch(e){ quiet(e); } }
+let CXR=null;
 const durRows = list => list&&list.length ? `<table class="mini"><tbody>${list.map(x=>`<tr><td>${esc(x.name)}</td><td class="muted">${x.n} timed</td><td class="num"><b>${x.avg} min</b></td></tr>`).join("")}</tbody></table>` : "";
 const PAL=["#9BCB2E","#0B7F6F","#F08A5D","#2F4566","#C9A23A","#7E57C2","#38B2AC","#5D666C"];
 function delta(cur, prev, lowerBetter, money){
@@ -1533,10 +1710,11 @@ function dAnalytics(){
       <section class="card"><div class="card-head"><h2>Where bookings came from</h2></div>${donut(AN.sources.map(s=>({label:SOURCE[s.name]||s.name, count:s.count})))}</section></div>
     <div class="grid grid-2"><section class="card"><div class="card-head"><h2>Packages</h2></div>${hbars(AN.packages,"#9BCB2E",true)}</section><section class="card"><div class="card-head"><h2>Areas</h2></div>${hbars(AN.areas,"#0B7F6F")}</section></div>
     <div class="grid grid-2"><section class="card"><div class="card-head"><h2>Time slots</h2></div>${hbars(AN.slots,"#F08A5D")}</section><section class="card"><div class="card-head"><h2>Washes per washer</h2></div>${hbars(AN.washers,"#2F4566",true)}</section></div>
-    <div class="grid grid-2"><section class="dark-card"><div class="label">Profit in this range</div><div class="big">${rupee(profit)}</div><div class="muted small">collected ${rupee(c.collected)} − costs ${rupee(c.costs||0)}</div>
+    <div class="grid grid-2"><section class="dark-card"><div class="label">Profit in this range</div><div class="big">${rupee(profit)}</div><div class="muted small">collected ${rupee(c.collected)} − costs ${rupee(c.costs||0)}${c.expenses||c.wages?` (incl. ${[c.expenses?rupee(c.expenses)+" bills":"", c.wages?rupee(c.wages)+" washer pay":""].filter(Boolean).join(", ")})`:""}</div>
         <dl class="dl" style="color:#F3F5F1"><dt class="muted">Cost per wash</dt><dd>${c.washed?rupee((c.costs||0)/c.washed):"–"}</dd><dt class="muted">Ad cost per new customer</dt><dd>${c.new_customers&&c.ads?rupee(c.ads/c.new_customers):"–"}</dd><dt class="muted">Car / bike</dt><dd>${AN.vehicles.map(v=>`${v.count} ${v.name}`).join(" · ")||"–"}</dd></dl>
         <button class="btn sm" type="button" data-go="settings/costs" style="align-self:flex-start">Edit monthly costs</button></section>
       <section class="card"><div class="card-head"><h2>Offers used</h2></div>${hbars(AN.offers,"#C9A23A",true)}</section></div>
+    ${CXR&&CXR.length?`<section class="card"><div class="card-head"><h2>Why bookings were cancelled</h2><span class="muted small">${CXR.reduce((a,x)=>a+x.n,0)} cancelled</span></div>${hbars(CXR.map(x=>({name:x.name, count:x.n})),"#FF895C")}</section>`:""}
     <section class="card"><div class="card-head"><h2>Time per wash</h2>${DUR&&DUR.n?`<span class="pill st-confirmed">${DUR.avg} min on average</span>`:""}</div>
       ${DUR&&DUR.n?`<div class="grid grid-2"><div><p class="opt-h">By package</p>${durRows(DUR.packages)}</div><div><p class="opt-h">By washer</p>${durRows(DUR.washers)}</div></div>`
         :`<p class="muted small">No timed washes yet. When washers tap <b>Start wash</b> and then <b>Mark washed</b>, the average time per package and per washer shows here.</p>`}</section>
@@ -1546,14 +1724,20 @@ function dAnalytics(){
 document.addEventListener("click", e => { const a=e.target.closest("[data-an]"); if(a){ S.an=a.dataset.an; store.set("vb.an",S.an); AN=null; vAnalytics(); } });
 
 /* ============================== SETTINGS (owner) — Team inside, like Studio CRM ============================== */
-let TEAM=null, OFFERS=null, COSTS=null, AUDIT=null, SLOTSET=null;
-const SET_TABS=[["team","Team"],["slots","Slots & days off"],["messages","WhatsApp messages"],["offers","Offers"],["costs","Monthly costs"],["notice","Team notice"],["data","Data & activity"]];
+let TEAM=null, OFFERS=null, COSTS=null, AUDIT=null, SLOTSET=null, PAY=null;
+const PAY_RANGES={week:["This week",()=>{ const t=istToday(), d=new Date(t+"T12:00:00Z"), back=(d.getUTCDay()+6)%7; return [addDays(t,-back), t]; }],
+  month:["This month",()=>[monthStart(istToday()), istToday()]], last:["Last month",()=>{ const m=monthStart(istToday()), d=new Date(m+"T12:00:00Z"); d.setUTCMonth(d.getUTCMonth()-1); const lm=d.toISOString().slice(0,10); return [lm, monthEnd(lm)]; }]};
+const payStatement=(w,f,t)=>{ const cars=w.jobs.filter(x=>!/bike/i.test(x.vehicle)).reduce((a,x)=>a+x.units,0), bikes=w.jobs.filter(x=>/bike/i.test(x.vehicle)).reduce((a,x)=>a+x.units,0);
+  return `Hi ${first(w.name)}, your ${SITE.name} pay for ${fmtDay(f,{day:"numeric",month:"short"})} – ${fmtDay(t,{day:"numeric",month:"short"})}:\n`+(cars?`${cars} car wash${cars>1?"es":""} × ${rupee(w.pay_car)} = ${rupee(cars*w.pay_car)}\n`:"")+(bikes?`${bikes} bike wash${bikes>1?"es":""} × ${rupee(w.pay_bike)} = ${rupee(bikes*w.pay_bike)}\n`:"")
+    +`Total ${rupee(w.earned)}`+(w.earned-w.owed?`\nAlready paid ${rupee(w.earned-w.owed)}`:"")+(w.owed?`\nStill to pay ${rupee(w.owed)}`:"\nAll paid. Thank you!"); };
+const SET_TABS=[["team","Team"],["pay","Pay"],["slots","Slots & days off"],["messages","WhatsApp messages"],["offers","Offers"],["costs","Monthly costs"],["notice","Team notice"],["data","Data & activity"]];
 async function vSettings(){
   if(!SET_TABS.some(t=>t[0]===S.setTab)) S.setTab="team";
   TEAM=TEAM||cache.get("team"); dSettings();
   try{
     if(S.setTab==="team"){ TEAM=await rpc("owner_team"); cache.set("team",TEAM); }
     if(S.setTab==="offers") OFFERS=await rpc("owner_offers");
+    if(S.setTab==="pay"){ const [f,t]=PAY_RANGES[S.payR||"month"][1](); PAY=await rpc("owner_pay",{p_from:f, p_to:t}); }
     if(S.setTab==="slots") SLOTSET=await rpc("staff_slots",{p_from:istToday(), p_to:addDays(istToday(),120)});
     if(S.setTab==="costs") COSTS=await rpc("owner_costs",{p_month:S.setMonth});
     if(S.setTab==="data"){ const r=await Promise.all([rpc("owner_audit",{p_limit:150}), rpc("owner_team")]); AUDIT=r[0]; TEAM=r[1]; }
@@ -1589,11 +1773,23 @@ function dSettings(){
       <button class="btn primary" type="button" id="stClose" style="margin-top:14px">Close it</button>
       <p class="opt-h" style="margin:18px 0 4px">Closed days coming up</p>
       ${X.closures.length?X.closures.map(c=>{ const n=cnt(c.day,c.slot); return `<div class="list-row" style="cursor:default"><div class="lr-main"><b>${relDay(c.day)}${relDay(c.day).length<10?", "+fmtDay(c.day,{day:"numeric",month:"short"}):""}</b><span>${c.slot?esc(c.slot):"Whole day"}${c.reason?" · "+esc(c.reason):""}${n?` · <b class="warn-tx">${n} booking${n>1?"s":""} already</b>`:""}</span></div><button class="btn sm" type="button" data-reopen="${c.id}">Open again</button></div>`; }).join(""):'<p class="muted small">Nothing closed.</p>'}</section></div>`; }
+  if(tab==="pay"){ const [f,t]=PAY_RANGES[S.payR||"month"][1]();
+    body = `<div class="seg">${Object.entries(PAY_RANGES).map(([k,[l]])=>`<button type="button" data-payr="${k}" class="${(S.payR||"month")===k?"on":""}">${l}</button>`).join("")}</div>
+      <p class="small muted">Pay is counted from the day a job is marked washed, for the washer it's given to. A society visit counts each vehicle ticked. ${fmtDay(f,{day:"numeric",month:"short"})} – ${fmtDay(t,{day:"numeric",month:"short"})}.</p>`
+      + (!PAY ? skel(2,160) : PAY.length ? `<div class="grid grid-2">${PAY.map(w=>`<section class="card" data-wid="${w.id}"><div class="card-head"><h2>${esc(w.name)}</h2>${w.owed?`<span class="pill st-collect">Owed ${rupee(w.owed)}</span>`:w.earned?'<span class="pill st-done">All paid</span>':""}</div>
+        <div class="form-grid"><label class="field">Per car wash ₹<input type="number" min="0" inputmode="numeric" data-rate="car" value="${w.pay_car}"></label><label class="field">Per bike wash ₹<input type="number" min="0" inputmode="numeric" data-rate="bike" value="${w.pay_bike}"></label></div>
+        <button class="btn sm" type="button" data-saverate style="margin-top:8px">Save rates</button>
+        <dl class="dl" style="margin-top:12px"><dt>Washes</dt><dd><b>${w.washes}</b></dd><dt>Earned</dt><dd><b>${rupee(w.earned)}</b></dd><dt>Still owed</dt><dd><b>${rupee(w.owed)}</b></dd></dl>
+        ${!w.pay_car&&!w.pay_bike&&w.washes?'<p class="small warn-tx">Set the rates above to work out the pay.</p>':""}
+        <div class="row" style="margin-top:10px">${w.owed?`<button class="btn coral" type="button" data-payout>Mark ${rupee(w.owed)} paid</button>`:""}${w.phone&&w.washes?`<a class="btn wa" target="_blank" rel="noopener" href="${wa(w.phone, payStatement(w,f,t))}">${I.chat}Send statement</a>`:""}</div>
+        ${w.jobs.length?`<details style="margin-top:10px"><summary class="small muted">Jobs · ${w.jobs.length}</summary><table class="mini"><tbody>${w.jobs.map(x=>`<tr><td>${fmtDay(x.day,{day:"numeric",month:"short"})}</td><td>${esc(x.name)}<br><span class="muted small">${esc(x.package)}${x.units>1?" · "+x.units+" vehicles":""}</span></td><td class="num">${rupee(x.amount)}${x.paid?' <span class="muted small">paid</span>':""}</td></tr>`).join("")}</tbody></table></details>`:""}
+        ${w.payouts.length?`<details style="margin-top:6px"><summary class="small muted">Paid before · ${w.payouts.length}</summary><table class="mini"><tbody>${w.payouts.map(x=>`<tr><td>${fmtDay(String(x.paid_at).slice(0,10),{day:"numeric",month:"short"})}</td><td>${fmtDay(x.from,{day:"numeric",month:"short"})}–${fmtDay(x.to,{day:"numeric",month:"short"})} · ${x.washes} washes${x.note?" · "+esc(x.note):""}</td><td class="num">${rupee(x.amount)} <button class="link-btn small" type="button" data-unpay="${x.id}">Undo</button></td></tr>`).join("")}</tbody></table></details>`:""}
+        </section>`).join("")}</div>` : `<section class="card empty"><b>No washers yet</b>Add washers in Team first.</section>`); }
   if(tab==="messages") body = `<section class="card"><div class="card-head"><h2>WhatsApp messages</h2><button class="btn primary sm" type="button" id="stTplSave">Save messages</button></div><p class="small muted" style="margin-bottom:12px">Words in curly brackets are filled in for each customer: {first_name} {package} {vehicle} {date} {slot} {address} {id} {total} {review_link} {book_link} {days} {society} {brand}</p>
     <div class="grid grid-2">${templates().map(t=>`<label class="field">${esc(t.title)}<textarea data-tpl="${t.key}" rows="4" maxlength="1000">${esc(t.body)}</textarea></label>`).join("")}</div></section>`;
   if(tab==="offers") body = !OFFERS ? skel(2,140) : `<section class="card"><div class="card-head"><h2>Offers and codes</h2></div><p class="small muted" style="margin-bottom:12px">The website and bookings use these straight away. Minimum order is the package plus add-ons before the discount.</p><div class="grid grid-2">${OFFERS.map(o=>offerRow(o)).join("")+offerRow(null)}</div></section>`;
   if(tab==="costs"){ const months=[]; for(let i=0;i<6;i++){ const d=new Date(monthStart(istToday())+"T12:00:00Z"); d.setUTCMonth(d.getUTCMonth()-i); months.push(d.toISOString().slice(0,8)+"01"); }
-    body = `<section class="card"><div class="card-head"><h2>Monthly costs</h2><select class="input" id="stMonth" style="width:auto">${months.map(m=>`<option value="${m}" ${m===S.setMonth?"selected":""}>${fmtDay(m,{month:"long", year:"numeric"})}</option>`).join("")}</select></div><p class="small muted" style="margin-bottom:12px">Used for profit, cost per wash and ad cost per new customer in Analytics.</p>
+    body = `<section class="card"><div class="card-head"><h2>Monthly costs</h2><select class="input" id="stMonth" style="width:auto">${months.map(m=>`<option value="${m}" ${m===S.setMonth?"selected":""}>${fmtDay(m,{month:"long", year:"numeric"})}</option>`).join("")}</select></div><p class="small muted" style="margin-bottom:12px">Used for profit, cost per wash and ad cost per new customer in Analytics. Bills you approve in <b>Stock &amp; bills</b> and washer pay you mark paid in <b>Settings → Pay</b> are added by themselves, so don't enter them here too.</p>
       ${COSTS?`<div class="form-grid">${COST_CATS.map(([k,l])=>`<label class="field">${l} ₹<input type="number" min="0" inputmode="numeric" data-cost="${k}" value="${COSTS.costs[k]!=null?COSTS.costs[k]:""}"></label>`).join("")}</div><div class="row" style="margin-top:14px"><button class="btn primary" type="button" id="stCostSave">Save costs</button><span class="small muted">Total ${rupee(Object.values(COSTS.costs).reduce((s,x)=>s+x,0))}</span></div>`:skel(1,120)}</section>`; }
   if(tab==="notice"){ const n=SET.notice; body = `<section class="card"><div class="card-head"><h2>Team notice</h2></div><p class="small muted" style="margin-bottom:12px">One line everyone sees at the top of Home and Jobs until you clear it.</p>
     <label class="field">Notice<textarea id="stNotice" rows="2" maxlength="280" placeholder="e.g. Rain today, carry seat covers">${esc(n&&n.body||"")}</textarea></label><div class="row" style="margin-top:12px"><button class="btn primary" type="button" id="stNoticeSave">Post</button>${n&&n.body?'<button class="btn" type="button" id="stNoticeClear">Clear</button>':""}</div></section>`; }
@@ -1635,6 +1831,12 @@ document.addEventListener("click", async e => {
       SLOTSET=await rpc("staff_slots",{p_from:istToday(), p_to:addDays(istToday(),120)}); dSettings();
       toast(r.bookings?`Closed. ${r.bookings} booking${r.bookings>1?"s are":" is"} already on it — move or cancel ${r.bookings>1?"them":"it"}.`:"Closed. The website won't take bookings for it.", !!r.bookings); }
     const ro=t.closest("[data-reopen]"); if(ro){ ro.disabled=true; await rpc("owner_reopen_day",{p_id:+ro.dataset.reopen}); SLOTSET=await rpc("staff_slots",{p_from:istToday(), p_to:addDays(istToday(),120)}); toast("Open again"); dSettings(); }
+    const pr=t.closest("[data-payr]"); if(pr){ S.payR=pr.dataset.payr; PAY=null; dSettings(); vSettings(); return; }
+    const wc=t.closest("[data-wid]");
+    if(wc && t.closest("[data-saverate]")){ await rpc("owner_set_rates",{p_staff:wc.dataset.wid, p_car:+wc.querySelector('[data-rate="car"]').value||0, p_bike:+wc.querySelector('[data-rate="bike"]').value||0}); toast("Rates saved"); return vSettings(); }
+    if(wc && t.closest("[data-payout]")){ const b=t.closest("[data-payout]"); if(!b.dataset.sure){ b.dataset.sure="1"; b.textContent="Tap again: you've paid "+b.textContent.replace(/^Mark | paid$/g,""); return; }
+      const [f,to]=PAY_RANGES[S.payR||"month"][1](); const r=await rpc("owner_pay_out",{p_staff:wc.dataset.wid, p_from:f, p_to:to, p_note:""}); toast(`Marked ${rupee(r.amount)} paid for ${r.washes} wash${r.washes>1?"es":""}`); return vSettings(); }
+    const up=t.closest("[data-unpay]"); if(up){ if(!up.dataset.sure){ up.dataset.sure="1"; up.textContent="Tap again"; return; } await rpc("owner_undo_payout",{p_id:+up.dataset.unpay}); toast("Payment undone"); return vSettings(); }
     if(t.id==="stExport") return exportCsv(t);
     if(t.id==="copyKey") navigator.clipboard.writeText($("sheetKey").textContent).then(()=>toast("Key copied")).catch(()=>{});
   }catch(x){ if(x.message!=="signed out") toast(x.message||"Couldn't save", true); t.disabled=false; }
@@ -1724,7 +1926,11 @@ function accountSheet(){
   openSheet(S.me.name, `<div class="menu"><p class="muted">${esc(session&&session.email||"")} · ${isOwner()?"Owner":"Washer"}</p>
     <div class="field">Look<div class="seg" id="themeSeg">${[["auto","Phone setting"],["light","Light"],["dark","Dark"]].map(([k,l])=>`<button type="button" data-th="${k}" class="${k===th?"on":""}">${l}</button>`).join("")}</div></div>
     <form id="pwForm" class="fs"><legend>Change my password</legend><div class="pw-row"><span class="pw-wrap"><input class="input" id="myPw" type="password" placeholder="New password, 8+ characters" autocomplete="new-password"><button type="button" class="pw-eye" data-eye="myPw">Show</button></span><button class="btn" type="submit">Save</button></div><p class="msg" id="pwMsg" hidden></p></form>
+    ${isOwner()?`<fieldset class="fs"><legend>Phone alerts</legend><div id="pushBox"><div class="skel" style="height:40px"></div></div></fieldset>`:`<fieldset class="fs"><legend>My pay</legend><div id="myPay"><div class="skel" style="height:40px"></div></div></fieldset><button class="btn" type="button" data-go="kit">${I.box}Stock &amp; bills</button>`}
     <button class="btn" type="button" id="refreshNow">Refresh now</button><button class="btn" type="button" data-go="help">Help</button><button class="btn danger" type="button" data-signout>Sign out</button></div>`, "account");
+  if(isOwner()) drawPushBox();
+  else rpc("staff_my_pay").then(m=>{ const el=$("myPay"); if(!el) return; el.innerHTML=`<dl class="dl"><dt>This month</dt><dd><b>${m.month_washes}</b> wash${m.month_washes===1?"":"es"} · <b>${rupee(m.month_earned)}</b></dd><dt>Still to be paid</dt><dd><b>${rupee(m.owed)}</b></dd><dt>Rate</dt><dd>${rupee(m.pay_car)} a car · ${rupee(m.pay_bike)} a bike</dd>${m.payouts.length?`<dt>Last paid</dt><dd>${rupee(m.payouts[0].amount)} on ${fmtDay(String(m.payouts[0].paid_at).slice(0,10),{day:"numeric",month:"short"})}</dd>`:""}</dl>`; })
+    .catch(()=>{ const el=$("myPay"); if(el) el.innerHTML='<p class="small muted">Couldn\'t load. Check your internet.</p>'; });
 }
 $("sheetBody").addEventListener("click", e => { const b=e.target.closest("[data-th]"); if(!b) return; store.set("vb.theme", b.dataset.th==="auto"?null:b.dataset.th); applyTheme(); $$("#themeSeg button").forEach(x=>x.classList.toggle("on", x===b)); });
 $("sheetBody").addEventListener("submit", async e => {
@@ -1738,7 +1944,7 @@ document.addEventListener("click", e => {
   if(e.target.closest("[data-signout]")){ if(session) fetch(URL_+"/auth/v1/logout",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+session.access_token}}).catch(()=>{});
     Object.keys(localStorage).filter(k=>k.startsWith("vb.") && !["vb.theme","vb.menu"].includes(k) && !k.startsWith("vb.tour")).forEach(k=>localStorage.removeItem(k));
     session=null; S.me=null; S.v=""; S.day=istToday(); S.open.clear(); S.inboxCount=0; S.attnCount=0; SET={templates:[],notice:null,team:[]}; JOBS.clear(); SINCE=null; NOTES=[];
-    OV=ATTN=CAL=DAY=BK=CU=DUE=INB=AN=TEAM=null;
+    OV=ATTN=CAL=DAY=BK=CU=DUE=INB=AN=TEAM=PAY=KIT=null;
     closeSheet(); closePop(); history.replaceState(null,"",location.pathname); $("lgFields").hidden=false; $("lgCer").hidden=true; show("login"); }
 });
 

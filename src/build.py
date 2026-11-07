@@ -21,6 +21,7 @@ PAGES = [  # slug, file, nav label, <title>, meta description
  ("terms","terms.html",None,"Terms of Service — Vroombrite","The terms for booking a doorstep car or bike wash with Vroombrite."),
  ("refunds","refunds.html",None,"Cancellation & Refund Policy — Vroombrite","Rescheduling, cancellation and refund rules for Vroombrite bookings and monthly plans."),
  ("review","review.html",None,"Rate Your Wash — Vroombrite","Tell us how your Vroombrite wash went."),
+ ("receipt","receipt.html",None,"Receipt — Vroombrite","Your Vroombrite receipt."),
  ("ops","ops.html",None,"Staff — Vroombrite","Vroombrite staff app."),
 ]
 import json, datetime
@@ -32,8 +33,8 @@ for x in AREAS:
                   f"Doorstep car and bike wash in {x['a']}, Mumbai (PIN {', '.join(x['pins'])}). We come to your society parking with our own water and power. Book in a minute."))
 FILE = {p[0]: p[1] for p in PAGES}
 BARE = {"ops"}                       # no site header/footer, not indexed
-NOINDEX = {"ops", "review"}
-PREVIEW_SKIP = {"ops"}
+NOINDEX = {"ops", "review", "receipt"}
+PREVIEW_SKIP = {"ops", "receipt"}
 
 # Public address of the site. Change this one line when the custom domain goes live.
 SITE_URL = "https://littlegasp.github.io/vroombrite/"
@@ -142,7 +143,7 @@ FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="p
 def build_site():
     if os.path.exists(SITE):
         for f in os.listdir(SITE):
-            if f.endswith(".html") or f in ("style.css","app.js","ops.js","ops.css","ops.webmanifest","config.js","qrcode.js","sitemap.xml","robots.txt"): os.remove(os.path.join(SITE, f))
+            if f.endswith(".html") or f in ("style.css","app.js","ops.js","ops.css","ops.webmanifest","ops-sw.js","config.js","qrcode.js","sitemap.xml","robots.txt"): os.remove(os.path.join(SITE, f))
     os.makedirs(os.path.join(SITE,"img"), exist_ok=True)
     for slug, fname, lbl, title, desc in PAGES:
         body = page_src(slug)
@@ -171,14 +172,14 @@ def build_site():
 </html>
 '''
         open(os.path.join(SITE, fname), "w", encoding="utf-8").write(links(html, False))
-    shutil.copy(os.path.join(SRC,"style.css"), SITE); open(os.path.join(SITE,"app.js"),"w",encoding="utf-8").write(app_js()); open(os.path.join(SITE,"ops.js"),"w",encoding="utf-8").write(ops_js()); open(os.path.join(SITE,"version.json"),"w").write(json.dumps({"build": BUILD}) + "\n"); shutil.copy(os.path.join(SRC,"config.js"), SITE); shutil.copy(os.path.join(SRC,"ops.css"), SITE); shutil.copy(os.path.join(SRC,"ops.webmanifest"), SITE); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE); shutil.copy(os.path.join(SRC,"apple-touch-icon.png"), SITE)
+    shutil.copy(os.path.join(SRC,"style.css"), SITE); open(os.path.join(SITE,"app.js"),"w",encoding="utf-8").write(app_js()); open(os.path.join(SITE,"ops.js"),"w",encoding="utf-8").write(ops_js()); open(os.path.join(SITE,"version.json"),"w").write(json.dumps({"build": BUILD}) + "\n"); shutil.copy(os.path.join(SRC,"config.js"), SITE); shutil.copy(os.path.join(SRC,"ops.css"), SITE); shutil.copy(os.path.join(SRC,"ops.webmanifest"), SITE); shutil.copy(os.path.join(SRC,"ops-sw.js"), SITE); shutil.copy(os.path.join(SRC,"vendor","qrcode.js"), SITE); shutil.copy(os.path.join(SRC,"favicon.svg"), SITE); shutil.copy(os.path.join(SRC,"apple-touch-icon.png"), SITE)
 
 def build_seo():
     today = datetime.date.today().isoformat()
     urls = [SITE_URL if f == "index.html" else SITE_URL + f for s_, f, *_ in PAGES if s_ not in NOINDEX]
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(f"  <url><loc>{u}</loc><lastmod>{today}</lastmod></url>\n" for u in urls) + "</urlset>\n"
     open(os.path.join(SITE, "sitemap.xml"), "w").write(xml)
-    open(os.path.join(SITE, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\nDisallow: /ops.html\n\nSitemap: {SITE_URL}sitemap.xml\n")
+    open(os.path.join(SITE, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\nDisallow: /ops.html\nDisallow: /receipt.html\n\nSitemap: {SITE_URL}sitemap.xml\n")
 
 def build_preview():
     os.makedirs(PREV, exist_ok=True)

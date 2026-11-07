@@ -434,6 +434,27 @@ async function loadReviews(){
 }
 loadReviews();
 
+/* ---------- receipt (receipt.html?b=BOOKING_ID&k=KEY), made in the staff app once a job is paid ---------- */
+const rcpt=$("receipt");
+if(rcpt){
+  const q=new URLSearchParams(location.search), e=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const bad=()=>{ rcpt.innerHTML='<p class="sub">We couldn\'t find this receipt. Please check the link, or WhatsApp us and we\'ll send it again.</p>'; };
+  if(!USE_DB || !q.get("b") || !q.get("k")) bad();
+  else rpc("public_receipt",{p_id:q.get("b"), p_key:q.get("k")}).then(r=>{
+    if(!r) return bad();
+    const day=d=>new Date(d+"T12:00:00Z").toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
+    const ex=String(r.extras||"").split(/\s*,\s*/).filter(x=>x&&x!=="None");
+    rcpt.innerHTML=`<div class="rc-head"><span>Receipt for <b>${e(r.name)}</b></span><span class="rc-paid">Paid</span></div>
+      <dl class="rc"><dt>Booking</dt><dd>${e(r.id)}</dd><dt>Wash date</dt><dd>${day(r.wash_date)}, ${e(r.slot)}</dd>
+      <dt>Vehicle</dt><dd>${e(r.vehicle)}${r.plate?" · "+e(r.plate):""}</dd><dt>Service</dt><dd>${e(r.package)}${ex.length?"<br><small>+ "+ex.map(e).join(", ")+"</small>":""}</dd>
+      ${r.area?`<dt>Area</dt><dd>${e(r.area)}</dd>`:""}</dl>
+      <div class="rc-sum">${r.discount>0?`<div><span>Price</span><span>${rupee(r.subtotal)}</span></div><div><span>Discount${r.promo&&r.promo!=="MANUAL"?" ("+e(r.promo==="REFERRAL"?"referral":r.promo)+")":""}</span><span>−${rupee(r.discount)}</span></div>`:""}
+        <div class="rc-total"><span>Total paid</span><span>${rupee(r.total)}</span></div>
+        <p>${r.payment==="paid_upi"?"Paid by UPI":"Paid in cash"}${r.paid_at?" on "+new Date(r.paid_at).toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Kolkata"}):""}</p></div>
+      <p class="note">${e(SITE.name)} · Doorstep car &amp; bike care, Mumbai</p>`;
+  }).catch(bad);
+}
+
 /* ---------- review form (review.html?b=BOOKING_ID) ---------- */
 const rform=$("rform");
 if(rform){

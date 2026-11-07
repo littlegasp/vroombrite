@@ -563,3 +563,16 @@ body[data-page="book"] .fab,body[data-page="review"] .fab,.fab.onbook{display:no
 .qr{width:200px;max-width:100%;aspect-ratio:1;background:#fff;border-radius:10px;padding:6px}
 .qr svg{display:block;width:100%;height:100%}
 .pinline .copy{flex:none}
+/* receipt page */
+.receipt{margin-top:32px;background:var(--white,#F7F8F5);color:#15191C;border-radius:22px;padding:24px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.receipt .rc-head{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:1.05rem;margin-bottom:14px}
+.receipt .rc-paid{background:#C9F36A;color:#15191C;font-weight:800;font-family:Montserrat,sans-serif;padding:4px 14px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;font-size:.8rem}
+.receipt dl.rc{display:grid;grid-template-columns:max-content 1fr;gap:8px 18px;margin:0;padding:14px 0;border-top:1px dashed #C9CDD0;border-bottom:1px dashed #C9CDD0}
+.receipt dl.rc dt{color:#6B7378}
+.receipt dl.rc dd{margin:0;font-weight:600}
+.receipt dl.rc small{font-weight:400;color:#6B7378}
+.receipt .rc-sum{padding-top:14px}
+.receipt .rc-sum > div{display:flex;justify-content:space-between;padding:4px 0}
+.receipt .rc-total{font-family:Montserrat,sans-serif;font-weight:800;font-size:1.3rem;padding-top:8px!important}
+.receipt .rc-sum p{color:#6B7378;margin:6px 0 0}
+.receipt .note{color:#6B7378;margin:16px 0 0}
