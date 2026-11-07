@@ -2,6 +2,7 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["7 Nov 2026", "Fixed: tapping a tab (like Last 30 days, or 21+ days under Due for a wash) now always marks the tab you tapped."],
   ["7 Nov 2026", "Tidier screens on phones and laptops: even spacing between sections, stock list easier to edit on a phone, plan visits say how many are left."],
   ["7 Nov 2026", "Cancelling a booking now asks why (rain, couldn't reach the customer…). Analytics shows the reasons."],
   ["7 Nov 2026", "Send receipt: once a job is paid, send the customer a receipt link on WhatsApp."],

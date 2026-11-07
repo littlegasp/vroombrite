@@ -235,6 +235,9 @@ const firstPaint = () => !$("view").classList.contains("norise");
 const pageHead = (title, sub, acts, back) => `<div class="page-head"><div>${back?`<button class="back" type="button" data-back>${I.back}${back}</button>`:""}<h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:""}</div>${acts?`<div class="acts">${acts}</div>`:""}</div>`;
 const newBtn = () => `<button class="btn primary" type="button" data-new>${I.plus}New booking</button>`;
 document.addEventListener("click", e => { if(e.target.closest("[data-back]")) go(S.from||homeView()); });
+/* Tabs (.seg): the tapped one is marked at once, even when a screen only redraws the part below its toolbar. */
+document.addEventListener("click", e => { const b=e.target.closest(".seg > button"); if(!b || b.disabled) return;
+  b.parentElement.querySelectorAll(":scope > button").forEach(x=>{ x.classList.toggle("on", x===b); if(x.hasAttribute("aria-pressed")) x.setAttribute("aria-pressed", x===b); }); }, true);
 const skel = (n, h) => Array.from({length:n||3}, () => `<div class="skel" style="height:${h||90}px"></div>`).join("");
 
 /* ============================== sheet, pop ============================== */

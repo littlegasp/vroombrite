@@ -55,6 +55,7 @@ const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["7 Nov 2026", "Fixed: tapping a tab (like Last 30 days, or 21+ days under Due for a wash) now always marks the tab you tapped."],
   ["7 Nov 2026", "Tidier screens on phones and laptops: even spacing between sections, stock list easier to edit on a phone, plan visits say how many are left."],
   ["7 Nov 2026", "Cancelling a booking now asks why (rain, couldn't reach the customer…). Analytics shows the reasons."],
   ["7 Nov 2026", "Send receipt: once a job is paid, send the customer a receipt link on WhatsApp."],
@@ -249,7 +250,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "3d36dcc430";
+const BUILD_ID = "7ac1278076";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";
@@ -479,6 +480,9 @@ const firstPaint = () => !$("view").classList.contains("norise");
 const pageHead = (title, sub, acts, back) => `<div class="page-head"><div>${back?`<button class="back" type="button" data-back>${I.back}${back}</button>`:""}<h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:""}</div>${acts?`<div class="acts">${acts}</div>`:""}</div>`;
 const newBtn = () => `<button class="btn primary" type="button" data-new>${I.plus}New booking</button>`;
 document.addEventListener("click", e => { if(e.target.closest("[data-back]")) go(S.from||homeView()); });
+/* Tabs (.seg): the tapped one is marked at once, even when a screen only redraws the part below its toolbar. */
+document.addEventListener("click", e => { const b=e.target.closest(".seg > button"); if(!b || b.disabled) return;
+  b.parentElement.querySelectorAll(":scope > button").forEach(x=>{ x.classList.toggle("on", x===b); if(x.hasAttribute("aria-pressed")) x.setAttribute("aria-pressed", x===b); }); }, true);
 const skel = (n, h) => Array.from({length:n||3}, () => `<div class="skel" style="height:${h||90}px"></div>`).join("");
 
 /* ============================== sheet, pop ============================== */
