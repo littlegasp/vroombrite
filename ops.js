@@ -55,7 +55,7 @@ const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
-  ["8 Nov 2026", "Phone: the screen you're on now shows as a lime button floating above the bottom bar, and it travels to the next tab you tap. Laptop: a glass pill slides along the side menu."],
+  ["8 Nov 2026", "Phone: the screen you're on now shows as a lime button floating on a wave in the bottom bar; tap another tab and it glides over, with the wave following like water. Laptop: a glass pill slides along the side menu."],
   ["8 Nov 2026", "Swipe a job on your phone: right for the next step (a long swipe does it straight away), left for Call, Chat and Cancel."],
   ["8 Nov 2026", "Undo: after Paid, Washed, Cancel, Start wash, a stock − / + or deleting a bill, tap Undo on the message at the bottom (or shake the phone) within a few seconds."],
   ["8 Nov 2026", "A dark bar at the top shows the wash that's running, with its timer and checklist, on every screen. Tap it to open the job."],
@@ -263,7 +263,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "40613b47c9";
+const BUILD_ID = "6d9c2bc7f1";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";
@@ -488,19 +488,45 @@ function glide(bar){
   }
   g._r=r;
 }
-/* Phone bar: the tab you're on rises into a floating lime button that travels to the next tab you open. */
+/* Phone bar: the tab you're on rises into a lime button that floats on a wave in the bar's top edge.
+   When you change tab the button glides over, the wave follows it like water and settles with a little wobble. */
+const SEA_T=28, canWave = typeof CSS!=="undefined" && CSS.supports && CSS.supports("clip-path", "path('M0 0H1V1Z')");
+const SEA={x:null, v:0, tx:0, h:0, hv:0, s:30, raf:0, last:0};
+function seaPath(W, H, c, h, s){
+  const T=SEA_T, R=Math.min(22, H/2), pts=[];
+  const top=x => { let y=T; if(x<R) y=T+R-Math.sqrt(Math.max(0, R*R-(R-x)*(R-x))); else if(x>W-R) y=T+R-Math.sqrt(Math.max(0, R*R-(x-(W-R))*(x-(W-R)))); const u=(x-c)/s; return y - h*Math.exp(-u*u); };
+  for(let x=0; x<=W; x+=3) pts.push(x.toFixed(1)+","+top(x).toFixed(1)); pts.push(W+","+top(W).toFixed(1));
+  return `M0,${T+R} L${pts.join(" L")} L${W},${T+H-R} A${R},${R} 0 0 1 ${W-R},${T+H} L${R},${T+H} A${R},${R} 0 0 1 0,${T+H-R} Z`;
+}
+function seaDraw(){
+  const bar=$("tabbar"), W=bar.offsetWidth, H=bar.offsetHeight; if(!W) return;
+  const d=seaPath(W, H, SEA.x, SEA.h, SEA.s), sea=bar.querySelector(".tb-sea");
+  sea.querySelector(".tb-bg").style.clipPath=`path('${d}')`;
+  sea.querySelectorAll("svg").forEach(g=>{ g.setAttribute("viewBox", `0 0 ${W} ${H+SEA_T}`); g.setAttribute("width", W); g.setAttribute("height", H+SEA_T); g.firstElementChild.setAttribute("d", d); });
+  const f=bar.querySelector(".fbtn"); f.style.transform=`translate(${SEA.x}px,${(-(SEA.h-18)*.9).toFixed(1)}px)`;
+}
+function seaStep(t){
+  const dt=Math.min(.033, (t-(SEA.last||t))/1000)||.016; SEA.last=t;
+  const ax=240*(SEA.tx-SEA.x)-24*SEA.v; SEA.v+=ax*dt; SEA.x+=SEA.v*dt;
+  const speed=Math.abs(SEA.v), hTarget=18-Math.min(8, speed/70), ah=260*(hTarget-SEA.h)-7*SEA.hv; SEA.hv+=ah*dt; SEA.h+=SEA.hv*dt;
+  SEA.s=34+Math.min(18, speed/45);
+  seaDraw();
+  if(Math.abs(SEA.tx-SEA.x)<.3 && speed<1 && Math.abs(18-SEA.h)<.15 && Math.abs(SEA.hv)<1){ SEA.x=SEA.tx; SEA.v=0; SEA.h=18; SEA.hv=0; SEA.s=34; seaDraw(); SEA.raf=0; SEA.last=0; return; }
+  SEA.raf=requestAnimationFrame(seaStep);
+}
 function floatBtn(){
   const bar=$("tabbar"), f=bar && bar.querySelector(":scope > .fbtn"); if(!f) return;
-  const on=bar.querySelector("button.on:not(.tb-new)"), vis=!!(on && on.offsetWidth); bar.classList.toggle("has-float", vis);
-  if(!vis){ f.style.opacity=0; f._x=null; f._k=null; return; }
-  const x=on.offsetLeft+on.offsetWidth/2, k=x+"|"+on.dataset.tab; if(f._k===k) return; f._k=k;
-  const b=f.firstElementChild, icon=on.querySelector("svg").outerHTML, from=f._x; f._x=x; f.style.opacity=1;
-  if(from==null || matchMedia("(prefers-reduced-motion:reduce)").matches){ f.style.transition="none"; f.style.transform=`translateX(${x}px)`; b.innerHTML=icon; void f.offsetWidth; f.style.transition=""; return; }
-  f.style.transform=`translateX(${x}px)`;
-  if(from!==x){ b.classList.remove("travel"); void b.offsetWidth; b.classList.add("travel"); }
+  const on=bar.querySelector("button.on:not(.tb-new)"), vis=!!(on && on.offsetWidth);
+  bar.classList.toggle("has-float", vis); bar.classList.toggle("has-sea", vis && canWave);
+  if(!vis){ f.style.opacity=0; f._k=null; SEA.x=null; return; }
+  const x=on.offsetLeft+on.offsetWidth/2, k=x+"|"+on.dataset.tab+"|"+bar.offsetWidth; if(f._k===k) return; f._k=k;
+  const b=f.firstElementChild, icon=on.querySelector("svg").outerHTML, first=SEA.x==null; f.style.opacity=1; SEA.tx=x;
+  if(first || matchMedia("(prefers-reduced-motion:reduce)").matches){ cancelAnimationFrame(SEA.raf); SEA.raf=0; Object.assign(SEA, {x, v:0, h:18, hv:0, s:34}); b.innerHTML=icon; seaDraw(); return; }
+  if(Math.abs(x-SEA.x)>1){ SEA.hv-=60; buzz(6); }      // the wave dips as it sets off
   clearTimeout(f._t); b.classList.add("swap"); f._t=setTimeout(()=>{ b.innerHTML=icon; b.classList.remove("swap"); }, 170);
+  if(!SEA.raf) SEA.raf=requestAnimationFrame(seaStep);
 }
-addEventListener("resize", () => { const f=$("tabbar").querySelector(".fbtn"); if(f){ f._k=null; f._x=null; } floatBtn(); });
+addEventListener("resize", () => { const f=$("tabbar").querySelector(".fbtn"); if(f) f._k=null; SEA.x=null; floatBtn(); });
 addEventListener("resize", () => { ["tabbar","nav"].forEach(id=>{ const g=$(id).querySelector(".glide"); if(g){ g._k=null; g._r=null; } glide($(id)); }); });
 function drawNav(){
   const cur = S.v==="b" ? (S.from||"bookings") : S.v==="c" ? "plans" : S.v;
