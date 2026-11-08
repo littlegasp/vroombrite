@@ -522,8 +522,7 @@ html[data-theme="dark"] .stepper button.done{background:var(--accent-tint);color
 .qr-box svg{display:block;width:100%;height:auto}
 .qr-amt{font:800 30px/1.1 Montserrat,Inter,sans-serif;text-align:center;color:var(--ink)}
 .qr-sheet .keybox{flex-direction:row;align-items:center}.qr-sheet .keybox span{min-width:0}.qr-sheet .keybox .btn{width:auto;flex:0 0 auto;min-height:34px}
-.syncbar{position:sticky;top:12px;z-index:30;box-shadow:0 6px 20px rgba(21,25,28,.12)}
-@media (max-width:820px){ .syncbar{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 66px)} }
+.syncbar{box-shadow:0 6px 20px rgba(21,25,28,.12)}
 
 /* ---- batch 2: saved note, checklist, timer, route, move day, time per wash ---- */
 .note.saved{display:flex;gap:6px;align-items:flex-start;color:var(--aqua);background:var(--aqua-tint);font-weight:500}
@@ -618,3 +617,75 @@ fieldset.fs #pushBox,fieldset.fs #myPay{display:flex;flex-direction:column;gap:8
 }
 .money.covered{flex-wrap:wrap;gap:4px 12px;align-items:center} .money.covered b{white-space:nowrap} .money.covered span b{font-size:inherit}
 .money.covered .warn-tx{color:var(--coral)}
+
+/* ---- motion: live bar, undo toast, swipe, symbol effects, sheet drag, arrange ---- */
+.hud{position:sticky;top:12px;z-index:30;display:flex;flex-direction:column;gap:8px}
+.hud[hidden]{display:none}
+@media (max-width:820px){ .hud{top:calc(env(safe-area-inset-top,0px) + 66px)} }
+.live{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:#F7F8F5;background:#15191C;border:1px solid rgba(201,243,106,.35);border-radius:18px;padding:10px 16px 14px;cursor:pointer;overflow:hidden;box-shadow:0 12px 30px -10px rgba(21,25,28,.55);animation:drop .35s cubic-bezier(.2,.9,.25,1.2)}
+.live[hidden]{display:none}
+.live-dot{width:10px;height:10px;border-radius:50%;background:var(--lime,#C9F36A);box-shadow:0 0 0 0 rgba(201,243,106,.6);animation:beat 1.6s ease-out infinite}
+.live-tx{display:flex;flex-direction:column;min-width:0}
+.live-tx b{font:700 14px/1.25 var(--head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live-tx small{font-size:12px;color:#A8AFB4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live-time{font:800 17px/1 var(--head);color:#C9F36A;font-variant-numeric:tabular-nums;white-space:nowrap}
+.live-prog{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.08)}
+.live-prog i{display:block;height:100%;background:linear-gradient(90deg,#55D6C2,#C9F36A);border-radius:0 4px 4px 0;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes drop{from{transform:translateY(-14px) scale(.97);opacity:0}}
+@keyframes beat{0%{box-shadow:0 0 0 0 rgba(201,243,106,.6)}70%{box-shadow:0 0 0 9px rgba(201,243,106,0)}100%{box-shadow:0 0 0 0 rgba(201,243,106,0)}}
+
+.toast.has-undo{pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 8px 8px 18px;text-align:left;width:max-content;max-width:min(460px,calc(100vw - 32px))}
+.toast-undo{border:0;border-radius:10px;background:var(--lime);color:#14190A;font:700 14px/1 var(--sans);padding:10px 14px;cursor:pointer;flex:none}
+.toast.bad .toast-undo{background:#fff;color:#C2461F}
+
+/* swipe a job: the actions sit under the card */
+#view .job,#view .jrow{touch-action:pan-y}
+.swiping{position:relative;z-index:1;background:var(--surface)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;will-change:transform}
+.job.swiping,.jrow.swiping{transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.sw-under{position:absolute;z-index:0;display:flex;justify-content:space-between;overflow:hidden;background:var(--column)}
+.sw-l,.sw-r{display:flex;height:100%;overflow:hidden;width:0}
+.sw-r{justify-content:flex-end}
+.sw-under.anim .sw-l,.sw-under.anim .sw-r{transition:width .22s cubic-bezier(.2,.8,.2,1)}
+.sw-a{flex:0 0 78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:0;font:650 12px/1.1 var(--sans);color:#fff;background:#5D666C;text-decoration:none;cursor:pointer;transition:flex-basis .18s}
+.sw-a svg{width:22px;height:22px}
+.sw-under.tall .sw-a{justify-content:flex-start;padding-top:64px}
+.sw-a.ok{background:#4A7300}.sw-a.wa{background:var(--wa)}.sw-a.pay{background:#E07A4D;color:#2A1206}.sw-a.bad{background:#B3261E}
+.sw-r .sw-a:first-child{background:#2F4566}
+.sw-under.armed .sw-l .sw-a{flex:1 1 auto}
+.sw-under.armed .sw-l .sw-a svg{animation:sym .35s}
+
+/* symbol effects: the thing you just changed answers back */
+@keyframes sym{0%{transform:scale(1)}35%{transform:scale(1.32)}65%{transform:scale(.92)}100%{transform:scale(1)}}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(201,243,106,.75)}100%{box-shadow:0 0 0 14px rgba(201,243,106,0)}}
+@keyframes flash{0%{background-color:var(--accent-tint)}100%{}}
+.fx-paid .pill.st-done,.fx-paid .money b,.fx-done .steps li:nth-child(3),.fx-on_way .steps li:nth-child(2),.fx-confirm .steps li:nth-child(1),.fx-start .timer,.fx-undo .pill,.fx-reopen .pill{animation:sym .5s cubic-bezier(.3,1.5,.5,1)}
+.job.fx-paid,.job.fx-done,.job.fx-start{animation:glow .8s ease-out}
+.jrow.fx-paid,.jrow.fx-done,.jrow.fx-undo,.list-row.fx-undo{animation:flash .9s ease-out}
+.job.fx-cancel,.jrow.fx-cancel{animation:flash .9s ease-out}
+.ck.ck-pop input{animation:tickRing .5s ease-out}
+@keyframes tickRing{0%{box-shadow:0 0 0 0 rgba(201,243,106,.9)}100%{box-shadow:0 0 0 8px rgba(201,243,106,0)}}
+.ck.ck-pop > span{animation:fadeTx .4s}
+@keyframes fadeTx{from{color:var(--ink)}}
+.num.bump-up,.num.bump-down{display:inline-block;animation:bumpUp .35s cubic-bezier(.3,1.5,.5,1)}
+.num.bump-down{animation-name:bumpDown}
+@keyframes bumpUp{0%{transform:translateY(6px);opacity:.3}100%{transform:none}}
+@keyframes bumpDown{0%{transform:translateY(-6px);opacity:.3}100%{transform:none}}
+.tabbar svg,.nav-ic svg{transition:transform .15s}
+.tabbar :active > svg,.tabbar :active svg,.nav-link:active .nav-ic svg{transform:scale(.82)}
+
+/* sheets: a bigger handle to pull down */
+.sheet-grip{position:relative;cursor:grab;touch-action:none}
+.sheet-grip::before{content:"";position:absolute;left:-80px;right:-80px;top:-10px;bottom:-12px}
+.sheet-head{touch-action:none}
+@media (min-width:700px){ .sheet-grip{display:none} }
+
+/* Arrange (jiggle) for the stock list */
+.drag-h{display:flex;align-items:center;justify-content:center;width:34px;height:40px;margin:-6px 0 -6px -6px;color:var(--label);cursor:grab;touch-action:none;flex:none}
+.drag-h svg{width:20px;height:20px}
+.sup-row.jiggle{animation:jiggle .32s ease-in-out infinite alternate;animation-delay:var(--jd,0s);transform-origin:50% 50%}
+.sup-row.jiggle .lr-main{pointer-events:none}
+.sup-row.lift{animation:none;transform:scale(1.03);z-index:2;position:relative;background:var(--surface);box-shadow:0 14px 30px -10px rgba(21,25,28,.4)}
+@keyframes jiggle{from{transform:rotate(-.6deg)}to{transform:rotate(.6deg)}}
+.arranging .qty .btn{min-width:40px}
+/* an effect that is redrawn mid-way carries on instead of starting again */
+.fx-paid,.fx-paid *,.fx-done,.fx-done *,.fx-on_way *,.fx-confirm *,.fx-start,.fx-start *,.fx-undo,.fx-undo *,.fx-reopen *,.fx-cancel,.ck.ck-pop *,.num.bump-up,.num.bump-down{animation-delay:var(--fxd,0s)!important}

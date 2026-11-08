@@ -66,7 +66,13 @@ const I = {
   route: ic('<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/>'),
   move: ic('<path d="M4 12h14M13 6l6 6-6 6"/><path d="M5 5v14" opacity=".5"/>'),
   pin: ic('<path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>'),
-  cam: ic('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>')
+  cam: ic('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
+  check: ic('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  x: ic('<path d="M6 6l12 12M18 6L6 18"/>'),
+  cash: ic('<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v5M17.5 9.5v5"/>'),
+  star: ic('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'),
+  grip: ic('<path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/>'),
+  arrange: ic('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>')
 };
 
 /* ============================== Supabase ============================== */
@@ -134,7 +140,33 @@ const S = { me: store.get("vb.me"), v:"", arg:"", day: istToday(), open: new Set
 let SET = store.get("vb.c.settings") || {templates:[], notice:null, team:[]};
 const cache = { get:k => store.get("vb.c."+k), set:(k,v) => store.set("vb.c."+k, v) };
 const isOwner = () => !!(S.me && S.me.role==="owner");
-function toast(t, bad){ const el=$("toast"); el.textContent=t; el.classList.toggle("bad",!!bad); el.classList.add("on"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("on"), bad?4200:2600); }
+/* Toast. With an undo ({undo, commit?}) it shows an Undo button for 6 s (shaking the phone works too);
+   commit() runs when the time is up, for changes that wait before they are sent (deleting a bill). */
+let UNDO=null;
+function settleUndo(){ const u=UNDO; UNDO=null; if(u && u.commit) try{ u.commit(); }catch(e){} }
+function toast(t, bad, undo){
+  const el=$("toast"); if(UNDO && UNDO!==undo) settleUndo();
+  el.innerHTML=esc(t)+(undo?`<button type="button" class="toast-undo" id="toastUndo">Undo</button>`:""); UNDO=undo||null;
+  el.classList.toggle("bad",!!bad); el.classList.toggle("has-undo",!!undo); el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
+  if(bad) buzz([60,50,60]);
+  clearTimeout(el._t); el._t=setTimeout(()=>{ el.classList.remove("on"); if(undo && UNDO===undo) settleUndo(); }, undo?6000:bad?4200:2600);
+}
+function doUndo(){ const u=UNDO; if(!u) return false; UNDO=null; const el=$("toast"); clearTimeout(el._t); el.classList.remove("on"); buzz(15); u.undo(); return true; }
+document.addEventListener("click", e => { if(e.target.closest("#toastUndo")) doUndo(); });
+addEventListener("pagehide", settleUndo);
+/* Vibration (Android; iPhones don't let web apps vibrate). Me → Feedback turns it off. */
+function buzz(p){ if(store.get("vb.buzz")===false) return; try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+/* A small effect on the thing just changed: used once, by the next drawing of that booking or row. */
+const FX = new Map();
+/* Added after drawing (so the screen's HTML doesn't change); a redraw while it plays carries on from where it was. */
+function fx(key, kind){ const f={kind, t:Date.now()}; FX.set(key, f); setTimeout(()=>{ if(FX.get(key)===f) FX.delete(key); }, 900); applyFx(); }
+const fxSel = (key, kind) => { const [a, b]=key.includes(":")?[key.slice(0,key.indexOf(":")), key.slice(key.indexOf(":")+1)]:["job", key], q=v=>CSS.escape(v);
+  if(a==="job") return [`#view .job[data-id="${q(b)}"]`, `#view .jrow[data-open="${q(b)}"]`].map(s=>[s, "fx-"+kind]);
+  if(a==="ck") return [[`#view [data-id="${q(b)}"] .ck:has(> input[data-check="${q(kind)}"])`, "ck-pop"]];
+  if(a==="sup") return [[`#view [data-sid="${q(b)}"] .qty .num`, "bump-"+kind]];
+  if(a==="bill") return [[`#view [data-eid="${q(b)}"]`, "fx-"+kind]];
+  return []; };
+function applyFx(){ FX.forEach((f, key) => fxSel(key, f.kind).forEach(([sel, cls]) => { try{ document.querySelectorAll(sel).forEach(el => { if(el.classList.contains(cls)) return; el.style.setProperty("--fxd", `-${Date.now()-f.t}ms`); el.classList.add(cls); }); }catch(e){} })); }
 
 /* ============================== look: theme + folded menu ============================== */
 function applyTheme(){
@@ -176,7 +208,7 @@ const NAV = [
 ];
 const allowed = id => id==="b" || (id==="c" && isOwner()) || NAV.some(n => n.id===id && (!n.owner || isOwner()));
 const homeView = () => isOwner() ? "home" : "jobs";
-function setHTML(el, h){ if(el._h!==h){ el.innerHTML=h; el._h=h; } }
+function setHTML(el, h){ if(el._h!==h){ el.innerHTML=h; el._h=h; if(FX.size) applyFx(); } }
 /* same for a part of a screen: writes to .innerHTML are skipped when nothing changed */
 const box = el => new Proxy({}, { get:(t,k)=>{ const v=el[k]; return typeof v==="function" ? v.bind(el) : v; }, set:(t,k,v)=>{ if(k==="innerHTML") setHTML(el, v); else el[k]=v; return true; } });
 function drawNav(){
@@ -205,7 +237,7 @@ function moreSheet(){
     <button class="btn" type="button" data-account>${I.user}<span>My account</span></button></div>`);
 }
 function go(path){ const h="#"+path; if(location.hash===h) route(); else location.hash=h; }
-addEventListener("hashchange", () => route());
+addEventListener("hashchange", () => { ARR=false; closeSwipe(); route(); drawLive(); });
 function route(){
   if($("shell").hidden) return;
   const [v, ...rest] = location.hash.slice(1).split("/"); const arg = decodeURIComponent(rest.join("/"));
@@ -224,7 +256,7 @@ function paint(html, el){
   const root = !el; el = el || $("view");
   if(el._h === html) return false;
   if(root){ const key=S.v+"/"+S.arg; el.classList.toggle("norise", painted===key); painted=key; }
-  const y = scrollY; el.innerHTML = html; el._h = html;
+  const y = scrollY; el.innerHTML = html; el._h = html; if(root){ SWO=null; drawLive(); } applyFx();
   if(root && painted && Math.abs(scrollY-y)>2) scrollTo(0,y);
   return true;
 }
@@ -242,7 +274,7 @@ const skel = (n, h) => Array.from({length:n||3}, () => `<div class="skel" style=
 
 /* ============================== sheet, pop ============================== */
 let sheetFor=null;
-function openSheet(title, html, id){ sheetFor=id||null; $("sheetTitle").textContent=title; $("sheetBody").innerHTML=html; $("sheet").hidden=false; $("sheet").querySelector(".sheet-panel").scrollTop=0; }
+function openSheet(title, html, id){ sheetFor=id||null; if(typeof sheetReset==="function" && !SD) sheetReset(); $("sheetTitle").textContent=title; $("sheetBody").innerHTML=html; $("sheet").hidden=false; $("sheet").querySelector(".sheet-panel").scrollTop=0; }
 function closeSheet(){ $("sheet").hidden=true; sheetFor=null; }
 $("sheet").addEventListener("click", e => { if(e.target.closest("[data-close]")) closeSheet(); });
 function closePop(){ $("pop").hidden=true; }
@@ -349,7 +381,7 @@ const netDown = e => !!e && !e.status && e.message!=="signed out";
 function saveQueue(){ store.set("vb.queue", QUEUE); drawSync(); }
 function queueAdd(item){ QUEUE.push(Object.assign({at:new Date().toISOString()}, item)); saveQueue(); }
 function withQueued(j){ QUEUE.forEach(q => { if(q.id!==j.id) return; if(q.fn==="staff_update" && OPTIMISTIC[q.action]) j=Object.assign({}, j, OPTIMISTIC[q.action](j)); else if(q.patch) j=Object.assign({}, j, q.patch); }); return j; }
-function drawSync(){ const b=$("syncBar"); if(!b) return; const n=QUEUE.length; b.hidden=!n; if(n) $("syncTx").textContent=`${n} change${n>1?"s":""} saved on this phone. ${n>1?"They":"It"} will sync when the internet is back.`; }
+function drawSync(){ const b=$("syncBar"); if(!b) return; const n=QUEUE.length; b.hidden=!n; if(n) $("syncTx").textContent=`${n} change${n>1?"s":""} saved on this phone. ${n>1?"They":"It"} will sync when the internet is back.`; hudVis(); }
 async function flush(){
   if(flushing || !QUEUE.length || !session) return; flushing=true; let sent=0;
   try{
@@ -384,12 +416,18 @@ async function bookCall(id, fn, args, patch, label){
   try{ const r=await rpc(fn, args); if(r && r.id) JOBS.set(r.id, withQueued(r)); redraw(); return "ok"; }
   catch(e){ if(e.message==="signed out") return false; if(netDown(e)) return later(); JOBS.set(id, before); redraw(); toast(e.message||"Couldn't save", true); return false; }
 }
-async function act(id, action, from){
-  const before = JOBS.get(id); if(!before) return false;
+/* Undo for the taps that are easy to make by mistake: paid, washed, cancelled. */
+const UNDO_ACT = {paid_upi:["unpaid"], paid_cash:["unpaid"], done:["reopen","on_way"], cancel:["reopen"]};
+const UNDO_MSG = {paid_upi:"Payment undone", paid_cash:"Payment undone", done:"Back to On the way", cancel:"Booking reopened"};
+function undoFor(id, action){ const back=UNDO_ACT[action]; if(!back) return null;
+  return {undo: async () => { for(const a of back){ if(!await act(id, a, null, {quiet:true})) return; } fx(id, "undo"); redraw(); toast(UNDO_MSG[action]); }}; }
+async function act(id, action, from, opt){
+  const before = JOBS.get(id); if(!before) return false; const quiet = opt && opt.quiet;
   JOBS.set(id, Object.assign({}, before, OPTIMISTIC[action](before)));
-  redraw(); toast(DONE_MSG[action] + (/^paid/.test(action)?" · "+rupee(before.total):""));
-  if(/^paid/.test(action)) celebrate(from);
-  const later = () => { queueAdd({fn:"staff_update", id, action, name:before.name, label:DONE_MSG[action]}); toast(DONE_MSG[action]+" · saved on this phone, will sync when online"); return true; };
+  if(!quiet){ fx(id, /^paid/.test(action)?"paid":action); buzz(/^paid/.test(action)?[18,40,18]:action==="done"?25:12); }
+  redraw(); if(!quiet) toast(DONE_MSG[action] + (/^paid/.test(action)?" · "+rupee(before.total):""), false, undoFor(id, action));
+  if(/^paid/.test(action) && !quiet) celebrate(from);
+  const later = () => { queueAdd({fn:"staff_update", id, action, name:before.name, label:DONE_MSG[action]}); if(!quiet) toast(DONE_MSG[action]+" · saved on this phone, will sync when online", false, undoFor(id, action)); return true; };
   if(QUEUE.length){ later(); flush(); return true; }
   try{ const f = await rpc("staff_update", {p_id:id, p_action:action}); JOBS.set(id, f); delete HIST[id]; redraw(); if(S.v==="b") loadHist(id); return true; }
   catch(e){ if(e.message==="signed out") return false; if(netDown(e)) return later(); JOBS.set(id, before); redraw(); toast(e.message||"Couldn't save. Try again.", true); return false; }
@@ -405,7 +443,7 @@ document.addEventListener("click", e => {
   const o = e.target.closest("[data-open]"); if(o && !o.classList.contains("jrow-inplace")){ closeSheet(); closePop(); go("b/"+encodeURIComponent(o.dataset.open)); }
 });
 const DRAW = () => ({home:dHome, jobs:dJobs, bookings:dBookings, b:dBooking, c:dContract});
-function redraw(){ const f=DRAW()[S.v]; if(f) f(); }
+function redraw(){ const f=DRAW()[S.v]; if(f) f(); drawLive(); }
 
 /* celebration (Studio "booked" confetti) */
 function celebrate(from){
@@ -586,7 +624,7 @@ document.addEventListener("submit", async e => {
   if(e.target.id!=="cxForm") return; e.preventDefault(); const id=e.target.dataset.for, on=document.querySelector("[data-cxr].on"); if(!on) return;
   const note=$("cxNote").value.trim(), reason=on.dataset.cxr+(note?": "+note:""); closeSheet();
   const r=await bookCall(id, "staff_cancel", {p_id:id, p_reason:reason}, {status:"cancelled", cancel_reason:reason, cancelled_at:new Date().toISOString()}, "Cancel");
-  if(r) toast(r==="queued"?"Cancelled · saved on this phone, will sync when online":"Booking cancelled"); delete HIST[id]; if(S.v==="b" && r==="ok") loadHist(id);
+  if(r){ fx(id, "cancel"); buzz(12); toast(r==="queued"?"Cancelled · saved on this phone, will sync when online":"Booking cancelled", false, undoFor(id, "cancel")); } delete HIST[id]; if(S.v==="b" && r==="ok") loadHist(id);
 });
 
 /* ============================== RECEIPT ON WHATSAPP ============================== */
@@ -600,23 +638,26 @@ document.addEventListener("click", async e => {
 });
 
 /* ============================== STOCK & BILLS ============================== */
-let KIT=store.get("vb.kit")||null, BILLURL={};
+let KIT=store.get("vb.kit")||null, BILLURL={}, ARR=false;
 async function loadKit(){ try{ const [sup,exp]=await Promise.all([rpc("staff_supplies"), rpc("staff_expenses")]); KIT={sup, exp}; store.set("vb.kit",KIT);
   S.kitCount=(isOwner()?exp.filter(x=>x.status==="pending").length:0)+sup.filter(x=>x.is_low).length; drawNav(); }catch(e){ quiet(e); } }
-async function vKit(){ dKit(); await loadKit(); const need=(KIT?KIT.exp:[]).filter(x=>x.photo && !BILLURL[x.photo]).map(x=>x.photo); if(need.length){ try{ (await signUrls(need)).forEach(x=>BILLURL[x.path]=x.url); }catch(e){} } if(S.v==="kit") dKit(); }
+async function vKit(){ if(ARR) return dKit(); dKit(); await loadKit(); const need=(KIT?KIT.exp:[]).filter(x=>x.photo && !BILLURL[x.photo]).map(x=>x.photo); if(need.length){ try{ (await signUrls(need)).forEach(x=>BILLURL[x.path]=x.url); }catch(e){} } if(S.v==="kit") dKit(); }
 const EXP_CAT={supplies:"Supplies",fuel:"Fuel",other:"Other"}, qtyTx=n=>String(+(+n).toFixed(2));
 function dKit(){
   if(S.v!=="kit") return;
   let html=pageHead("Stock & bills", isOwner()?"Supplies in hand, and bills from the team":"Supplies in hand, and your bills", `<button class="btn primary" type="button" data-expnew>${I.plus}Add a bill</button>`);
   if(!KIT){ V().innerHTML=html+`<div class="grid grid-2">${skel(2,220)}</div>`; return; }
-  const pend=KIT.exp.filter(x=>x.status==="pending");
-  html+=`<div class="grid grid-2"><section class="card"><div class="card-head"><h2>Stock</h2>${isOwner()?`<button class="btn sm" type="button" data-supedit>Edit list</button>`:""}</div>
-    ${KIT.sup.length?`<div class="list">${KIT.sup.map(x=>`<div class="list-row sup-row${x.is_low?" low":""}" data-sid="${x.id}" style="cursor:default"><div class="lr-main"><b>${esc(x.name)} ${x.is_low?'<span class="pill st-collect">Low</span>':""}</b><span>${x.low>0?"Warn at "+qtyTx(x.low)+" "+esc(x.unit):"No warning set"}${x.by?" · "+esc(first(x.by))+" "+ago(x.updated_at):""}</span></div>
-      <div class="qty"><button class="btn sm" type="button" data-qd="-1" aria-label="Used one">−</button><b class="num">${qtyTx(x.qty)}<small>${esc(x.unit)}</small></b><button class="btn sm" type="button" data-qd="1" aria-label="Added one">+</button></div></div>`).join("")}</div>`
+  const exps=KIT.exp.filter(x=>!BILL_GONE.has(x.id)), pend=exps.filter(x=>x.status==="pending"), arr=ARR && isOwner(), n=KIT.sup.length;
+  const supAct = arr ? `<button class="btn primary sm" type="button" data-arrdone>${I.check}Done</button>`
+    : isOwner() ? `${n>1?`<button class="btn sm" type="button" data-arrange>${I.arrange}<span class="hide-sm">Arrange</span></button>`:""}<button class="btn sm" type="button" data-supedit>Edit list</button>` : "";
+  html+=`<div class="grid grid-2"><section class="card${arr?" arranging":""}"><div class="card-head"><h2>Stock</h2><div class="row" style="gap:6px">${supAct}</div></div>
+    ${n?`<div class="list" id="supList">${KIT.sup.map((x,i)=>{ return `<div class="list-row sup-row${x.is_low?" low":""}${arr?" jiggle":""}" data-sid="${x.id}" style="cursor:default${arr?`;--jd:${(i%3)*-.09}s`:""}">${arr?`<span class="drag-h" data-dragh aria-hidden="true">${I.grip}</span>`:""}<div class="lr-main"><b>${esc(x.name)} ${x.is_low?'<span class="pill st-collect">Low</span>':""}</b><span>${x.low>0?"Warn at "+qtyTx(x.low)+" "+esc(x.unit):"No warning set"}${x.by?" · "+esc(first(x.by))+" "+ago(x.updated_at):""}</span></div>
+      ${arr?`<div class="qty"><button class="btn sm" type="button" data-mv="-1" aria-label="Move ${esc(x.name)} up"${i===0?" disabled":""}>↑</button><button class="btn sm" type="button" data-mv="1" aria-label="Move ${esc(x.name)} down"${i===n-1?" disabled":""}>↓</button></div>`
+        :`<div class="qty"><button class="btn sm" type="button" data-qd="-1" aria-label="Used one">−</button><b class="num">${qtyTx(x.qty)}<small>${esc(x.unit)}</small></b><button class="btn sm" type="button" data-qd="1" aria-label="Added one">+</button></div>`}</div>`; }).join("")}</div>`
       :`<p class="muted small">No items yet.${isOwner()?" Tap Edit list to add what you keep in the kit.":""}</p>`}
-    <p class="small muted" style="margin-top:10px">Tap − when you use one up and + when you buy more.${isOwner()?" Set a warning level in Edit list; Home tells you when something runs low.":""}</p></section>
+    <p class="small muted" style="margin-top:10px">${arr?"Drag an item by its dots (or use ↑ ↓) to put the list in the order you like, then tap <b>Done</b>.":`Tap − when you use one up and + when you buy more.${isOwner()?" Set a warning level in Edit list; Home tells you when something runs low.":""}`}</p></section>
   <section class="card"><div class="card-head"><h2>Bills</h2>${pend.length&&isOwner()?`<span class="pill st-collect">${pend.length} to approve</span>`:""}</div>
-    ${KIT.exp.length?`<div class="list">${KIT.exp.map(x=>`<div class="list-row bill" data-eid="${x.id}" style="cursor:default">${x.photo?`<a class="bill-ph" href="${esc(BILLURL[x.photo]||"#")}" target="_blank" rel="noopener">${BILLURL[x.photo]?`<img src="${esc(BILLURL[x.photo])}" alt="Bill photo" loading="lazy">`:I.receipt}</a>`:`<span class="bill-ph">${I.receipt}</span>`}
+    ${exps.length?`<div class="list">${exps.map(x=>`<div class="list-row bill" data-eid="${x.id}" style="cursor:default">${x.photo?`<a class="bill-ph" href="${esc(BILLURL[x.photo]||"#")}" target="_blank" rel="noopener">${BILLURL[x.photo]?`<img src="${esc(BILLURL[x.photo])}" alt="Bill photo" loading="lazy">`:I.receipt}</a>`:`<span class="bill-ph">${I.receipt}</span>`}
       <div class="lr-main"><b>${rupee(x.amount)} · ${EXP_CAT[x.category]}</b><span>${fmtDay(x.day,{day:"numeric",month:"short"})}${isOwner()?" · "+esc(first(x.staff_name)):""}${x.note?" · "+esc(x.note):""}</span></div>
       <div class="bill-act">${x.status==="pending"?(isOwner()?`<button class="btn coral sm" type="button" data-er="approved">Approve</button><button class="btn sm" type="button" data-er="rejected">Reject</button>`:'<span class="pill st-new">Waiting</span>'):x.status==="approved"?'<span class="pill st-done">Approved</span>':'<span class="pill st-cancelled">Rejected</span>'}
       ${isOwner()||x.status==="pending"?`<button class="link-btn small" type="button" data-edel>Delete</button>`:""}${isOwner()&&x.status!=="pending"?`<button class="link-btn small" type="button" data-er="pending">Undo</button>`:""}</div></div>`).join("")}</div>`
@@ -626,15 +667,53 @@ function dKit(){
 }
 document.addEventListener("click", async e => {
   if(S.v!=="kit") return; const t=e.target;
-  const q=t.closest("[data-qd]"); if(q){ const id=+q.closest("[data-sid]").dataset.sid, d=+q.dataset.qd, x=KIT.sup.find(y=>y.id===id); if(!x) return;
-    x.qty=Math.max(0,+x.qty+d); x.is_low=x.low>0&&x.qty<=x.low; dKit();
-    try{ KIT.sup=await rpc("staff_use_supply",{p_id:id, p_delta:d}); store.set("vb.kit",KIT); dKit(); }catch(err){ if(netDown(err)) queueAdd({fn:"staff_use_supply", args:{p_id:id, p_delta:d}, label:(d>0?"Added ":"Used ")+x.name}); else { toast(err.message, true); vKit(); } } return; }
+  const q=t.closest("[data-qd]"); if(q){ const id=+q.closest("[data-sid]").dataset.sid, d=+q.dataset.qd; if(useSupply(id, d)) toast((d>0?"Added 1 · ":"Used 1 · ")+KIT.sup.find(y=>y.id===id).name, false, {undo:()=>useSupply(id, -d, true)}); return; }
   if(t.closest("[data-supedit]")) return supSheet();
   const er=t.closest("[data-er]"); if(er){ const id=+er.closest("[data-eid]").dataset.eid; try{ await rpc("owner_review_expense",{p_id:id, p_status:er.dataset.er}); toast({approved:"Approved",rejected:"Rejected",pending:"Back to waiting"}[er.dataset.er]); vKit(); }catch(x){ toast(x.message,true); } return; }
-  const ed=t.closest("[data-edel]"); if(ed){ if(!ed.dataset.sure){ ed.dataset.sure="1"; ed.textContent="Tap again"; return; } const id=+ed.closest("[data-eid]").dataset.eid;
-    try{ const r=await rpc("staff_delete_expense",{p_id:id}); if(r.photo) removeFiles([r.photo]).catch(()=>{}); toast("Bill deleted"); vKit(); }catch(x){ toast(x.message,true); } return; }
+  const ed=t.closest("[data-edel]"); if(ed){ const id=+ed.closest("[data-eid]").dataset.eid; delBill(id); return; }
 });
 document.addEventListener("click", e => { if(e.target.closest("[data-expnew]")) expSheet(); });
+/* Arrange (owner): the stock items wiggle; drag one by its dots, or use ↑ ↓, then Done saves the order. */
+function supOrder(){ const ids=$$("#supList [data-sid]").map(r=>+r.dataset.sid); KIT.sup.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id)); }
+async function saveSupOrder(){
+  const list=KIT.sup.map(x=>({id:x.id, name:x.name, unit:x.unit, qty:+x.qty, low:+x.low}));
+  ARR=false; dKit();
+  try{ KIT.sup=await rpc("owner_save_supplies",{p:list}); store.set("vb.kit",KIT); dKit(); toast("Order saved"); }catch(x){ toast(x.message, true); vKit(); }
+}
+document.addEventListener("click", e => {
+  if(S.v!=="kit") return;
+  if(e.target.closest("[data-arrange]")){ ARR=true; buzz(20); dKit(); return; }
+  if(e.target.closest("[data-arrdone]")) return saveSupOrder();
+  const m=e.target.closest("[data-mv]"); if(m){ const r=m.closest("[data-sid]"), sib=+m.dataset.mv<0?r.previousElementSibling:r.nextElementSibling; if(!sib) return;
+    +m.dataset.mv<0 ? sib.before(r) : sib.after(r); supOrder(); buzz(8); dKit(); const b=document.querySelector(`#supList [data-sid="${r.dataset.sid}"] [data-mv="${m.dataset.mv}"]`); (b && !b.disabled ? b : document.querySelector(`#supList [data-sid="${r.dataset.sid}"] [data-mv]:not([disabled])`))?.focus(); }
+});
+let DRAG=null;
+document.addEventListener("pointerdown", e => {
+  const h=e.target.closest("[data-dragh]"); if(!h || S.v!=="kit" || !ARR) return; e.preventDefault();
+  const row=h.closest("[data-sid]"); DRAG={row, list:row.parentElement, y:e.clientY}; row.classList.add("lift"); try{ h.setPointerCapture(e.pointerId); }catch(x){} buzz(10);
+});
+document.addEventListener("pointermove", e => {
+  if(!DRAG) return; const {row, list}=DRAG;
+  const sibs=[...list.children].filter(x=>x!==row), over=sibs.find(x=>{ const r=x.getBoundingClientRect(); return e.clientY < r.top + r.height/2; });
+  const before = over || null; if(row.nextElementSibling!==before && !(before===null && row===list.lastElementChild)){ list.insertBefore(row, before); buzz(6); }
+});
+function dragEnd(){ if(!DRAG) return; DRAG.row.classList.remove("lift"); DRAG=null; supOrder(); dKit(); }
+document.addEventListener("pointerup", dragEnd); document.addEventListener("pointercancel", dragEnd);
+/* − / + on a stock item: shown at once, sent in the background (kept for later when offline). */
+function useSupply(id, d, isUndo){
+  const x=KIT && KIT.sup.find(y=>y.id===id); if(!x) return false; if(d<0 && +x.qty<=0 && !isUndo) return toast(x.name+" is already at 0", true), false;
+  x.qty=Math.max(0,+x.qty+d); x.is_low=x.low>0&&x.qty<=x.low; fx("sup:"+id, d>0?"up":"down"); buzz(8); dKit();
+  rpc("staff_use_supply",{p_id:id, p_delta:d}).then(sup=>{ KIT.sup=sup; store.set("vb.kit",KIT); dKit(); },
+    err=>{ if(netDown(err)) queueAdd({fn:"staff_use_supply", args:{p_id:id, p_delta:d}, label:(d>0?"Added ":"Used ")+x.name}); else { toast(err.message, true); vKit(); } });
+  return true;
+}
+/* Deleting a bill waits 6 s so Undo can bring it back; it is deleted when the time is up. */
+const BILL_GONE=new Set();
+function delBill(id){
+  BILL_GONE.add(id); buzz(12); dKit();
+  toast("Bill deleted", false, {undo:()=>{ BILL_GONE.delete(id); fx("bill:"+id, "undo"); dKit(); },
+    commit:()=>rpc("staff_delete_expense",{p_id:id}).then(r=>{ BILL_GONE.delete(id); if(r.photo) removeFiles([r.photo]).catch(()=>{}); if(KIT) KIT.exp=KIT.exp.filter(x=>x.id!==id); dKit(); }, x=>{ BILL_GONE.delete(id); dKit(); toast("Couldn't delete the bill: "+x.message, true); })});
+}
 function expSheet(){
   openSheet("Add a bill", `<form id="expForm" class="menu"><div class="chips">${Object.entries(EXP_CAT).map(([k,l],i)=>`<button type="button" class="chip${i===0?" on":""}" data-ecat="${k}">${l}</button>`).join("")}</div>
     <div class="form-grid"><label class="field">Amount ₹<input type="number" id="expAmt" min="1" max="100000" inputmode="numeric" required></label><label class="field">Day<input type="date" id="expDay" max="${istToday()}" min="${addDays(istToday(),-60)}" value="${istToday()}"></label></div>
@@ -990,7 +1069,8 @@ document.addEventListener("toggle", e => { const d=e.target; if(!d.matches || !d
 document.addEventListener("change", e => {
   const c=e.target.closest("[data-check]"); if(!c) return; const id=c.closest("[data-id]").dataset.id, j=JOBS.get(id); if(!j) return;
   const it=c.dataset.check, on=c.checked, checks=(j.checks||[]).filter(x=>x!==it).concat(on?[it]:[]);
-  bookCall(id, "staff_check", {p_id:id, p_item:it, p_on:on}, {checks}, on?"Tick "+it:"Untick "+it);
+  if(on) buzz(8);
+  bookCall(id, "staff_check", {p_id:id, p_item:it, p_on:on}, {checks}, on?"Tick "+it:"Untick "+it); if(on) fx("ck:"+id, it);
 });
 // Washed with items not ticked: ask for a second tap
 document.addEventListener("click", e => {
@@ -1001,10 +1081,14 @@ document.addEventListener("click", e => {
   setTimeout(()=>{ if(a.isConnected) delete a.dataset.sure; }, 5000);
 }, true);
 /* Wash timer: Start wash → Mark washed. Analytics shows the average time. */
+function timerCall(id, what){
+  if(what==="start") fx(id, "start");
+  return bookCall(id, "staff_timer", {p_id:id, p_what:what}, {started_at: what==="start"?new Date().toISOString():null}, what==="start"?"Start wash":"Undo start")
+    .then(r=>{ if(r){ if(what==="start"){ buzz(12); toast("Wash started. Tap Mark washed when you finish.", false, {undo:()=>timerCall(id, "reset")}); } else toast("Start undone"); }
+      delete HIST[id]; if(S.v==="b" && r==="ok") loadHist(id); drawLive(); });
+}
 document.addEventListener("click", e => {
-  const t=e.target.closest("[data-timer]"); if(!t) return; const h=t.closest("[data-id]"); if(!h) return; const id=h.dataset.id, what=t.dataset.timer;
-  bookCall(id, "staff_timer", {p_id:id, p_what:what}, {started_at: what==="start"?new Date().toISOString():null}, what==="start"?"Start wash":"Undo start")
-    .then(r=>{ if(r) toast(what==="start"?"Wash started. Tap Mark washed when you finish.":"Start undone"); delete HIST[id]; if(S.v==="b" && r==="ok") loadHist(id); });
+  const t=e.target.closest("[data-timer]"); if(!t) return; const h=t.closest("[data-id]"); if(!h) return; timerCall(h.dataset.id, t.dataset.timer);
 });
 setInterval(() => $$("[data-since]").forEach(x => x.textContent = mins(x.dataset.since)), 30e3);
 /* Saved note for a customer: shows on all their bookings. */
@@ -1687,7 +1771,7 @@ function accountSheet(){
     <div class="field">Look<div class="seg" id="themeSeg">${[["auto","Phone setting"],["light","Light"],["dark","Dark"]].map(([k,l])=>`<button type="button" data-th="${k}" class="${k===th?"on":""}">${l}</button>`).join("")}</div></div>
     <form id="pwForm" class="fs"><legend>Change my password</legend><div class="pw-row"><span class="pw-wrap"><input class="input" id="myPw" type="password" placeholder="New password, 8+ characters" autocomplete="new-password"><button type="button" class="pw-eye" data-eye="myPw">Show</button></span><button class="btn" type="submit">Save</button></div><p class="msg" id="pwMsg" hidden></p></form>
     ${isOwner()?`<fieldset class="fs"><legend>Phone alerts</legend><div id="pushBox"><div class="skel" style="height:40px"></div></div></fieldset>`:`<fieldset class="fs"><legend>My pay</legend><div id="myPay"><div class="skel" style="height:40px"></div></div></fieldset><button class="btn" type="button" data-go="kit">${I.box}Stock &amp; bills</button>`}
-    <button class="btn" type="button" id="refreshNow">Refresh now</button><button class="btn" type="button" data-go="help">Help</button><button class="btn danger" type="button" data-signout>Sign out</button></div>`, "account");
+    ${feedbackBox()}<button class="btn" type="button" id="refreshNow">Refresh now</button><button class="btn" type="button" data-go="help">Help</button><button class="btn danger" type="button" data-signout>Sign out</button></div>`, "account");
   if(isOwner()) drawPushBox();
   else rpc("staff_my_pay").then(m=>{ const el=$("myPay"); if(!el) return; el.innerHTML=`<dl class="dl"><dt>This month</dt><dd><b>${m.month_washes}</b> wash${m.month_washes===1?"":"es"} · <b>${rupee(m.month_earned)}</b></dd><dt>Still to be paid</dt><dd><b>${rupee(m.owed)}</b></dd><dt>Rate</dt><dd>${rupee(m.pay_car)} a car · ${rupee(m.pay_bike)} a bike</dd>${m.payouts.length?`<dt>Last paid</dt><dd>${rupee(m.payouts[0].amount)} on ${fmtDay(String(m.payouts[0].paid_at).slice(0,10),{day:"numeric",month:"short"})}</dd>`:""}</dl>`; })
     .catch(()=>{ const el=$("myPay"); if(el) el.innerHTML='<p class="small muted">Couldn\'t load. Check your internet.</p>'; });
@@ -1702,10 +1786,150 @@ $("sheetBody").addEventListener("submit", async e => {
 document.addEventListener("click", e => {
   if(e.target.closest("#refreshNow")){ closeSheet(); refreshSettings(); route(); }
   if(e.target.closest("[data-signout]")){ if(session) fetch(URL_+"/auth/v1/logout",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+session.access_token}}).catch(()=>{});
-    Object.keys(localStorage).filter(k=>k.startsWith("vb.") && !["vb.theme","vb.menu"].includes(k) && !k.startsWith("vb.tour")).forEach(k=>localStorage.removeItem(k));
+    Object.keys(localStorage).filter(k=>k.startsWith("vb.") && !["vb.theme","vb.menu","vb.buzz","vb.shake"].includes(k) && !k.startsWith("vb.tour")).forEach(k=>localStorage.removeItem(k));
     session=null; S.me=null; S.v=""; S.day=istToday(); S.open.clear(); S.inboxCount=0; S.attnCount=0; SET={templates:[],notice:null,team:[]}; JOBS.clear(); SINCE=null; NOTES=[];
     OV=ATTN=CAL=DAY=BK=CU=DUE=INB=AN=TEAM=PAY=KIT=null;
     closeSheet(); closePop(); history.replaceState(null,"",location.pathname); $("lgFields").hidden=false; $("lgCer").hidden=true; show("login"); }
+});
+
+/* ============================== motion: swipe, live bar, sheet drag, shake ============================== */
+/* Swipe a job on a phone: right = the next step (a long swipe does it), left = Call, Chat, Cancel. */
+let SWO=null, SWP=null, swipedAt=0;
+const SW_W=78;
+function swipeActs(j){
+  const A=(cls, attrs, icon, tx, a) => a ? `<a class="sw-a ${cls}" ${attrs}>${icon}<span>${tx}</span></a>` : `<button type="button" class="sw-a ${cls}" ${attrs}>${icon}<span>${tx}</span></button>`;
+  const waA=(act, key, icon, tx) => A("wa", `data-act="${act}" target="_blank" rel="noopener" href="${wa(j.phone, fill(key, jobCtx(j)))}"`, icon, tx, 1);
+  const L=[], R=[];
+  if(j.status==="cancelled") L.push(A("ok", 'data-act="reopen"', I.repeat, "Reopen"));
+  else if(j.status==="new") L.push(waA("confirm", "confirm", I.chat, "Confirm"));
+  else if(j.status==="confirmed") L.push(waA("on_way", "onway", I.jobs, "On my way"));
+  else if(j.status==="on_way"){ if(!j.started_at) L.push(A("ok", 'data-timer="start"', I.play, "Start")); L.push(A("ok", 'data-act="done"', I.check, "Washed")); }
+  else if(!isPaid(j) && j.payment!=="refunded") L.push(A("pay", 'data-act="paid_upi"', I.qr, "UPI"), A("pay", 'data-act="paid_cash"', I.cash, "Cash"));
+  else if(!j.review_asked_at) L.push(waA("review_asked", "review", I.star, "Review"));
+  R.push(A("", `href="${tel(j.phone)}" data-call`, I.call, "Call", 1), A("", "data-chat", I.chat, "Chat"));
+  if(!["cancelled","done"].includes(j.status)) R.push(A("bad", 'data-act="cancel"', I.x, "Cancel"));
+  return {L, R};
+}
+function swipePrep(p){
+  if(SWO && SWO.el===p.el){ Object.assign(p, {u:SWO.u, lw:SWO.lw, rw:SWO.rw, full:SWO.full}); SWO=null; }
+  else {
+    closeSwipe(true);
+    const {L, R}=swipeActs(p.j), el=p.el, par=el.parentElement, u=document.createElement("div");
+    if(getComputedStyle(par).position==="static") par.style.position="relative";
+    u.className="sw-under"+(el.offsetHeight>220?" tall":""); u.dataset.id=p.id; u.innerHTML=`<div class="sw-l">${L.join("")}</div><div class="sw-r">${R.join("")}</div>`;
+    u.style.cssText=`top:${el.offsetTop}px;left:${el.offsetLeft}px;width:${el.offsetWidth}px;height:${el.offsetHeight}px;border-radius:${getComputedStyle(el).borderRadius}`;
+    el.before(u); Object.assign(p, {u, lw:L.length*SW_W, rw:R.length*SW_W, full:L.length===1});
+  }
+  p.el.classList.add("swiping"); p.u.classList.remove("anim"); p.el.style.transition="none";
+}
+function swipeTo(o, off){
+  o.off=off; o.el.style.transform=off?`translateX(${off}px)`:""; o.u.querySelector(".sw-l").style.width=Math.max(0,off)+"px"; o.u.querySelector(".sw-r").style.width=Math.max(0,-off)+"px";
+}
+function openSwipe(p, off){ p.el.style.transition=""; p.u.classList.add("anim"); swipeTo(p, off); SWO=p; }
+function closeSwipe(now){
+  const o=SWO; SWO=null; if(!o) return;
+  if(now || !o.el.isConnected){ o.u.remove(); o.el.classList.remove("swiping"); o.el.style.transform=o.el.style.transition=""; return; }
+  o.el.style.transition=""; o.u.classList.add("anim"); swipeTo(o, 0);
+  setTimeout(()=>{ if(SWO && SWO.el===o.el) return; o.u.remove(); o.el.classList.remove("swiping"); }, 240);
+}
+document.addEventListener("pointerdown", e => {
+  const el=e.target.closest("#view .job, #view .jrow");
+  if(SWO && !e.target.closest(".sw-under") && el!==SWO.el) closeSwipe();
+  if(e.pointerType==="mouse" || !el || e.target.closest("input,textarea,select,summary,.cklist")) return;
+  const id=el.dataset.id||el.dataset.open, j=JOBS.get(id); if(!j) return;
+  SWP={el, id, j, x:e.clientX, y:e.clientY, mode:0, base:SWO&&SWO.el===el?SWO.off:0, off:0};
+}, {passive:true});
+document.addEventListener("pointermove", e => {
+  const p=SWP; if(!p) return; const dx=e.clientX-p.x, dy=e.clientY-p.y;
+  if(!p.mode){ if(Math.abs(dx)>10 && Math.abs(dx)>Math.abs(dy)*1.4){ p.mode=1; swipePrep(p); } else { if(Math.abs(dy)>10) SWP=null; return; } }
+  const W=p.el.offsetWidth; let off=p.base+dx;
+  const maxR=p.full?W*.82:p.lw+24, minL=-(p.rw+24);
+  if(off>0 && !p.lw) off*=.15; else if(off>maxR) off=maxR+(off-maxR)*.2;
+  if(off<0 && !p.rw) off*=.15; else if(off<minL) off=minL+(off-minL)*.2;
+  swipeTo(p, off); p.u.classList.toggle("show-l", off>0); p.u.classList.toggle("show-r", off<0);
+  const armed=p.full && off>Math.max(W*.45, p.lw+40); if(armed!==!!p.armed){ p.armed=armed; p.u.classList.toggle("armed", armed); if(armed) buzz(10); }
+});
+function swipeEnd(e){
+  const p=SWP; SWP=null; if(!p || !p.mode) return; swipedAt=Date.now();
+  if(e.type==="pointercancel"){ SWO=p; return closeSwipe(); }
+  if(p.armed){ const b=p.u.querySelector(".sw-l .sw-a"); openSwipe(p, p.lw); b.click();     // the click runs in the swipe itself, so WhatsApp links open
+    setTimeout(()=>{ if(SWO===p && !b.dataset.sure) closeSwipe(); }, 60); return; }
+  if(p.lw && p.off>p.lw*.5) openSwipe(p, p.lw); else if(p.rw && p.off<-p.rw*.5) openSwipe(p, -p.rw); else { SWO=p; closeSwipe(); }
+}
+document.addEventListener("pointerup", swipeEnd); document.addEventListener("pointercancel", swipeEnd);
+/* After a swipe, the lifted finger doesn't also open the job; a tap on an open row closes it. */
+document.addEventListener("click", e => {
+  const el=e.target.closest("#view .job, #view .jrow"); if(!el) return;
+  if(Date.now()-swipedAt<400 || (SWO && SWO.el===el)){ e.preventDefault(); e.stopImmediatePropagation(); if(SWO && Date.now()-swipedAt>=400) closeSwipe(); }
+}, true);
+document.addEventListener("click", e => { const b=e.target.closest(".sw-under .sw-a"); if(b) setTimeout(()=>{ if(SWO && SWO.u.contains(b) && !b.dataset.sure) closeSwipe(); }, 0); });
+
+/* Live bar: a wash that's running stays pinned at the top (timer and checklist) until it's marked washed. */
+function hudVis(){ const h=$("hud"); if(h) h.hidden=$("liveBar").hidden && $("syncBar").hidden; }
+function drawLive(){
+  const bar=$("liveBar"); if(!bar) return; const me=S.me&&S.me.id, here=S.v==="b"?S.arg:null;
+  const run=!S.me||$("shell").hidden ? [] : [...JOBS.values()].filter(j=>j.status==="on_way" && j.started_at && (isOwner()||j.assigned_to===me||!j.assigned_to) && j.id!==here && decodeURIComponent(here||"")!==j.id)
+    .sort((a,b)=>a.started_at<b.started_at?-1:1);
+  bar.hidden=!run.length;
+  if(run.length){ const j=run[0], all=checklist(j), done=(j.checks||[]).filter(x=>all.includes(x)).length;
+    bar.dataset.open=j.id; bar.setAttribute("aria-label", `Washing ${j.name}, open the booking`);
+    setHTML(bar, `<span class="live-dot" aria-hidden="true"></span><span class="live-tx"><b>Washing · ${esc(j.name)}</b><small>${esc(vehShort(j.vehicle))} · ${esc(j.package)}${all.length?` · ${done}/${all.length} ticked`:""}${run.length>1?` · +${run.length-1} more`:""}</small></span><b class="live-time" data-since="${esc(j.started_at)}">${mins(j.started_at)}</b><span class="live-prog"><i style="width:${all.length?Math.round(done/all.length*100):0}%"></i></span>`); }
+  hudVis();
+}
+setInterval(drawLive, 15e3);
+
+/* Sheets: pull down on the handle or the title to close. */
+let SD=null;
+const sheetPanel = () => $("sheet").querySelector(".sheet-panel");
+function sheetReset(){ const p=sheetPanel(); p.style.transform=p.style.transition=p.style.animation=""; $("sheet").querySelector(".sheet-bg").style.opacity=""; }
+$("sheet").addEventListener("pointerdown", e => {
+  if(!e.target.closest(".sheet-grip, .sheet-head") || e.target.closest("button,a,input")) return;
+  const p=sheetPanel(); SD={y:e.clientY, t:Date.now(), dy:0}; p.style.transition="none"; p.style.animation="none";
+  try{ e.target.setPointerCapture(e.pointerId); }catch(x){}
+});
+$("sheet").addEventListener("pointermove", e => {
+  if(!SD) return; const dy=e.clientY-SD.y; SD.dy=dy>0?dy:dy*.15;
+  sheetPanel().style.transform=`translateY(${SD.dy}px)`; $("sheet").querySelector(".sheet-bg").style.opacity=Math.max(.2, 1-SD.dy/400);
+});
+function sheetDragEnd(){
+  const d=SD; SD=null; if(!d) return; const p=sheetPanel(), v=d.dy/Math.max(1, Date.now()-d.t);
+  p.style.transition="transform .2s cubic-bezier(.2,.8,.2,1)";
+  if(d.dy>110 || (d.dy>40 && v>.5)){ p.style.transform="translateY(110%)"; buzz(8); setTimeout(()=>{ closeSheet(); sheetReset(); }, 190); }
+  else { p.style.transform=""; $("sheet").querySelector(".sheet-bg").style.opacity=""; setTimeout(sheetReset, 220); }
+}
+$("sheet").addEventListener("pointerup", sheetDragEnd); $("sheet").addEventListener("pointercancel", sheetDragEnd);
+
+/* Shake the phone to undo (while the Undo button shows). iPhones ask once; Me → Feedback turns it on there. */
+const MOTION_ASK = typeof DeviceMotionEvent!=="undefined" && typeof DeviceMotionEvent.requestPermission==="function", SHAKE_ASK = MOTION_ASK && isIOS;
+const touchy = matchMedia("(pointer:coarse)").matches;
+const shakeOn = () => { const v=store.get("vb.shake"); return v==null ? !SHAKE_ASK : v; };
+let motionOn=false, shPrev=null, shT=0, shHits=[], shLast=0;
+function onMotion(e){
+  const a=e.accelerationIncludingGravity; if(!a || a.x==null) return; const now=Date.now(); if(now-shT<90) return; shT=now;
+  if(shPrev){ const d=Math.abs(a.x-shPrev.x)+Math.abs(a.y-shPrev.y)+Math.abs(a.z-shPrev.z);
+    if(d>22){ shHits=shHits.filter(t=>now-t<900); shHits.push(now); if(shHits.length>=3 && now-shLast>1500){ shLast=now; shHits=[]; doUndo(); } } }
+  shPrev={x:a.x, y:a.y, z:a.z};
+}
+function motion(on){ if(on===motionOn) return; motionOn=on; on ? addEventListener("devicemotion", onMotion) : removeEventListener("devicemotion", onMotion); }
+function startShake(){
+  if(typeof DeviceMotionEvent==="undefined" || !touchy || !shakeOn()) return Promise.resolve(motion(false));
+  if(!SHAKE_ASK){ motion(true); if(MOTION_ASK) DeviceMotionEvent.requestPermission().catch(()=>{}); return Promise.resolve(true); }
+  return DeviceMotionEvent.requestPermission().then(r=>{ motion(r==="granted"); return r==="granted"; }, ()=>false);
+}
+document.addEventListener("click", function firstTap(){ document.removeEventListener("click", firstTap, true); if(MOTION_ASK && shakeOn()) startShake(); }, true);
+if(!SHAKE_ASK) startShake();
+function feedbackBox(){
+  const canBuzz="vibrate" in navigator && touchy, canShake=typeof DeviceMotionEvent!=="undefined" && touchy;
+  const seg=(k, on) => `<div class="seg" data-fbseg="${k}"><button type="button" data-fb="${k}" data-val="1" class="${on?"on":""}">On</button><button type="button" data-fb="${k}" data-val="0" class="${on?"":"on"}">Off</button></div>`;
+  return `<fieldset class="fs"><legend>Feedback</legend>${canBuzz?`<div class="field">Vibrate on taps${seg("buzz", store.get("vb.buzz")!==false)}</div>`:""}${canShake?`<div class="field">Shake to undo${seg("shake", shakeOn())}</div>`:""}
+    <p class="small muted">After Paid, Washed, Cancel or Start wash, an <b>Undo</b> button shows for a few seconds.${isIOS?" iPhones don't let web apps vibrate.":""}</p></fieldset>`;
+}
+$("sheetBody").addEventListener("click", async e => {
+  const b=e.target.closest("[data-fb]"); if(!b) return; const on=b.dataset.val==="1";
+  if(b.dataset.fb==="buzz"){ store.set("vb.buzz", on?null:false); if(on) buzz(20); return; }
+  store.set("vb.shake", on); if(!on) return motion(false);
+  if(!await startShake()){ store.set("vb.shake", false); $$('[data-fb="shake"]').forEach(x=>x.classList.toggle("on", x.dataset.val==="0")); toast("Motion access wasn't allowed. Turn it on in the phone's settings for this app.", true); }
+  else toast("Shake to undo is on");
 });
 
 /* ============================== bell (notifications) ============================== */

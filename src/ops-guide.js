@@ -2,6 +2,11 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["8 Nov 2026", "Swipe a job on your phone: right for the next step (a long swipe does it straight away), left for Call, Chat and Cancel."],
+  ["8 Nov 2026", "Undo: after Paid, Washed, Cancel, Start wash, a stock − / + or deleting a bill, tap Undo on the message at the bottom (or shake the phone) within a few seconds."],
+  ["8 Nov 2026", "A dark bar at the top shows the wash that's running, with its timer and checklist, on every screen. Tap it to open the job."],
+  ["8 Nov 2026", "Small touches: buttons answer with a little bounce, Android phones vibrate on Paid and Washed (turn it off in Me → Feedback), and you can pull a sheet down by its handle to close it."],
+  ["8 Nov 2026", "Owner: Arrange on Stock & bills puts the stock list in the order you like (drag by the dots, or ↑ ↓)."],
   ["7 Nov 2026", "Fixed: tapping a tab (like Last 30 days, or 21+ days under Due for a wash) now always marks the tab you tapped."],
   ["7 Nov 2026", "Tidier screens on phones and laptops: even spacing between sections, stock list easier to edit on a phone, plan visits say how many are left."],
   ["7 Nov 2026", "Cancelling a booking now asks why (rain, couldn't reach the customer…). Analytics shows the reasons."],
@@ -59,6 +64,9 @@ const GUIDE = [
 <li><b>Mark washed</b>: when the job is finished. If some checklist items aren't ticked, the app reminds you; tap again if it's done.</li>
 <li><b>Paid by UPI</b> or <b>Paid in cash</b>: once the money is with you.</li>
 <li><b>Ask for a review</b>: sends the rating link.</li></ol>
+<p><b>Swipe</b> (phone): slide a job card or row to the <b>right</b> for its next step (Confirm, On my way, Start, Washed, UPI / Cash, Review). A long swipe right does it straight away when there's only one. Slide <b>left</b> for <b>Call</b>, <b>Chat</b> and <b>Cancel</b>. Tap anywhere else to close it.</p>
+<p><b>Undo</b>: after <b>Paid</b>, <b>Mark washed</b>, <b>Cancel</b> or <b>Start wash</b>, the message at the bottom has an <b>Undo</b> button for a few seconds. You can also shake the phone (Me → Feedback; an iPhone asks once).</p>
+<p>While a wash is running, a <b>dark bar at the top</b> shows the customer, the timer and how many checklist items are ticked, on every screen. Tap it to open the job.</p>
 <p><b>Call</b>, <b>Map</b>, <b>Chat</b> (pick a ready message) and <b>Open</b> are on every card. Tap a short row to open its full card; tap the name to open the booking's page.</p>
 <p>While you're washing, the card has a <b>Checklist</b>: tap Show and tick each step. It's made from the package (the same steps the website lists), the add-ons the customer chose, and a final walk-round with the customer.</p>
 <p>A blue note with a pin is the customer's <b>saved note</b> (gate code, parking spot). It shows on all their bookings.</p>
@@ -121,8 +129,10 @@ const GUIDE = [
   { id: "kit", role: "all", title: "Stock & bills", screens: ["kit"], body: `
 <p><b>Stock & bills</b> is in the menu (on a phone: More, or Me for washers).</p>
 <ul><li><b>Stock</b>: tap <b>−</b> when you use up one (a bottle, a litre, a cloth) and <b>+</b> when you buy more. Items in orange are running low.</li>
+<li>Tapped by mistake? <b>Undo</b> on the message at the bottom puts it back.</li>
 <li>Owner: <b>Edit list</b> to add or remove items and set <b>Warn at</b>: when what's in hand reaches that number, Home shows "Running low".</li>
-<li><b>Add a bill</b>: for fuel or supplies you paid for. Enter the amount, what it was for, and take a photo of the bill. It waits for the owner, and you can delete it until then.</li>
+<li>Owner: <b>Arrange</b> makes the items wiggle. Drag one by its dots (or tap ↑ ↓) to put the list in the order you like, then tap <b>Done</b>.</li>
+<li><b>Add a bill</b>: for fuel or supplies you paid for. Enter the amount, what it was for, and take a photo of the bill. It waits for the owner, and you can delete it until then (<b>Delete</b>, then <b>Undo</b> within a few seconds if that was a mistake).</li>
 <li>Owner: <b>Approve</b> or <b>Reject</b> each bill; Home shows how many are waiting. Approved bills count as costs in Analytics (don't enter them again in Monthly costs). Your own bills are approved straight away.</li></ul>` },
 
   { id: "pay", role: "owner", title: "Washer pay (Settings → Pay)", body: `
@@ -180,6 +190,8 @@ const GUIDE = [
 
   { id: "account", role: "all", title: "My account and password", body: `
 <p>Tap your name (laptop menu) or <b>Me</b> / <b>More → My account</b> (phone) for <b>Change my password</b>, light or dark look, <b>Refresh now</b> and <b>Sign out</b>. The sun/moon button switches the look too.</p>
+<p><b>Feedback</b> (phone): turn <b>Vibrate on taps</b> (Android only; iPhones don't let web apps vibrate) and <b>Shake to undo</b> on or off. On an iPhone, Shake to undo asks for motion access the first time.</p>
+<p>Any sheet (like this one) closes when you pull it down by the handle or the title.</p>
 <p>Washers: <b>My pay</b> shows this month's washes and pay, what's still to be paid and your last payment. The owner sees <b>Phone alerts</b> here.</p>
 <p>Forgot your password? On the sign-in screen tap <b>Forgot password?</b> for an email link, or ask the owner to set a new one in Settings → Team.</p>` },
 

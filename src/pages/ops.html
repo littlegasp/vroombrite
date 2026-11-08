@@ -79,7 +79,10 @@
 
   <main class="main" id="main">
     <div class="updbar" id="updBar" hidden><span>A new version of the staff app is ready.</span><button class="btn primary sm" type="button" id="updBtn">Update</button></div>
-    <div class="updbar syncbar" id="syncBar" hidden role="status"><span id="syncTx"></span><button class="btn sm" type="button" id="syncBtn">Try now</button></div>
+    <div class="hud" id="hud" hidden>
+      <button class="live" id="liveBar" type="button" hidden></button>
+      <div class="updbar syncbar" id="syncBar" hidden role="status"><span id="syncTx"></span><button class="btn sm" type="button" id="syncBtn">Try now</button></div>
+    </div>
     <div id="view"></div>
   </main>
 
