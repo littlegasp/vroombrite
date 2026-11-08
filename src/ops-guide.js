@@ -2,6 +2,7 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["8 Nov 2026", "Phones: tab rows (Analytics periods, Settings sections, Bookings ranges) now show every option at once in tidy rows, with no sliding sideways. Settings uses short names on phones (Slots, Messages, Costs, Notice, Data)."],
   ["8 Nov 2026", "Phone: the screen you're on now shows as a lime button floating on a wave in the bottom bar; tap another tab and it glides over, with the wave following like water. Laptop: a glass pill slides along the side menu."],
   ["8 Nov 2026", "Swipe a job on your phone: right for the next step (a long swipe does it straight away), left for Call, Chat and Cancel."],
   ["8 Nov 2026", "Undo: after Paid, Washed, Cancel, Start wash, a stock − / + or deleting a bill, tap Undo on the message at the bottom (or shake the phone) within a few seconds."],

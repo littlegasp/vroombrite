@@ -55,6 +55,7 @@ const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["8 Nov 2026", "Phones: tab rows (Analytics periods, Settings sections, Bookings ranges) now show every option at once in tidy rows, with no sliding sideways. Settings uses short names on phones (Slots, Messages, Costs, Notice, Data)."],
   ["8 Nov 2026", "Phone: the screen you're on now shows as a lime button floating on a wave in the bottom bar; tap another tab and it glides over, with the wave following like water. Laptop: a glass pill slides along the side menu."],
   ["8 Nov 2026", "Swipe a job on your phone: right for the next step (a long swipe does it straight away), left for Call, Chat and Cancel."],
   ["8 Nov 2026", "Undo: after Paid, Washed, Cancel, Start wash, a stock − / + or deleting a bill, tap Undo on the message at the bottom (or shake the phone) within a few seconds."],
@@ -263,7 +264,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "6d9c2bc7f1";
+const BUILD_ID = "c3e9836683";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";
@@ -1830,8 +1831,8 @@ document.addEventListener("click", async e => {
 });
 
 /* ============================== ANALYTICS (owner) ============================== */
-const AN_RANGES = {week:["7 days",()=>[addDays(istToday(),-6),istToday()]], d30:["30 days",()=>[addDays(istToday(),-29),istToday()]], month:["This month",()=>[monthStart(istToday()),istToday()]],
-  last:["Last month",()=>{ const e=addDays(monthStart(istToday()),-1); return [monthStart(e),e]; }], d90:["90 days",()=>[addDays(istToday(),-89),istToday()]]};
+const AN_RANGES = {week:["7 days",()=>[addDays(istToday(),-6),istToday()]], d30:["30 days",()=>[addDays(istToday(),-29),istToday()]], d90:["90 days",()=>[addDays(istToday(),-89),istToday()]],
+  month:["This month",()=>[monthStart(istToday()),istToday()]], last:["Last month",()=>{ const e=addDays(monthStart(istToday()),-1); return [monthStart(e),e]; }]};
 let AN=null;
 let DUR=null;
 async function vAnalytics(){ const k="an."+S.an; AN=cache.get(k); DUR=cache.get("dur."+S.an); dAnalytics(); try{ const [f,t]=AN_RANGES[S.an][1]();
@@ -1892,7 +1893,7 @@ const PAY_RANGES={week:["This week",()=>{ const t=istToday(), d=new Date(t+"T12:
 const payStatement=(w,f,t)=>{ const cars=w.jobs.filter(x=>!/bike/i.test(x.vehicle)).reduce((a,x)=>a+x.units,0), bikes=w.jobs.filter(x=>/bike/i.test(x.vehicle)).reduce((a,x)=>a+x.units,0);
   return `Hi ${first(w.name)}, your ${SITE.name} pay for ${fmtDay(f,{day:"numeric",month:"short"})} – ${fmtDay(t,{day:"numeric",month:"short"})}:\n`+(cars?`${cars} car wash${cars>1?"es":""} × ${rupee(w.pay_car)} = ${rupee(cars*w.pay_car)}\n`:"")+(bikes?`${bikes} bike wash${bikes>1?"es":""} × ${rupee(w.pay_bike)} = ${rupee(bikes*w.pay_bike)}\n`:"")
     +`Total ${rupee(w.earned)}`+(w.earned-w.owed?`\nAlready paid ${rupee(w.earned-w.owed)}`:"")+(w.owed?`\nStill to pay ${rupee(w.owed)}`:"\nAll paid. Thank you!"); };
-const SET_TABS=[["team","Team"],["pay","Pay"],["slots","Slots & days off"],["messages","WhatsApp messages"],["offers","Offers"],["costs","Monthly costs"],["notice","Team notice"],["data","Data & activity"]];
+const SET_TABS=[["team","Team"],["pay","Pay"],["slots","Slots & days off","Slots"],["messages","WhatsApp messages","Messages"],["offers","Offers"],["costs","Monthly costs","Costs"],["notice","Team notice","Notice"],["data","Data & activity","Data"]];
 async function vSettings(){
   if(!SET_TABS.some(t=>t[0]===S.setTab)) S.setTab="team";
   TEAM=TEAM||cache.get("team"); dSettings();
@@ -1961,7 +1962,7 @@ function dSettings(){
       <div class="keybox"><span id="sheetKey" style="flex:1">${TEAM?esc(TEAM.sheet_copy_key):"…"}</span><button class="btn sm" type="button" id="copyKey">Copy</button></div></section></div>
     <section class="card"><div class="card-head"><h2>Activity log</h2></div><p class="small muted" style="margin-bottom:12px">Who changed logins, offers or messages, downloaded or deleted data. Customers' details are never shown here.</p>
       ${AUDIT?(AUDIT.length?`<ol class="timeline">${AUDIT.map(a=>`<li><span class="dot"></span><div>${esc(AUD[a.action]||a.action)}${a.detail?" · "+esc(a.detail):""}<small>${esc(a.actor_name||"")} · ${fmtTime(a.at)}</small></div></li>`).join("")}</ol>`:'<p class="muted">Nothing yet.</p>'):skel(1,120)}</section>`;
-  V().innerHTML = pageHead("Settings", "Team, slots and days off, messages, offers, costs and data") + `<div class="seg">${SET_TABS.map(([k,l])=>`<button type="button" data-settab="${k}" class="${tab===k?"on":""}">${l}</button>`).join("")}</div>` + body;
+  V().innerHTML = pageHead("Settings", "Team, slots and days off, messages, offers, costs and data") + `<div class="seg">${SET_TABS.map(([k,l,sh])=>`<button type="button" data-settab="${k}" class="${tab===k?"on":""}"${sh?` aria-label="${l}"`:""}>${sh?`<span class="t-lg">${l}</span><span class="t-sm" aria-hidden="true">${sh}</span>`:l}</button>`).join("")}</div>` + body;
 }
 function offerRow(o){
   const isRef = o && o.code==="REFERRAL";
