@@ -2,7 +2,7 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
-  ["8 Nov 2026", "The menu has a glass pill that slides to the screen you open (bottom bar on a phone, side menu on a laptop)."],
+  ["8 Nov 2026", "Phone: the screen you're on now shows as a lime button floating above the bottom bar, and it travels to the next tab you tap. Laptop: a glass pill slides along the side menu."],
   ["8 Nov 2026", "Swipe a job on your phone: right for the next step (a long swipe does it straight away), left for Call, Chat and Cancel."],
   ["8 Nov 2026", "Undo: after Paid, Washed, Cancel, Start wash, a stock − / + or deleting a bill, tap Undo on the message at the bottom (or shake the phone) within a few seconds."],
   ["8 Nov 2026", "A dark bar at the top shows the wash that's running, with its timer and checklist, on every screen. Tap it to open the job."],

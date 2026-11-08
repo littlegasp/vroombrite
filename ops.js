@@ -55,7 +55,7 @@ const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
-  ["8 Nov 2026", "The menu has a glass pill that slides to the screen you open (bottom bar on a phone, side menu on a laptop)."],
+  ["8 Nov 2026", "Phone: the screen you're on now shows as a lime button floating above the bottom bar, and it travels to the next tab you tap. Laptop: a glass pill slides along the side menu."],
   ["8 Nov 2026", "Swipe a job on your phone: right for the next step (a long swipe does it straight away), left for Call, Chat and Cancel."],
   ["8 Nov 2026", "Undo: after Paid, Washed, Cancel, Start wash, a stock − / + or deleting a bill, tap Undo on the message at the bottom (or shake the phone) within a few seconds."],
   ["8 Nov 2026", "A dark bar at the top shows the wash that's running, with its timer and checklist, on every screen. Tap it to open the job."],
@@ -263,7 +263,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "1b601a40bd";
+const BUILD_ID = "40613b47c9";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";
@@ -488,6 +488,19 @@ function glide(bar){
   }
   g._r=r;
 }
+/* Phone bar: the tab you're on rises into a floating lime button that travels to the next tab you open. */
+function floatBtn(){
+  const bar=$("tabbar"), f=bar && bar.querySelector(":scope > .fbtn"); if(!f) return;
+  const on=bar.querySelector("button.on:not(.tb-new)"), vis=!!(on && on.offsetWidth); bar.classList.toggle("has-float", vis);
+  if(!vis){ f.style.opacity=0; f._x=null; f._k=null; return; }
+  const x=on.offsetLeft+on.offsetWidth/2, k=x+"|"+on.dataset.tab; if(f._k===k) return; f._k=k;
+  const b=f.firstElementChild, icon=on.querySelector("svg").outerHTML, from=f._x; f._x=x; f.style.opacity=1;
+  if(from==null || matchMedia("(prefers-reduced-motion:reduce)").matches){ f.style.transition="none"; f.style.transform=`translateX(${x}px)`; b.innerHTML=icon; void f.offsetWidth; f.style.transition=""; return; }
+  f.style.transform=`translateX(${x}px)`;
+  if(from!==x){ b.classList.remove("travel"); void b.offsetWidth; b.classList.add("travel"); }
+  clearTimeout(f._t); b.classList.add("swap"); f._t=setTimeout(()=>{ b.innerHTML=icon; b.classList.remove("swap"); }, 170);
+}
+addEventListener("resize", () => { const f=$("tabbar").querySelector(".fbtn"); if(f){ f._k=null; f._x=null; } floatBtn(); });
 addEventListener("resize", () => { ["tabbar","nav"].forEach(id=>{ const g=$(id).querySelector(".glide"); if(g){ g._k=null; g._r=null; } glide($(id)); }); });
 function drawNav(){
   const cur = S.v==="b" ? (S.from||"bookings") : S.v==="c" ? "plans" : S.v;
@@ -498,7 +511,7 @@ function drawNav(){
     : [["jobs","Jobs",I.jobs],["bookings","Bookings",I.board],["new","New",I.plus],["help","Help",I.help],["more","Me",I.user]];
   const inMore = ["customers","plans","kit","inbox","analytics","settings"].concat(isOwner()?["help"]:[]);
   setHTML($("tabRow"), tabs.map(([id,l,i]) => `<button type="button" data-tab="${id}" class="${id==="new"?"tb-new":""}${id===cur||(id==="more"&&inMore.includes(cur))?" on":""}">${i}<span>${l}</span>${id==="more"&&S.inboxCount?`<i class="tb-dot">${S.inboxCount}</i>`:""}${id==="home"&&S.attnCount?`<i class="tb-dot">${S.attnCount}</i>`:""}</button>`).join(""));
-  glide($("tabbar")); glide($("nav"));
+  floatBtn(); glide($("nav"));
   $("whoAv").textContent = (S.me&&S.me.name||"?").trim().charAt(0).toUpperCase();
   $("whoName").textContent = S.me ? S.me.name : ""; $("whoRole").textContent = isOwner() ? "Owner" : "Washer";
   drawBell();
