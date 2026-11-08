@@ -689,3 +689,16 @@ fieldset.fs #pushBox,fieldset.fs #myPay{display:flex;flex-direction:column;gap:8
 .arranging .qty .btn{min-width:40px}
 /* an effect that is redrawn mid-way carries on instead of starting again */
 .fx-paid,.fx-paid *,.fx-done,.fx-done *,.fx-on_way *,.fx-confirm *,.fx-start,.fx-start *,.fx-undo,.fx-undo *,.fx-reopen *,.fx-cancel,.ck.ck-pop *,.num.bump-up,.num.bump-down{animation-delay:var(--fxd,0s)!important}
+
+/* Liquid-glass menu pill (phone tab bar and laptop menu) */
+#nav{position:relative}
+.tb-row{display:contents}
+.glide{position:absolute;left:0;top:0;width:0;height:0;opacity:0;pointer-events:none;z-index:0;border-radius:16px;
+  background:linear-gradient(180deg,rgba(247,253,232,.98),rgba(222,244,170,.92));box-shadow:0 1px 0 rgba(255,255,255,.95) inset,0 0 0 1px rgba(74,115,0,.2),0 8px 18px -10px rgba(53,84,0,.55);
+  transition-property:transform,width,height,opacity;transition-timing-function:cubic-bezier(.3,1.25,.5,1);will-change:transform,width}
+#nav .glide{border-radius:12px}
+html[data-theme="dark"] .glide{background:linear-gradient(180deg,rgba(201,243,106,.2),rgba(201,243,106,.1));box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 0 0 1px rgba(201,243,106,.28),0 8px 18px -10px rgba(0,0,0,.6)}
+.has-glide .nav-link,.has-glide .tabbar button,.tabbar.has-glide button{position:relative;z-index:1}
+.has-glide .nav-link.on,.tabbar.has-glide button.on,html[data-theme="dark"] .has-glide .nav-link.on,html[data-theme="dark"] .tabbar.has-glide button.on{background:none;box-shadow:none}
+.tabbar svg.hop,.nav-ic svg.hop{animation:hop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes hop{0%{transform:translateY(0) scale(1)}40%{transform:translateY(-4px) scale(1.14)}100%{transform:none}}

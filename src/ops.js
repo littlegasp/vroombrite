@@ -179,7 +179,7 @@ applyTheme();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if(!store.get("vb.theme")) applyTheme(); });
 document.addEventListener("click", e => { if(e.target.closest("[data-themebtn]")){ store.set("vb.theme", document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"); applyTheme(); } });
 if(store.get("vb.menu")==="folded") document.documentElement.setAttribute("data-menu","folded");
-$("foldBtn").addEventListener("click", () => { const f=document.documentElement.getAttribute("data-menu")==="folded"; if(f) document.documentElement.removeAttribute("data-menu"); else document.documentElement.setAttribute("data-menu","folded"); store.set("vb.menu", f?null:"folded"); });
+$("foldBtn").addEventListener("click", () => { setTimeout(()=>{ const g=$("nav").querySelector(".glide"); g._k=g._r=null; glide($("nav")); }, 260); const f=document.documentElement.getAttribute("data-menu")==="folded"; if(f) document.documentElement.removeAttribute("data-menu"); else document.documentElement.setAttribute("data-menu","folded"); store.set("vb.menu", f?null:"folded"); });
 $("kbdHint").textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K";
 
 /* ============================== gates ============================== */
@@ -211,15 +211,36 @@ const homeView = () => isOwner() ? "home" : "jobs";
 function setHTML(el, h){ if(el._h!==h){ el.innerHTML=h; el._h=h; if(FX.size) applyFx(); } }
 /* same for a part of a screen: writes to .innerHTML are skipped when nothing changed */
 const box = el => new Proxy({}, { get:(t,k)=>{ const v=el[k]; return typeof v==="function" ? v.bind(el) : v; }, set:(t,k,v)=>{ if(k==="innerHTML") setHTML(el, v); else el[k]=v; return true; } });
+/* Liquid-glass menu: one glass pill slides to the tab you're on, stretching over both on the way. */
+function glide(bar){
+  const g=bar && bar.querySelector(":scope > .glide"); if(!g) return;
+  const on=bar.querySelector(".on:not(.tb-new)"), r=on && on.offsetWidth ? {x:on.offsetLeft, y:on.offsetTop, w:on.offsetWidth, h:on.offsetHeight} : null;
+  bar.classList.toggle("has-glide", !!r);
+  if(!r){ g.style.opacity=0; g._r=null; return; }
+  const k=r.x+","+r.y+","+r.w+","+r.h; if(g._k===k) return; g._k=k;
+  const put=(x, rr, ms)=>{ g.style.transitionDuration=ms+"ms"; g.style.width=rr.w+"px"; g.style.height=rr.h+"px"; g.style.transform=`translate(${rr.x}px,${rr.y}px)`; };
+  const from=g._r, moved=from && (from.x!==r.x || from.y!==r.y), sameSize=from && from.w===r.w && from.h===r.h;
+  g.style.opacity=1; clearTimeout(g._t);
+  if(!from || !moved || !sameSize || matchMedia("(prefers-reduced-motion:reduce)").matches){ put(0, r, from&&!moved?200:0); }
+  else {   // stretch over both, then settle on the new one
+    const x=Math.min(from.x, r.x), y=Math.min(from.y, r.y);
+    put(0, {x, y, w:Math.max(from.x+from.w, r.x+r.w)-x, h:Math.max(from.y+from.h, r.y+r.h)-y}, 170);
+    g._t=setTimeout(()=>put(0, r, 260), 150);
+    const ic=on.querySelector("svg"); if(ic){ ic.classList.remove("hop"); void ic.offsetWidth; ic.classList.add("hop"); }
+  }
+  g._r=r;
+}
+addEventListener("resize", () => { ["tabbar","nav"].forEach(id=>{ const g=$(id).querySelector(".glide"); if(g){ g._k=null; g._r=null; } glide($(id)); }); });
 function drawNav(){
   const cur = S.v==="b" ? (S.from||"bookings") : S.v==="c" ? "plans" : S.v;
-  setHTML($("nav"), NAV.filter(n => !n.owner || isOwner()).map(n => n.label ? `<div class="nav-label">${n.label}</div>`
+  setHTML($("navRow"), NAV.filter(n => !n.owner || isOwner()).map(n => n.label ? `<div class="nav-label">${n.label}</div>`
     : `<button type="button" class="nav-link${n.id===cur?" on":""}" data-go="${n.id}" title="${n.t}"><span class="nav-ic">${n.i}</span><span class="nav-tx">${n.t}</span>${n.badge&&n.badge()?`<span class="nav-badge">${n.badge()}</span>`:""}</button>`).join(""));
   const tabs = isOwner()
     ? [["home","Home",I.home],["jobs","Jobs",I.jobs],["new","New",I.plus],["bookings","Bookings",I.board],["more","More",I.menu]]
     : [["jobs","Jobs",I.jobs],["bookings","Bookings",I.board],["new","New",I.plus],["help","Help",I.help],["more","Me",I.user]];
   const inMore = ["customers","plans","kit","inbox","analytics","settings"].concat(isOwner()?["help"]:[]);
-  setHTML($("tabbar"), tabs.map(([id,l,i]) => `<button type="button" data-tab="${id}" class="${id==="new"?"tb-new":""}${id===cur||(id==="more"&&inMore.includes(cur))?" on":""}">${i}<span>${l}</span>${id==="more"&&S.inboxCount?`<i class="tb-dot">${S.inboxCount}</i>`:""}${id==="home"&&S.attnCount?`<i class="tb-dot">${S.attnCount}</i>`:""}</button>`).join(""));
+  setHTML($("tabRow"), tabs.map(([id,l,i]) => `<button type="button" data-tab="${id}" class="${id==="new"?"tb-new":""}${id===cur||(id==="more"&&inMore.includes(cur))?" on":""}">${i}<span>${l}</span>${id==="more"&&S.inboxCount?`<i class="tb-dot">${S.inboxCount}</i>`:""}${id==="home"&&S.attnCount?`<i class="tb-dot">${S.attnCount}</i>`:""}</button>`).join(""));
+  glide($("tabbar")); glide($("nav"));
   $("whoAv").textContent = (S.me&&S.me.name||"?").trim().charAt(0).toUpperCase();
   $("whoName").textContent = S.me ? S.me.name : ""; $("whoRole").textContent = isOwner() ? "Owner" : "Washer";
   drawBell();
