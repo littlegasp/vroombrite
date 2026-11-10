@@ -2,6 +2,11 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["10 Nov 2026", "Customers can now see their booking live, and move or cancel it themselves until 2 hours before the slot. The link is on the website after booking and in the Confirm message. Changes show on Home and in the bell as Changed online."],
+  ["10 Nov 2026", "Cash handover: washers see Cash with you on Jobs. Owner: Home shows the cash each washer holds; tap Received when they hand it over (it warns if the amount is short)."],
+  ["10 Nov 2026", "Rain warning on Jobs when rain is likely in a slot that has bookings (today and the next 3 days), with Move day for the owner."],
+  ["10 Nov 2026", "Due for a wash no longer lists plan or society customers, and people you reminded in the last 7 days move to the bottom."],
+  ["10 Nov 2026", "Switching between light and dark now spreads the new look from the button like a splash of ink."],
   ["8 Nov 2026", "Phones: tab rows (Analytics periods, Settings sections, Bookings ranges) now show every option at once in tidy rows, with no sliding sideways. Settings uses short names on phones (Slots, Messages, Costs, Notice, Data)."],
   ["8 Nov 2026", "Phone: the screen you're on now shows as a lime button floating on a wave in the bottom bar; tap another tab and it glides over, with the wave following like water. Laptop: a glass pill slides along the side menu."],
   ["8 Nov 2026", "Swipe a job on your phone: right for the next step (a long swipe does it straight away), left for Call, Chat and Cancel."],
@@ -54,6 +59,8 @@ const GUIDE = [
   { id: "home", role: "owner", title: "Home", body: `
 <ul><li>The boxes at the top: jobs today, upcoming, money collected and <b>Washed, not paid</b>. Tap a box to open that screen.</li>
 <li><b>Needs attention</b>: bookings not confirmed yet (tap <b>Confirm</b> to send the WhatsApp), washed jobs not paid, jobs with no washer, customers due for a wash and new Inbox items.</li>
+<li><b>Changed online</b>: a customer moved or cancelled their booking from their link in the last 3 days. Tap it to open the booking; the new day and time are already saved. Send them the "Customer moved it" message if you like.</li>
+<li><b>Cash with (washer)</b>: cash a washer collected (jobs marked <b>Paid in cash</b>) that you haven't received yet. When they hand it over, tap <b>Received</b>, check the amount and tap <b>Mark received</b>. If it's less, the app says how much is short and keeps that with the washer. A mistake? Open it again and tap <b>Undo</b> (within 2 days).</li>
 <li>The <b>calendar</b> shows bookings per day. Tap a day to open it in Jobs.</li>
 <li><b>Recent bookings</b> lists the newest bookings. Tap one to open it.</li></ul>` },
 
@@ -75,6 +82,8 @@ const GUIDE = [
 <p><b>Route</b> lists the day's open jobs in order and opens them in Google Maps, starting from where you are. Choose <b>By time</b> or <b>Same area together</b>. Google Maps takes 10 stops per link, so a busy day has more than one button.</p>
 <p>Owner: <b>Move day</b> is for rain or a day off. Tick the bookings, pick the new day (and a time, or keep each one's time), then tap <b>Move</b>. A list opens with a <b>WhatsApp</b> button for each customer with the "Moved" message ready; send them one by one. The history of each booking shows the move. Slot limits don't stop a move, but the app tells you if the new day is closed or already busy.</p>
 <p>Washers see <b>Mine</b> (jobs given to you) and <b>Everyone</b>.</p>
+<p><b>Rain likely</b>: a blue note shows when rain is likely (60% or more) in a slot that has open jobs, for today and the next 3 days. Owner: tap <b>Move day</b> to move them. <b>Hide</b> hides it for that day.</p>
+<p>Washers: <b>Cash with you</b> shows the cash you collected (jobs you marked <b>Paid in cash</b>) that the owner hasn't received yet. Tap it to see today's cash jobs. It goes down when the owner taps <b>Received</b>.</p>
 <p>If a customer has <b>referral credit</b>, the card says so. Take it off the bill, then tap <b>Mark used</b>.</p>` },
 
   { id: "bookings", role: "all", title: "Bookings: board and table", body: `
@@ -108,7 +117,8 @@ const GUIDE = [
 <p>After saving you can send the confirmation on WhatsApp in one tap. Bookings a washer adds are given to that washer.</p>` },
 
   { id: "messages-use", role: "all", title: "WhatsApp messages", body: `
-<p>The app never sends messages by itself. It opens WhatsApp with the message ready; you press send. <b>Chat</b> lets you pick any ready message; sending one is noted in the booking's history.</p>` },
+<p>The app never sends messages by itself. It opens WhatsApp with the message ready; you press send. <b>Chat</b> lets you pick any ready message; sending one is noted in the booking's history.</p>
+<p>The <b>Confirm</b> message ends with the customer's own link. On it they see the booking live (Confirmed, On the way, Washing, Done) and can move or cancel it until 2 hours before the slot. Later the same page shows their receipt and the review link. It never shows their phone number or full address.</p>` },
 
   { id: "search", role: "all", title: "Search and the bell", body: `
 <p><b>Search</b> (Ctrl K on a laptop, the magnifier on a phone) finds bookings, customers and screens. Use the arrow keys and Enter on a laptop.</p>
@@ -153,7 +163,7 @@ const GUIDE = [
 
   { id: "customers", role: "owner", title: "Customers", body: `
 <p><b>All customers</b> lists every customer by mobile number: washes, amount paid, last wash and next booking. Tap one to see their bookings, call or message them, or start a <b>New booking</b> with their details filled in.</p>
-<p><b>Due for a wash</b> lists people whose last wash was 7, 12, 21 or 30+ days ago and who have nothing booked. Tap <b>Send rebook message</b>.</p>` },
+<p><b>Due for a wash</b> lists people whose last wash was 7, 12, 21 or 30+ days ago and who have nothing booked. Plan and society customers aren't listed. Tap <b>Send rebook message</b>; people reminded in the last 7 days move to the bottom.</p>` },
 
   { id: "assign", role: "owner", title: "Giving jobs to washers", body: `
 <p>Open a booking and choose the washer under <b>The job → Washer</b>. They see it under <b>Mine</b>. Choose <b>Nobody yet</b> to take it back. Home shows jobs in the next 3 days with no washer.</p>` },
@@ -168,7 +178,7 @@ const GUIDE = [
 
   { id: "settings", role: "owner", title: "Settings", body: `
 <ul><li><b>Slots &amp; days off</b>: how many website bookings each time (6–8 AM, 8–10 AM…) can take in a day; leave it empty for no limit. When a time is full, the website shows it as <b>Full</b> and the customer picks another. Tick a <b>weekly day off</b> if you don't work that day. Use <b>Close a day or a time</b> for holidays, heavy rain or a big society job, and <b>Open again</b> to undo it. Bookings already made on a closed day stay; move or cancel them yourself. You can always add bookings yourself; the app only warns you.</li>
-<li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {days}, {society}, {brand}.</li>
+<li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {track_link} (the customer's own see/move/cancel link), {days}, {society}, {brand}.</li>
 <li><b>Offers</b>: change WELCOME50 and the referral offer (amount, minimum order, first wash only, on/off), or add a new code like DIWALI100. The website uses the new amounts straight away.</li>
 <li><b>Monthly costs</b>: ads, supplies, fuel, washer pay and other costs. Analytics then shows profit and cost per wash.</li>
 <li><b>Team notice</b>: one line everyone sees at the top of Home and Jobs ("Rain today, carry covers"). Clear it when done.</li>

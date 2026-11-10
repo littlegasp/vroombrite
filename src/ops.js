@@ -72,6 +72,7 @@ const I = {
   cash: ic('<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v5M17.5 9.5v5"/>'),
   star: ic('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'),
   grip: ic('<path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/>'),
+  rain: ic('<path d="M7 15a4.5 4.5 0 0 1 .4-9 5.5 5.5 0 0 1 10.3 1.6A3.7 3.7 0 0 1 17 15z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/>'),
   arrange: ic('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>')
 };
 
@@ -177,7 +178,7 @@ function applyTheme(){
 }
 applyTheme();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if(!store.get("vb.theme")) applyTheme(); });
-document.addEventListener("click", e => { if(e.target.closest("[data-themebtn]")){ store.set("vb.theme", document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"); applyTheme(); } });
+document.addEventListener("click", e => { const b=e.target.closest("[data-themebtn]"); if(b) themeSwap(() => { store.set("vb.theme", document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"); applyTheme(); }, b); });
 if(store.get("vb.menu")==="folded") document.documentElement.setAttribute("data-menu","folded");
 $("foldBtn").addEventListener("click", () => { setTimeout(()=>{ const g=$("nav").querySelector(".glide"); g._k=g._r=null; glide($("nav")); }, 260); const f=document.documentElement.getAttribute("data-menu")==="folded"; if(f) document.documentElement.removeAttribute("data-menu"); else document.documentElement.setAttribute("data-menu","folded"); store.set("vb.menu", f?null:"folded"); });
 $("kbdHint").textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K";
@@ -347,7 +348,7 @@ document.addEventListener("click", e => { if(!$("pop").hidden && !e.target.close
 
 /* ============================== messages ============================== */
 const DEFAULT_T = {
-  confirm:["Confirm booking","Hi {first_name}, this is {brand}. Your {package} for your {vehicle} is confirmed for {date}, {slot}. We'll message you when we're on the way.\nBooking ID: {id}"],
+  confirm:["Confirm booking","Hi {first_name}, this is {brand}. Your {package} for your {vehicle} is confirmed for {date}, {slot}. We'll message you when we're on the way.\nBooking ID: {id}\nSee, move or cancel it here: {track_link}"],
   remind:["Reminder","Hi {first_name}, a reminder from {brand}: your {package} is on {date}, {slot}, at {address}. Please keep the vehicle accessible. Reply here to reschedule."],
   onway:["On my way","Hi {first_name}, your {brand} washer is on the way and will reach in about 20 minutes."],
   review:["Ask for a review","Hi {first_name}, thank you for choosing {brand}! How did we do? Rate your wash here, it takes 20 seconds: {review_link}"],
@@ -358,12 +359,16 @@ const DEFAULT_T = {
   plan_renew:["Plan renewal","Hi {first_name}, this is {brand}. Your {plan} plan ends on {end}. Shall we continue next month? It's {price} for {washes}. Just reply YES and we'll keep the same days and time."],
   plan_pay:["Plan payment due","Hi {first_name}, a gentle reminder from {brand}: {price} for your {plan} plan ({period}) is due. You can pay by UPI to {upi}. Thank you!"],
   receipt:["Receipt","Hi {first_name}, thank you for choosing {brand}! Here is your receipt for {amount}: {link}"],
+  moved_by_customer:["Customer moved it","Hi {first_name}, got it, your {package} is now on {date}, {slot}. See or change it here: {track_link}"],
   noanswer:["Couldn't reach you","Hi {first_name}, this is {brand}. We tried calling about your {package} on {date}. Please reply here or call us back when free."]
 };
 function templates(){ const map={}; Object.keys(DEFAULT_T).forEach((k,i)=>map[k]={key:k,title:DEFAULT_T[k][0],body:DEFAULT_T[k][1],position:i}); (SET.templates||[]).forEach(t=>map[t.key]=t); return Object.values(map).sort((a,b)=>a.position-b.position); }
-function fill(key, ctx){ const t=templates().find(x=>x.key===key); return (t?t.body:"").replace(/\{(\w+)\}/g, (m,k) => ctx[k]!=null && ctx[k]!=="" ? ctx[k] : m); }
+function fill(key, ctx){ const t=templates().find(x=>x.key===key);
+  return (t?t.body:"").replace(/\{(\w+)\}/g, (m,k) => ctx[k]!=null && ctx[k]!=="" ? ctx[k] : m)
+    .split("\n").filter(l=>!l.includes("{track_link}")).join("\n"); }   // no link yet (older booking): leave that line out
 const jobCtx = j => ({first_name:first(j.name), name:j.name, brand:SITE.name, package:j.package, vehicle:vehShort(j.vehicle).toLowerCase(), date:fmtDay(j.wash_date), slot:j.slot,
-  address:[j.address, j.area].filter(Boolean).join(", "), id:j.id, total:rupee(j.total), review_link:BASE+"review.html?b="+encodeURIComponent(j.id), book_link:BASE+"book.html"});
+  address:[j.address, j.area].filter(Boolean).join(", "), id:j.id, total:rupee(j.total), review_link:BASE+"review.html?b="+encodeURIComponent(j.id), book_link:BASE+"book.html", track_link:trackLink(j)});
+const trackLink = j => j.track_key ? BASE+"track.html?b="+encodeURIComponent(j.id)+"&k="+j.track_key : "";
 const MSG_ACTION = {confirm:"confirm", onway:"on_way", review:"review_asked", remind:"reminded"};
 
 /* ============================== bookings: shared bits ============================== */
@@ -489,7 +494,7 @@ async function act(id, action, from, opt){
   if(/^paid/.test(action) && !quiet) celebrate(from);
   const later = () => { queueAdd({fn:"staff_update", id, action, name:before.name, label:DONE_MSG[action]}); if(!quiet) toast(DONE_MSG[action]+" · saved on this phone, will sync when online", false, undoFor(id, action)); return true; };
   if(QUEUE.length){ later(); flush(); return true; }
-  try{ const f = await rpc("staff_update", {p_id:id, p_action:action}); JOBS.set(id, f); delete HIST[id]; redraw(); if(S.v==="b") loadHist(id); return true; }
+  try{ const f = await rpc("staff_update", {p_id:id, p_action:action}); JOBS.set(id, f); delete HIST[id]; redraw(); if(S.v==="b") loadHist(id); if(/paid|unpaid/.test(action)) loadCash(); return true; }
   catch(e){ if(e.message==="signed out") return false; if(netDown(e)) return later(); JOBS.set(id, before); redraw(); toast(e.message||"Couldn't save. Try again.", true); return false; }
 }
 document.addEventListener("click", e => {
@@ -860,6 +865,8 @@ function dHome(){
   const attn = [
     ...uc.map(j=>`<div class="list-row" data-id="${esc(j.id)}"><span class="lr-main" data-open="${esc(j.id)}"><b>${esc(j.name)} <span class="pill st-new">Not confirmed</span></b><span>${relDay(j.wash_date)}, ${esc(j.slot)} · ${esc(j.package)}</span></span><a class="btn wa sm" data-act="confirm" target="_blank" rel="noopener" href="${wa(j.phone, fill("confirm", jobCtx(j)))}">Confirm</a></div>`),
     ...up.map(j=>`<div class="list-row" data-id="${esc(j.id)}"><span class="lr-main" data-open="${esc(j.id)}"><b>${esc(j.name)} <span class="pill st-collect">Collect ${rupee(j.total)}</span></b><span>Washed ${relDay(j.wash_date)} · ${esc(j.package)}</span></span><button class="btn sm" type="button" data-open="${esc(j.id)}">Open</button></div>`),
+    ...(ATTN.changes||[]).map(c=>`<button class="list-row" type="button" data-open="${esc(c.id)}"><span class="lr-main"><b>${esc(c.name)} <span class="pill st-new">Changed online</span></b><span>${esc(c.detail.replace(/^(Moved|Cancelled) (online )?by the customer( online)?/, "$1"))} · ${ago(c.at)}</span></span>${I.fwd}</button>`),
+    ...(ATTN.cash||[]).map(c=>`<div class="list-row"><span class="lr-main"><b>Cash with ${esc(first(c.name))}: ${rupee(c.balance)}</b><span>${c.today?rupee(c.today)+" collected today":"From earlier days"} · tap Received when you get it</span></span><button class="btn sm" type="button" data-cashrecv="${esc(c.id)}">Received</button></div>`),
     ATTN.unassigned?`<button class="list-row" type="button" data-go="bookings"><span class="lr-main"><b>${ATTN.unassigned} job${ATTN.unassigned>1?"s":""} in the next 3 days with no washer</b><span>Open a booking and choose a washer</span></span>${I.fwd}</button>`:"",
     ATTN.due?`<button class="list-row" type="button" data-go="customers" data-cumode="due"><span class="lr-main"><b>${ATTN.due} customer${ATTN.due>1?"s":""} due for a wash</b><span>Last wash 12+ days ago, nothing booked</span></span><span class="pill st-confirmed">Rebook</span></button>`:"",
     ...(KIT&&KIT.sup.some(x=>x.is_low)?[`<button class="list-row" type="button" data-go="kit"><span class="lr-main"><b>Running low: ${KIT.sup.filter(x=>x.is_low).map(x=>esc(x.name)).join(", ")}</b><span>Buy more, then update Stock &amp; bills</span></span>${I.fwd}</button>`]:[]),
@@ -899,6 +906,7 @@ function countUp(root){
 /* ============================== JOBS (day runner) ============================== */
 let DAY=null;
 async function vJobs(){
+  loadRain(); loadCash();
   const k="day."+S.day; DAY=cache.get(k); if(DAY) remember(DAY.jobs); dJobs(painted!=="jobs/" || S.dayDrawn!==S.day); S.dayDrawn=S.day;
   try{ const d=await rpc("staff_day",{p_date:S.day}); DAY=d; remember(d.jobs, true); cache.set(k,d); if(S.v==="jobs") dJobs(); } catch(e){ quiet(e); }
 }
@@ -913,6 +921,7 @@ function dJobs(scroll){
   const acts = (openJobs?`<button class="btn" type="button" data-route aria-label="Route">${I.route}<span class="hide-sm">Route</span></button>`:"") + (isOwner()&&openJobs&&S.day>=istToday()?`<button class="btn" type="button" data-moveday>${I.move}<span class="hide-sm">Move day</span></button>`:"") + (!isOwner()&&anyMine?`<div class="seg"><button type="button" data-mine="1" class="${S.mine?"on":""}">Mine</button><button type="button" data-mine="0" class="${!S.mine?"on":""}">Everyone</button></div>`:"") + newBtn();
   let html = pageHead(relDay(S.day), fmtDay(S.day,{weekday:"long", day:"numeric", month:"long"}) + (live.length?` · ${done}/${live.length} washed`:""), acts)
     + (n&&n.body?`<div class="notice">${I.note}<div><b>${esc(n.body)}</b><small>${esc(n.by||"")} · ${ago(n.updated_at)}</small></div></div>`:"")
+    + cashCard() + rainBanner(jobs)
     + `<div class="daystrip" id="strip">${DAY?DAY.strip.map(d=>`<button type="button" class="day${d.date===istToday()?" today":""}${d.date===S.day?" sel":""}" data-sday="${d.date}"><small>${fmtDay(d.date,{weekday:"short"})}</small><b>${fmtDay(d.date,{day:"numeric"})}</b><i>${d.count>3?`<em>${d.count}</em>`:Array.from({length:d.count},(_,k)=>`<span class="${k<d.open?"open":""}"></span>`).join("")}</i></button>`).join(""):Array.from({length:8},()=>'<div class="skel" style="flex:none;width:58px;height:66px"></div>').join("")}</div>`;
   if(!DAY){ V().innerHTML = html + skel(2,260); return; }
   if(live.length) html += `<div class="row"><div class="prog"><i style="width:${Math.round(done/live.length*100)}%"></i></div><span class="small muted"><b style="color:var(--ink)">${done}/${live.length}</b> washed · ${toCollect?`<b style="color:var(--coral)">${rupee(toCollect)}</b> to collect`:"all paid"}</span></div>`;
@@ -1511,9 +1520,13 @@ function dCustomers(shell){
       : `<section class="card empty"><b>${S.cu.q?"Nobody found":"No customers yet"}</b></section>`;
   } else {
     if(!DUE){ el.innerHTML=skel(2,120); return; }
-    el.innerHTML = DUE.length ? `<p class="small muted" style="margin-bottom:12px">${DUE.length} customer${DUE.length>1?"s":""} with nothing booked whose last wash was ${S.cu.due}+ days ago.</p><div class="grid grid-3">${DUE.map((d,i)=>`<section class="card"><div class="card-head"><h2>${esc(d.name)}</h2><span class="pill st-collect">${d.days_ago} days</span></div>
+    const recent = d => d.reminder_sent_at && Date.now()-new Date(d.reminder_sent_at) < 7*864e5, fresh=DUE.filter(d=>!recent(d)), later=DUE.filter(recent);
+    const dueCard = d => { const i=DUE.indexOf(d); return `<section class="card${recent(d)?" muted-card":""}"><div class="card-head"><h2>${esc(d.name)}</h2><span class="pill st-collect">${d.days_ago} days</span></div>
       <p class="small muted">${esc(d.vehicle)} · last: ${esc(d.package)} on ${fmtDay(d.last_date)}${d.area?" · "+esc(d.area):""}<br>${d.washes} wash${d.washes>1?"es":""}${d.reminder_sent_at?` · reminded ${ago(d.reminder_sent_at)}`:""}</p>
-      <div class="row" style="margin-top:12px"><a class="btn wa sm" target="_blank" rel="noopener" data-rebook="${i}" href="${wa(d.phone, fill("rebook", {first_name:first(d.name), brand:SITE.name, days:d.days_ago, package:d.package, book_link:BASE+"book.html"}))}">Send rebook message</a><a class="btn sm" href="${tel(d.phone)}">Call</a><button class="btn sm" type="button" data-newfor="${d.phone}">New booking</button></div></section>`).join("")}</div>`
+      <div class="row" style="margin-top:12px"><a class="btn wa sm" target="_blank" rel="noopener" data-rebook="${i}" href="${wa(d.phone, fill("rebook", {first_name:first(d.name), brand:SITE.name, days:d.days_ago, package:d.package, book_link:BASE+"book.html"}))}">Send rebook message</a><a class="btn sm" href="${tel(d.phone)}">Call</a><button class="btn sm" type="button" data-newfor="${d.phone}">New booking</button></div></section>`; };
+    el.innerHTML = DUE.length ? `<p class="small muted" style="margin-bottom:12px">${fresh.length} customer${fresh.length===1?"":"s"} with nothing booked whose last wash was ${S.cu.due}+ days ago. Plan and society customers aren't listed.</p>`
+      + (fresh.length?`<div class="grid grid-3">${fresh.map(dueCard).join("")}</div>`:`<section class="card empty"><b>Everyone due has been reminded</b>They're below. They come back to the top 7 days after the reminder.</section>`)
+      + (later.length?`<div class="grp" style="margin-top:18px"><h2>Reminded in the last 7 days · ${later.length}</h2></div><div class="grid grid-3">${later.map(dueCard).join("")}</div>`:"")
       : `<section class="card empty"><b>Nobody is due</b>Customers show up here ${S.cu.due} days after their last wash.</section>`;
   }
 }
@@ -1836,7 +1849,7 @@ function accountSheet(){
   else rpc("staff_my_pay").then(m=>{ const el=$("myPay"); if(!el) return; el.innerHTML=`<dl class="dl"><dt>This month</dt><dd><b>${m.month_washes}</b> wash${m.month_washes===1?"":"es"} · <b>${rupee(m.month_earned)}</b></dd><dt>Still to be paid</dt><dd><b>${rupee(m.owed)}</b></dd><dt>Rate</dt><dd>${rupee(m.pay_car)} a car · ${rupee(m.pay_bike)} a bike</dd>${m.payouts.length?`<dt>Last paid</dt><dd>${rupee(m.payouts[0].amount)} on ${fmtDay(String(m.payouts[0].paid_at).slice(0,10),{day:"numeric",month:"short"})}</dd>`:""}</dl>`; })
     .catch(()=>{ const el=$("myPay"); if(el) el.innerHTML='<p class="small muted">Couldn\'t load. Check your internet.</p>'; });
 }
-$("sheetBody").addEventListener("click", e => { const b=e.target.closest("[data-th]"); if(!b) return; store.set("vb.theme", b.dataset.th==="auto"?null:b.dataset.th); applyTheme(); $$("#themeSeg button").forEach(x=>x.classList.toggle("on", x===b)); });
+$("sheetBody").addEventListener("click", e => { const b=e.target.closest("[data-th]"); if(!b) return; $$("#themeSeg button").forEach(x=>x.classList.toggle("on", x===b)); themeSwap(() => { store.set("vb.theme", b.dataset.th==="auto"?null:b.dataset.th); applyTheme(); }, b); });
 $("sheetBody").addEventListener("submit", async e => {
   if(e.target.id!=="pwForm") return; e.preventDefault(); const pw=$("myPw").value, m=$("pwMsg"); m.hidden=false;
   if(pw.length<8){ m.className="msg bad"; m.textContent="Use 8 or more characters."; return; }
@@ -1992,15 +2005,111 @@ $("sheetBody").addEventListener("click", async e => {
   else toast("Shake to undo is on");
 });
 
+/* ============================== cash handover ============================== */
+/* Washers: cash they collected (Paid in cash on their jobs) minus what the owner marked received. */
+let CASH=store.get("vb.cash")||null;
+async function loadCash(){ if(!S.me || isOwner()) return; try{ CASH=await rpc("staff_cash"); store.set("vb.cash", CASH); if(S.v==="jobs") dJobs(); }catch(e){} }
+function cashCard(){
+  if(isOwner() || !CASH || CASH.balance<=0) return "";
+  return `<button class="cashbar" type="button" data-cashme>${I.cash}<span><b>Cash with you: ${rupee(CASH.balance)}</b><small>${CASH.today?rupee(CASH.today)+" collected today · ":""}hand it to the owner</small></span>${I.fwd}</button>`;
+}
+const handRows = (list, undo) => list.map(h=>`<div class="list-row" style="cursor:default"><span class="lr-main"><b>${rupee(h.amount)} received${h.expected>h.amount?` <span class="pill st-collect">${rupee(h.expected-h.amount)} short</span>`:""}</b><span>${fmtDay(String(h.at).slice(0,10),{day:"numeric",month:"short"})} · ${ago(h.at)}${h.by?" · by "+esc(first(h.by)):""}${h.note?" · "+esc(h.note):""}</span></span>${undo && Date.now()-new Date(h.at)<2*864e5?`<button class="btn sm" type="button" data-cashundo="${h.id}">Undo</button>`:""}</div>`).join("");
+function cashMeSheet(){
+  const c=CASH; if(!c) return;
+  openSheet("Cash with you", `<div class="menu"><div class="cash-big"><small>Still with you</small><b class="num">${rupee(c.balance)}</b></div>
+    ${c.today_jobs.length?`<h4>Paid in cash today</h4>${c.today_jobs.map(j=>`<button class="list-row" type="button" data-open="${esc(j.id)}"><span class="lr-main"><b>${esc(j.name)}</b><span>${new Date(j.paid_at).toLocaleTimeString("en-IN",{hour:"numeric",minute:"2-digit",timeZone:"Asia/Kolkata"})}</span></span><b class="num">${rupee(j.total)}</b></button>`).join("")}`:""}
+    ${c.handovers.length?`<h4>Handed over</h4>${handRows(c.handovers.slice(0,5))}`:""}
+    <p class="small muted">When you give the cash to the owner, they tap <b>Received</b> on their phone and this goes down.</p></div>`);
+}
+async function cashRecvSheet(id){
+  let c=(ATTN&&ATTN.cash||[]).find(x=>x.id===id); try{ const all=await rpc("owner_cash"); c=all.find(x=>x.id===id)||c; }catch(e){}
+  if(!c) return toast("Couldn't load the cash for this washer", true);
+  openSheet("Cash from "+first(c.name), `<div class="menu" data-cashfor="${esc(c.id)}">
+    <div class="cash-big"><small>The app expects</small><b class="num">${rupee(c.balance)}</b><span>${c.today?rupee(c.today)+" collected today":"all from earlier days"}</span></div>
+    <label class="field">Amount you received (₹)<input class="input" id="cashAmt" type="number" inputmode="numeric" min="1" step="1" value="${Math.max(c.balance,0)}"></label>
+    <p class="small" id="cashDiff" aria-live="polite"></p>
+    <label class="field">Note (optional)<input class="input" id="cashNote" maxlength="200" placeholder="e.g. ₹50 kept for petrol"></label>
+    <button class="btn primary" type="button" id="cashGo" data-expect="${c.balance}">${I.check}Mark received</button>
+    ${c.handovers.length?`<h4>Earlier handovers</h4>${handRows(c.handovers, true)}`:""}</div>`);
+  cashDiff();
+}
+function cashDiff(){ const a=$("cashAmt"), out=$("cashDiff"), go=$("cashGo"); if(!a||!out) return; const d=Math.round(+a.value||0) - +go.dataset.expect;
+  out.className="small"+(d<0?" warn-tx":""); out.textContent = !a.value ? "" : d===0 ? "Matches what the app expects." : d<0 ? `${rupee(-d)} short. That stays with the washer until it's handed over.` : `${rupee(d)} more than the app expects. Check that every cash job is marked Paid in cash.`; }
+document.addEventListener("input", e => { if(e.target.id==="cashAmt") cashDiff(); });
+document.addEventListener("click", async e => {
+  if(e.target.closest("[data-cashme]")) return cashMeSheet();
+  const r=e.target.closest("[data-cashrecv]"); if(r) return cashRecvSheet(r.dataset.cashrecv);
+  const u=e.target.closest("[data-cashundo]"); if(u){ u.disabled=true; try{ await rpc("owner_cash_undo",{p_id:+u.dataset.cashundo}); closeSheet(); toast("Handover undone"); vHome(); }catch(x){ u.disabled=false; toast(x.message, true); } return; }
+  if(e.target.closest("#cashGo")){ const host=e.target.closest("[data-cashfor]"), amt=Math.round(+$("cashAmt").value||0), exp=+$("cashGo").dataset.expect;
+    if(amt<1) return toast("Enter the amount you received", true);
+    $("cashGo").disabled=true;
+    try{ await rpc("owner_cash_received",{p_staff:host.dataset.cashfor, p_amount:amt, p_note:$("cashNote").value.trim()}); closeSheet(); buzz([18,40,18]);
+      toast(`Received ${rupee(amt)}`+(amt<exp?` · ${rupee(exp-amt)} still with them`:"")); vHome(); }
+    catch(x){ $("cashGo").disabled=false; toast(x.message, true); } }
+});
+
+/* ============================== rain warning ============================== */
+/* Free forecast from Open-Meteo (no key, nothing about customers is sent: only a point in central Mumbai). */
+const RAIN_AT={lat:19.11, lon:72.88};
+let RAIN=store.get("vb.rain")||null, rainBusy=false;
+async function loadRain(){
+  if(rainBusy || (RAIN && Date.now()-RAIN.at<45*60e3)) return; rainBusy=true;
+  try{ const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${RAIN_AT.lat}&longitude=${RAIN_AT.lon}&hourly=precipitation_probability,precipitation&timezone=Asia%2FKolkata&forecast_days=4`);
+    const j=await r.json(); if(j && j.hourly){ RAIN={at:Date.now(), t:j.hourly.time, p:j.hourly.precipitation_probability, mm:j.hourly.precipitation}; store.set("vb.rain", RAIN); if(S.v==="jobs") dJobs(); } }
+  catch(e){} rainBusy=false;
+}
+function rainFor(day, slot){
+  if(!RAIN) return null; const h=SLOT_H[slot]; if(!h) return null; let p=0, mm=0, n=0;
+  RAIN.t.forEach((t,i)=>{ if(t.slice(0,10)!==day) return; const hr=+t.slice(11,13); if(hr>=h[0] && hr<h[1]){ p=Math.max(p, RAIN.p[i]||0); mm+=RAIN.mm[i]||0; n++; } });
+  return n ? {p, mm:Math.round(mm*10)/10} : null;
+}
+function rainBanner(jobs){
+  if(!RAIN || (store.get("vb.rainHide")||{})[S.day]) return "";
+  const by={}; jobs.filter(j=>["new","confirmed","on_way"].includes(j.status)).forEach(j=>(by[j.slot]=by[j.slot]||[]).push(j));
+  const wet=Object.keys(by).sort((a,b)=>SLOTS.indexOf(a)-SLOTS.indexOf(b)).map(sl=>({sl, r:rainFor(S.day, sl), n:by[sl].length})).filter(x=>x.r && x.r.p>=60 && x.r.mm>=1);
+  if(!wet.length) return "";
+  return `<div class="rainbar" role="status">${I.rain}<div class="rain-tx"><b>Rain likely ${wet.length===1?wet[0].sl:relDay(S.day).toLowerCase()}</b><small>${wet.map(x=>`${x.sl}: ${x.r.p}% chance, about ${x.r.mm} mm · ${x.n} job${x.n>1?"s":""}`).join("<br>")}</small><small class="rain-src">Forecast: Open-Meteo</small></div>
+    <div class="rain-acts">${isOwner()&&S.day>=istToday()?`<button class="btn sm" type="button" data-moveday>${I.move}Move day</button>`:""}<button class="link-btn" type="button" data-rainhide>Hide</button></div></div>`;
+}
+document.addEventListener("click", e => { if(e.target.closest("[data-rainhide]")){ const h=store.get("vb.rainHide")||{}; h[S.day]=1; Object.keys(h).forEach(d=>{ if(d<istToday()) delete h[d]; }); store.set("vb.rainHide", h); dJobs(); } });
+
+/* ============================== light / dark: ink transition ============================== */
+/* The new look spreads from the button you tapped like a splash of ink (Chrome, Edge, Safari 18+; others switch at once). */
+let INK=null;
+function inkMask(){
+  if(INK) return INK; let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const N=72, pts=[], ph=[rnd()*6.3, rnd()*6.3, rnd()*6.3], spikes=Array.from({length:9},()=>({a:rnd()*6.283, w:.05+rnd()*.07, h:5+rnd()*9}));
+  for(let i=0;i<N;i++){ const a=i/N*6.283; let r=31+3.2*Math.sin(3*a+ph[0])+2.4*Math.sin(5*a+ph[1])+1.6*Math.sin(11*a+ph[2])+(rnd()-.5)*1.6;
+    spikes.forEach(s=>{ let d=Math.abs(a-s.a); d=Math.min(d, 6.283-d); const u=d/s.w; r+=s.h*Math.exp(-u*u); }); pts.push([50+r*Math.cos(a), 50+r*Math.sin(a)]); }
+  let d=`M${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
+  for(let i=0;i<N;i++){ const p0=pts[(i-1+N)%N], p1=pts[i], p2=pts[(i+1)%N], p3=pts[(i+2)%N];
+    d+=`C${(p1[0]+(p2[0]-p0[0])/6).toFixed(2)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(2)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(2)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`; }
+  const drops=Array.from({length:14},()=>{ const a=rnd()*6.283, r=40+rnd()*8.5, s=.5+rnd()*1.8; return `<circle cx="${(50+r*Math.cos(a)).toFixed(2)}" cy="${(50+r*Math.sin(a)).toFixed(2)}" r="${s.toFixed(2)}"/>`; }).join("");
+  INK=`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#fff"><path d="${d}Z"/>${drops}</g></svg>`)}")`;
+  return INK;
+}
+function themeSwap(change, from){
+  if(!document.startViewTransition || matchMedia("(prefers-reduced-motion:reduce)").matches) return change();
+  const r=from&&from.getBoundingClientRect(), x=r&&r.width?r.left+r.width/2:innerWidth-40, y=r&&r.width?r.top+r.height/2:40;
+  const far=Math.hypot(Math.max(x, innerWidth-x), Math.max(y, innerHeight-y)), end=Math.ceil(far/0.25), img=inkMask();
+  let vt; try{ vt=document.startViewTransition(change); }catch(e){ return change(); }
+  vt.ready.then(() => {
+    const k=[{maskImage:img, WebkitMaskImage:img, maskSize:"0px 0px", WebkitMaskSize:"0px 0px", maskPosition:`${x}px ${y}px`, WebkitMaskPosition:`${x}px ${y}px`, maskRepeat:"no-repeat", WebkitMaskRepeat:"no-repeat"},
+             {maskImage:img, WebkitMaskImage:img, maskSize:`${end}px ${end}px`, WebkitMaskSize:`${end}px ${end}px`, maskPosition:`${x-end/2}px ${y-end/2}px`, WebkitMaskPosition:`${x-end/2}px ${y-end/2}px`, maskRepeat:"no-repeat", WebkitMaskRepeat:"no-repeat"}];
+    document.documentElement.animate(k, {duration:1100, easing:"cubic-bezier(.7,0,.25,1)", pseudoElement:"::view-transition-new(root)"});
+  }).catch(()=>{});
+}
+
 /* ============================== bell (notifications) ============================== */
 function drawBell(ring){
-  const seen=store.get("vb.bellSeen")||"", n=NOTES.filter(x=>x.at>seen).length + (isOwner()?(S.inboxCount||0):0);
+  const seen=store.get("vb.bellSeen")||"", n=NOTES.filter(x=>x.at>seen).length + (isOwner()?(S.inboxCount||0)+((ATTN&&ATTN.changes)||[]).filter(c=>c.at>seen).length:0);
   $$("[data-bell]").forEach(b=>{ setHTML(b, I.bell + (n?`<span class="bell-count">${n>9?"9+":n}</span>`:"")); if(ring){ b.classList.remove("ring"); void b.offsetWidth; b.classList.add("ring"); } });
 }
 document.addEventListener("click", e => {
   const b=e.target.closest("[data-bell]"); if(!b) return; if(!$("pop").hidden){ closePop(); return; }
   const r=b.getBoundingClientRect(), pop=$("pop"), seen=store.get("vb.bellSeen")||"", items=[];
   if(isOwner() && S.inboxCount) items.push(`<button class="list-row" type="button" data-go="inbox"><span class="lr-main"><b>${S.inboxCount} new in Inbox</b><span>Society requests, messages and reviews</span></span><span class="nav-badge">${S.inboxCount}</span></button>`);
+  if(isOwner() && ATTN) (ATTN.changes||[]).forEach(c=>items.push(`<button class="list-row" type="button" data-open="${esc(c.id)}"><span class="lr-main"><b>${c.at>seen?"● ":""}${esc(c.name)} changed their booking</b><span>${esc(c.detail.replace(/^(Moved|Cancelled) (online )?by the customer( online)?/, "$1"))} · ${ago(c.at)}</span></span></button>`));
   if(isOwner() && ATTN && ATTN.unconfirmed.length) items.push(`<button class="list-row" type="button" data-go="home"><span class="lr-main"><b>${ATTN.unconfirmed.length} booking${ATTN.unconfirmed.length>1?"s":""} not confirmed yet</b><span>Confirm them on WhatsApp from Home</span></span></button>`);
   NOTES.slice(0,15).forEach(x=>items.push(`<button class="list-row" type="button" data-open="${esc(x.id)}"><span class="lr-main"><b>${x.at>seen?"● ":""}${esc(x.text)}</b><span>${esc(x.sub)} · ${ago(x.at)}</span></span></button>`));
   pop.innerHTML = `<h3>Notifications</h3>${items.join("")||'<div class="empty">Nothing new. New bookings show up here.</div>'}`;

@@ -22,6 +22,7 @@ PAGES = [  # slug, file, nav label, <title>, meta description
  ("refunds","refunds.html",None,"Cancellation & Refund Policy — Vroombrite","Rescheduling, cancellation and refund rules for Vroombrite bookings and monthly plans."),
  ("review","review.html",None,"Rate Your Wash — Vroombrite","Tell us how your Vroombrite wash went."),
  ("receipt","receipt.html",None,"Receipt — Vroombrite","Your Vroombrite receipt."),
+ ("track","track.html",None,"Your Booking — Vroombrite","See, move or cancel your Vroombrite booking."),
  ("ops","ops.html",None,"Staff — Vroombrite","Vroombrite staff app."),
 ]
 import json, datetime
@@ -33,8 +34,8 @@ for x in AREAS:
                   f"Doorstep car and bike wash in {x['a']}, Mumbai (PIN {', '.join(x['pins'])}). We come to your society parking with our own water and power. Book in a minute."))
 FILE = {p[0]: p[1] for p in PAGES}
 BARE = {"ops"}                       # no site header/footer, not indexed
-NOINDEX = {"ops", "review", "receipt"}
-PREVIEW_SKIP = {"ops", "receipt"}
+NOINDEX = {"ops", "review", "receipt", "track"}
+PREVIEW_SKIP = {"ops", "receipt", "track"}
 
 # Public address of the site. Change this one line when the custom domain goes live.
 SITE_URL = "https://littlegasp.github.io/vroombrite/"
@@ -179,7 +180,7 @@ def build_seo():
     urls = [SITE_URL if f == "index.html" else SITE_URL + f for s_, f, *_ in PAGES if s_ not in NOINDEX]
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(f"  <url><loc>{u}</loc><lastmod>{today}</lastmod></url>\n" for u in urls) + "</urlset>\n"
     open(os.path.join(SITE, "sitemap.xml"), "w").write(xml)
-    open(os.path.join(SITE, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\nDisallow: /ops.html\nDisallow: /receipt.html\n\nSitemap: {SITE_URL}sitemap.xml\n")
+    open(os.path.join(SITE, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\nDisallow: /ops.html\nDisallow: /receipt.html\nDisallow: /track.html\n\nSitemap: {SITE_URL}sitemap.xml\n")
 
 def build_preview():
     os.makedirs(PREV, exist_ok=True)

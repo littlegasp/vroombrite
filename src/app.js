@@ -72,7 +72,7 @@ async function rpc(fn, args){
   const r = await fetch(SITE.supabaseUrl.replace(/\/$/,"")+"/rest/v1/rpc/"+fn, {method:"POST",
     headers:{"Content-Type":"application/json", apikey:SITE.supabaseKey}, body:JSON.stringify(args||{})});
   const j = await r.json().catch(()=>null);
-  if(!r.ok) throw new Error((j&&j.message)||("HTTP "+r.status));
+  if(!r.ok) throw Object.assign(new Error((j&&j.message)||("HTTP "+r.status)), {hint:j&&j.hint||""});
   return j;
 }
 async function apiGet(params){
@@ -397,7 +397,8 @@ if(bform){
     openNew(url);                               // open WhatsApp inside the click so it isn't blocked
     const st=$("saveState"); st.hidden=true;
     const res=await saveToSheet(data);
-    if(res==="ok"){ st.className="status ok"; st.textContent="Saved to our booking list."; st.hidden=false; }
+    if(res==="ok"){ st.className="status ok"; st.textContent="Saved to our booking list."; st.hidden=false;
+      rpc("public_track_link",{p_id:id, p_phone:ph}).then(r=>{ const k=r&&r.key; if(!k) return; const a=$("trackLink"); a.href=`track.html?b=${encodeURIComponent(id)}&k=${k}`; a.hidden=false; }).catch(()=>{}); }
     else if(res==="full"){ st.className="status warn"; st.textContent="That time just got fully booked. Please still press send in WhatsApp and we'll reply with the nearest free time."; st.hidden=false; delete AVAIL[data.date]; loadAvail(data.date); }
     else if(res==="fail"){ st.className="status warn"; st.textContent="We couldn't save this online, so please press send in WhatsApp to confirm."; st.hidden=false; }
   });
@@ -453,6 +454,98 @@ if(rcpt){
         <p>${r.payment==="paid_upi"?"Paid by UPI":"Paid in cash"}${r.paid_at?" on "+new Date(r.paid_at).toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Kolkata"}):""}</p></div>
       <p class="note">${e(SITE.name)} · Doorstep car &amp; bike care, Mumbai</p>`;
   }).catch(bad);
+}
+
+/* ---------- track page (track.html?b=BOOKING_ID&k=KEY): live status; move or cancel until 2 hours before the slot ---------- */
+const trk=$("track");
+if(trk){
+  const q=new URLSearchParams(location.search), bid=q.get("b")||"", key=q.get("k")||"";
+  const e=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const ist=()=>new Date(Date.now()+5.5*36e5).toISOString().slice(0,10), addD=(d,n)=>{ const x=new Date(d+"T12:00:00Z"); x.setUTCDate(x.getUTCDate()+n); return x.toISOString().slice(0,10); };
+  const day=(d,o)=>new Date(d+"T12:00:00Z").toLocaleDateString("en-IN",Object.assign({weekday:"short",day:"numeric",month:"short",timeZone:"UTC"},o||{}));
+  const tm=t=>t?new Date(t).toLocaleTimeString("en-IN",{hour:"numeric",minute:"2-digit",timeZone:"Asia/Kolkata"}):"";
+  const STARTS={"6–8 AM":6,"8–10 AM":8,"10 AM–1 PM":10,"2–5 PM":14,"5–8 PM":17};
+  let T=null, mode="", pick={d:"", s:""}, reason="", busy=false, msg="", timer=0;
+  const bad=m=>{ trk.innerHTML=`<div class="tr-card"><p>${m||"We couldn't find this booking. Please check the link, or WhatsApp us and we'll send it again."}</p></div>`; };
+  async function load(){
+    if(!USE_DB || !bid || !key) return bad();
+    try{ const r=await rpc("public_track",{p_id:bid, p_key:key}); if(!r) return bad(); T=r; if(!mode) draw(); }
+    catch(x){ if(!T) bad("We couldn't load your booking just now. Please check your internet and try again."); }
+    clearTimeout(timer); if(T && !["done","cancelled"].includes(T.status)) timer=setTimeout(load, 30000);
+  }
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden && T && !mode) load(); });
+  function draw(){
+    const st=T.status, cancelled=st==="cancelled", paid=/^paid/.test(T.payment)||T.payment==="covered";
+    const steps=[["Booked",T.created_at],["Confirmed",T.confirmed_at],["On the way",T.on_way_at],["Washing",T.started_at],["Done",T.done_at]];
+    const cur=st==="done"?4:T.started_at?3:st==="on_way"?2:st==="confirmed"?1:0;
+    const label=cancelled?"Cancelled":["Booked · waiting for confirmation","Confirmed","On the way","Washing now","Done"][cur];
+    const ex=String(T.extras||"").split(/\s*,\s*/).filter(x=>x&&x!=="None");
+    let acts="";
+    if(cancelled) acts=`<p class="tr-msg">${T.cancelled_by_you?"You cancelled this booking.":"This booking was cancelled."} Nothing more to pay for it.</p><a class="btn btn-lime" href="book.html">Book a new wash <span class="arrow">→</span></a>`;
+    else if(T.can_change) acts=`<div class="tr-acts"><button type="button" class="btn btn-lime" data-trmode="move">Change day or time</button><button type="button" class="btn btn-ghost" data-trmode="cancel">Cancel booking</button></div>
+      <p class="note">You can change or cancel here until ${tm(T.change_until)} on ${day(new Date(new Date(T.change_until).getTime()+5.5*36e5).toISOString().slice(0,10))}, free of charge.</p>`;
+    else if(st==="new"||st==="confirmed") acts=`<p class="tr-msg">${T.source==="plan"||T.source==="society"?"This is a plan visit. To change it, message us.":"It's less than 2 hours to your slot, so changes need a quick message."}</p><a class="btn btn-wa" target="_blank" rel="noopener" href="${waLink(`Hi ${SITE.name}, about my booking ${T.id}: `)}">WhatsApp us <span class="arrow">↗</span></a>`;
+    if(st==="done"){ acts+=`<div class="tr-acts">${T.receipt_key?`<a class="btn btn-ghost" href="receipt.html?b=${encodeURIComponent(T.id)}&k=${T.receipt_key}">See receipt</a>`:""}${!T.reviewed?`<a class="btn btn-lime" href="review.html?b=${encodeURIComponent(T.id)}">Rate your wash <span class="arrow">→</span></a>`:`<p class="tr-msg">Thanks for your review!</p>`}</div>`; }
+    trk.innerHTML=`<div class="tr-card">
+      <div class="tr-head"><span>Hi <b>${e(T.name)}</b> · ${e(T.id)}</span><span class="tr-pill${cancelled?" off":cur===4?" done":""}">${label}</span></div>
+      ${cancelled?"":`<ol class="tr-steps">${steps.map(([n,t],i)=>`<li class="${i<cur?"past":i===cur?"now":""}"><i></i><b>${n}</b><small>${i<=cur&&t?tm(t):""}</small></li>`).join("")}</ol>`}
+      ${st==="on_way"&&!T.started_at?`<p class="tr-live"><span class="dot"></span>${T.washer?e(T.washer)+" is":"Your washer is"} on the way.</p>`:""}
+      ${T.started_at&&st!=="done"?`<p class="tr-live"><span class="dot"></span>Washing started at ${tm(T.started_at)}.</p>`:""}
+      <dl class="rc"><dt>When</dt><dd>${day(T.wash_date,{weekday:"long",month:"long"})}, ${e(T.slot)}</dd><dt>Vehicle</dt><dd>${e(T.vehicle)}${T.plate?" · "+e(T.plate):""}</dd>
+        <dt>Service</dt><dd>${e(T.package)}${ex.length?"<br><small>+ "+ex.map(e).join(", ")+"</small>":""}</dd>${T.area?`<dt>Area</dt><dd>${e(T.area)}</dd>`:""}
+        ${T.washer&&!cancelled?`<dt>Washer</dt><dd>${e(T.washer)}</dd>`:""}
+        ${T.payment==="covered"?`<dt>Payment</dt><dd>Covered by your plan</dd>`:`<dt>Total</dt><dd>${rupee(T.total)}${T.discount>0?` <small>(${rupee(T.discount)} off)</small>`:""} · ${paid?(T.payment==="paid_upi"?"Paid by UPI":"Paid in cash"):cancelled?"Not charged":"Pay after the wash"}</dd>`}</dl>
+      ${msg?`<p class="status ok">${e(msg)}</p>`:""}${acts}</div>`;
+  }
+  async function drawMove(){
+    const t0=ist(); if(!pick.d){ pick={d:T.wash_date, s:T.slot}; }
+    trk.innerHTML=`<div class="tr-card"><h3>Pick a new day and time</h3><p class="note" style="margin-top:0">Now: ${day(T.wash_date)}, ${e(T.slot)}</p>
+      <div class="chips tr-days" role="radiogroup" aria-label="Day">${Array.from({length:14},(_,i)=>addD(t0,i)).map(d=>`<label><input type="radio" name="trd" value="${d}" ${d===pick.d?"checked":""}><span>${i0(d,t0)}</span></label>`).join("")}</div>
+      <div class="chips" role="radiogroup" aria-label="Time slot" id="trSlots" style="margin-top:14px"><span class="note">Checking free times…</span></div>
+      <p class="status warn" id="trErr" hidden></p>
+      <div class="tr-acts"><button type="button" class="btn btn-lime" id="trMoveGo">Move my booking</button><button type="button" class="btn btn-ghost" data-trmode="">Back</button></div></div>`;
+    drawSlots();
+  }
+  const i0=(d,t0)=>d===t0?"Today":d===addD(t0,1)?"Tomorrow":day(d);
+  const AV={};
+  async function drawSlots(){
+    const box=$("trSlots"); if(!box) return;
+    if(!AV[pick.d]){ try{ (await rpc("slot_availability",{p_from:pick.d, p_days:14})).forEach(x=>AV[x.date]=x.slots); }catch(x){ AV[pick.d]={}; } }
+    const st=AV[pick.d]||{}, now=Date.now(), soon=s=>{ const h=STARTS[s]; if(h==null) return false; return new Date(pick.d+"T00:00:00+05:30").getTime()+h*36e5 < now+2*36e5; };
+    const state=s=>{ const x=st[s]&&st[s]!=="open"?st[s]:""; return x||(soon(s)?"past":""); };
+    if(state(pick.s) && !(pick.d===T.wash_date&&pick.s===T.slot)) pick.s=SLOTS.find(s=>!state(s))||"";
+    box.innerHTML=SLOTS.map(s=>{ const x=state(s), mine=pick.d===T.wash_date&&s===T.slot; return `<label${x&&!mine?' class="off"':""}><input type="radio" name="trs" value="${s}" ${s===pick.s?"checked":""} ${x&&!mine?"disabled":""}><span>${s}${mine?"<small style=\"color:var(--aqua)\">Now</small>":x?`<small>${SLOT_TAG[x]||"Full"}</small>`:""}</span></label>`; }).join("");
+  }
+  function drawCancel(){
+    const R=["My plans changed","Not needed right now","Booked by mistake","Weather","Other"];
+    trk.innerHTML=`<div class="tr-card"><h3>Cancel this booking?</h3><p class="note" style="margin-top:0">${day(T.wash_date)}, ${e(T.slot)} · ${e(T.package)}. Cancelling now is free.</p>
+      <p class="lb" style="margin:14px 0 8px">Tell us why (optional)</p>
+      <div class="chips">${R.map(r=>`<label><input type="radio" name="trr" value="${r}" ${r===reason?"checked":""}><span>${r}</span></label>`).join("")}</div>
+      <p class="status warn" id="trErr" hidden></p>
+      <div class="tr-acts"><button type="button" class="btn btn-danger" id="trCancelGo">Yes, cancel it</button><button type="button" class="btn btn-ghost" data-trmode="">Keep my booking</button></div>
+      <p class="note">Rather move it? <button type="button" class="linkbtn" data-trmode="move">Pick another day or time</button></p></div>`;
+  }
+  async function change(action, args){
+    if(busy) return; busy=true; const err=$("trErr"), btn=$(action==="move"?"trMoveGo":"trCancelGo"); if(btn) btn.disabled=true;
+    try{ T=await rpc("public_change", Object.assign({p_id:bid, p_key:key, p_action:action, p_date:null, p_slot:null, p_reason:""}, args)); mode=""; pick={d:"",s:""};
+      msg=action==="move"?`Done. Your wash is now on ${day(T.wash_date)}, ${T.slot}. We've let the team know.`:"Your booking is cancelled. We've let the team know."; draw(); trk.scrollIntoView({behavior:"smooth", block:"start"}); }
+    catch(x){ if(err){ err.textContent=x.hint||(/not found/.test(x.message)?"We couldn't find this booking.":"That didn't work. Please try again, or WhatsApp us."); err.hidden=false; } if(btn) btn.disabled=false;
+      if(/too late|not online/.test(x.message)) setTimeout(()=>{ mode=""; load(); }, 2500); }
+    busy=false;
+  }
+  trk.addEventListener("click", ev=>{
+    const m=ev.target.closest("[data-trmode]"); if(m){ mode=m.dataset.trmode; msg=""; if(mode==="move"){ Object.keys(AV).forEach(k=>delete AV[k]); drawMove(); } else if(mode==="cancel") drawCancel(); else { pick={d:"",s:""}; draw(); } return; }
+    if(ev.target.closest("#trMoveGo")){ if(pick.d===T.wash_date&&pick.s===T.slot){ const er=$("trErr"); er.textContent="That's the time you already have. Pick a different day or time."; er.hidden=false; return; }
+      if(!pick.s){ const er=$("trErr"); er.textContent="No free time left on that day. Please pick another day."; er.hidden=false; return; }
+      change("move",{p_date:pick.d, p_slot:pick.s}); }
+    if(ev.target.closest("#trCancelGo")) change("cancel",{p_reason:reason});
+  });
+  trk.addEventListener("change", ev=>{
+    if(ev.target.name==="trd"){ pick.d=ev.target.value; drawSlots(); }
+    if(ev.target.name==="trs") pick.s=ev.target.value;
+    if(ev.target.name==="trr") reason=ev.target.value;
+  });
+  load();
 }
 
 /* ---------- review form (review.html?b=BOOKING_ID) ---------- */

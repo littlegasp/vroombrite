@@ -55,6 +55,11 @@ const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["10 Nov 2026", "Customers can now see their booking live, and move or cancel it themselves until 2 hours before the slot. The link is on the website after booking and in the Confirm message. Changes show on Home and in the bell as Changed online."],
+  ["10 Nov 2026", "Cash handover: washers see Cash with you on Jobs. Owner: Home shows the cash each washer holds; tap Received when they hand it over (it warns if the amount is short)."],
+  ["10 Nov 2026", "Rain warning on Jobs when rain is likely in a slot that has bookings (today and the next 3 days), with Move day for the owner."],
+  ["10 Nov 2026", "Due for a wash no longer lists plan or society customers, and people you reminded in the last 7 days move to the bottom."],
+  ["10 Nov 2026", "Switching between light and dark now spreads the new look from the button like a splash of ink."],
   ["8 Nov 2026", "Phones: tab rows (Analytics periods, Settings sections, Bookings ranges) now show every option at once in tidy rows, with no sliding sideways. Settings uses short names on phones (Slots, Messages, Costs, Notice, Data)."],
   ["8 Nov 2026", "Phone: the screen you're on now shows as a lime button floating on a wave in the bottom bar; tap another tab and it glides over, with the wave following like water. Laptop: a glass pill slides along the side menu."],
   ["8 Nov 2026", "Swipe a job on your phone: right for the next step (a long swipe does it straight away), left for Call, Chat and Cancel."],
@@ -107,6 +112,8 @@ const GUIDE = [
   { id: "home", role: "owner", title: "Home", body: `
 <ul><li>The boxes at the top: jobs today, upcoming, money collected and <b>Washed, not paid</b>. Tap a box to open that screen.</li>
 <li><b>Needs attention</b>: bookings not confirmed yet (tap <b>Confirm</b> to send the WhatsApp), washed jobs not paid, jobs with no washer, customers due for a wash and new Inbox items.</li>
+<li><b>Changed online</b>: a customer moved or cancelled their booking from their link in the last 3 days. Tap it to open the booking; the new day and time are already saved. Send them the "Customer moved it" message if you like.</li>
+<li><b>Cash with (washer)</b>: cash a washer collected (jobs marked <b>Paid in cash</b>) that you haven't received yet. When they hand it over, tap <b>Received</b>, check the amount and tap <b>Mark received</b>. If it's less, the app says how much is short and keeps that with the washer. A mistake? Open it again and tap <b>Undo</b> (within 2 days).</li>
 <li>The <b>calendar</b> shows bookings per day. Tap a day to open it in Jobs.</li>
 <li><b>Recent bookings</b> lists the newest bookings. Tap one to open it.</li></ul>` },
 
@@ -128,6 +135,8 @@ const GUIDE = [
 <p><b>Route</b> lists the day's open jobs in order and opens them in Google Maps, starting from where you are. Choose <b>By time</b> or <b>Same area together</b>. Google Maps takes 10 stops per link, so a busy day has more than one button.</p>
 <p>Owner: <b>Move day</b> is for rain or a day off. Tick the bookings, pick the new day (and a time, or keep each one's time), then tap <b>Move</b>. A list opens with a <b>WhatsApp</b> button for each customer with the "Moved" message ready; send them one by one. The history of each booking shows the move. Slot limits don't stop a move, but the app tells you if the new day is closed or already busy.</p>
 <p>Washers see <b>Mine</b> (jobs given to you) and <b>Everyone</b>.</p>
+<p><b>Rain likely</b>: a blue note shows when rain is likely (60% or more) in a slot that has open jobs, for today and the next 3 days. Owner: tap <b>Move day</b> to move them. <b>Hide</b> hides it for that day.</p>
+<p>Washers: <b>Cash with you</b> shows the cash you collected (jobs you marked <b>Paid in cash</b>) that the owner hasn't received yet. Tap it to see today's cash jobs. It goes down when the owner taps <b>Received</b>.</p>
 <p>If a customer has <b>referral credit</b>, the card says so. Take it off the bill, then tap <b>Mark used</b>.</p>` },
 
   { id: "bookings", role: "all", title: "Bookings: board and table", body: `
@@ -161,7 +170,8 @@ const GUIDE = [
 <p>After saving you can send the confirmation on WhatsApp in one tap. Bookings a washer adds are given to that washer.</p>` },
 
   { id: "messages-use", role: "all", title: "WhatsApp messages", body: `
-<p>The app never sends messages by itself. It opens WhatsApp with the message ready; you press send. <b>Chat</b> lets you pick any ready message; sending one is noted in the booking's history.</p>` },
+<p>The app never sends messages by itself. It opens WhatsApp with the message ready; you press send. <b>Chat</b> lets you pick any ready message; sending one is noted in the booking's history.</p>
+<p>The <b>Confirm</b> message ends with the customer's own link. On it they see the booking live (Confirmed, On the way, Washing, Done) and can move or cancel it until 2 hours before the slot. Later the same page shows their receipt and the review link. It never shows their phone number or full address.</p>` },
 
   { id: "search", role: "all", title: "Search and the bell", body: `
 <p><b>Search</b> (Ctrl K on a laptop, the magnifier on a phone) finds bookings, customers and screens. Use the arrow keys and Enter on a laptop.</p>
@@ -206,7 +216,7 @@ const GUIDE = [
 
   { id: "customers", role: "owner", title: "Customers", body: `
 <p><b>All customers</b> lists every customer by mobile number: washes, amount paid, last wash and next booking. Tap one to see their bookings, call or message them, or start a <b>New booking</b> with their details filled in.</p>
-<p><b>Due for a wash</b> lists people whose last wash was 7, 12, 21 or 30+ days ago and who have nothing booked. Tap <b>Send rebook message</b>.</p>` },
+<p><b>Due for a wash</b> lists people whose last wash was 7, 12, 21 or 30+ days ago and who have nothing booked. Plan and society customers aren't listed. Tap <b>Send rebook message</b>; people reminded in the last 7 days move to the bottom.</p>` },
 
   { id: "assign", role: "owner", title: "Giving jobs to washers", body: `
 <p>Open a booking and choose the washer under <b>The job → Washer</b>. They see it under <b>Mine</b>. Choose <b>Nobody yet</b> to take it back. Home shows jobs in the next 3 days with no washer.</p>` },
@@ -221,7 +231,7 @@ const GUIDE = [
 
   { id: "settings", role: "owner", title: "Settings", body: `
 <ul><li><b>Slots &amp; days off</b>: how many website bookings each time (6–8 AM, 8–10 AM…) can take in a day; leave it empty for no limit. When a time is full, the website shows it as <b>Full</b> and the customer picks another. Tick a <b>weekly day off</b> if you don't work that day. Use <b>Close a day or a time</b> for holidays, heavy rain or a big society job, and <b>Open again</b> to undo it. Bookings already made on a closed day stay; move or cancel them yourself. You can always add bookings yourself; the app only warns you.</li>
-<li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {days}, {society}, {brand}.</li>
+<li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {track_link} (the customer's own see/move/cancel link), {days}, {society}, {brand}.</li>
 <li><b>Offers</b>: change WELCOME50 and the referral offer (amount, minimum order, first wash only, on/off), or add a new code like DIWALI100. The website uses the new amounts straight away.</li>
 <li><b>Monthly costs</b>: ads, supplies, fuel, washer pay and other costs. Analytics then shows profit and cost per wash.</li>
 <li><b>Team notice</b>: one line everyone sees at the top of Home and Jobs ("Rain today, carry covers"). Clear it when done.</li>
@@ -264,7 +274,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "c3e9836683";
+const BUILD_ID = "33c16de2e9";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";
@@ -331,6 +341,7 @@ const I = {
   cash: ic('<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v5M17.5 9.5v5"/>'),
   star: ic('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'),
   grip: ic('<path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/>'),
+  rain: ic('<path d="M7 15a4.5 4.5 0 0 1 .4-9 5.5 5.5 0 0 1 10.3 1.6A3.7 3.7 0 0 1 17 15z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/>'),
   arrange: ic('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>')
 };
 
@@ -436,7 +447,7 @@ function applyTheme(){
 }
 applyTheme();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if(!store.get("vb.theme")) applyTheme(); });
-document.addEventListener("click", e => { if(e.target.closest("[data-themebtn]")){ store.set("vb.theme", document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"); applyTheme(); } });
+document.addEventListener("click", e => { const b=e.target.closest("[data-themebtn]"); if(b) themeSwap(() => { store.set("vb.theme", document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"); applyTheme(); }, b); });
 if(store.get("vb.menu")==="folded") document.documentElement.setAttribute("data-menu","folded");
 $("foldBtn").addEventListener("click", () => { setTimeout(()=>{ const g=$("nav").querySelector(".glide"); g._k=g._r=null; glide($("nav")); }, 260); const f=document.documentElement.getAttribute("data-menu")==="folded"; if(f) document.documentElement.removeAttribute("data-menu"); else document.documentElement.setAttribute("data-menu","folded"); store.set("vb.menu", f?null:"folded"); });
 $("kbdHint").textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K";
@@ -606,7 +617,7 @@ document.addEventListener("click", e => { if(!$("pop").hidden && !e.target.close
 
 /* ============================== messages ============================== */
 const DEFAULT_T = {
-  confirm:["Confirm booking","Hi {first_name}, this is {brand}. Your {package} for your {vehicle} is confirmed for {date}, {slot}. We'll message you when we're on the way.\nBooking ID: {id}"],
+  confirm:["Confirm booking","Hi {first_name}, this is {brand}. Your {package} for your {vehicle} is confirmed for {date}, {slot}. We'll message you when we're on the way.\nBooking ID: {id}\nSee, move or cancel it here: {track_link}"],
   remind:["Reminder","Hi {first_name}, a reminder from {brand}: your {package} is on {date}, {slot}, at {address}. Please keep the vehicle accessible. Reply here to reschedule."],
   onway:["On my way","Hi {first_name}, your {brand} washer is on the way and will reach in about 20 minutes."],
   review:["Ask for a review","Hi {first_name}, thank you for choosing {brand}! How did we do? Rate your wash here, it takes 20 seconds: {review_link}"],
@@ -617,12 +628,16 @@ const DEFAULT_T = {
   plan_renew:["Plan renewal","Hi {first_name}, this is {brand}. Your {plan} plan ends on {end}. Shall we continue next month? It's {price} for {washes}. Just reply YES and we'll keep the same days and time."],
   plan_pay:["Plan payment due","Hi {first_name}, a gentle reminder from {brand}: {price} for your {plan} plan ({period}) is due. You can pay by UPI to {upi}. Thank you!"],
   receipt:["Receipt","Hi {first_name}, thank you for choosing {brand}! Here is your receipt for {amount}: {link}"],
+  moved_by_customer:["Customer moved it","Hi {first_name}, got it, your {package} is now on {date}, {slot}. See or change it here: {track_link}"],
   noanswer:["Couldn't reach you","Hi {first_name}, this is {brand}. We tried calling about your {package} on {date}. Please reply here or call us back when free."]
 };
 function templates(){ const map={}; Object.keys(DEFAULT_T).forEach((k,i)=>map[k]={key:k,title:DEFAULT_T[k][0],body:DEFAULT_T[k][1],position:i}); (SET.templates||[]).forEach(t=>map[t.key]=t); return Object.values(map).sort((a,b)=>a.position-b.position); }
-function fill(key, ctx){ const t=templates().find(x=>x.key===key); return (t?t.body:"").replace(/\{(\w+)\}/g, (m,k) => ctx[k]!=null && ctx[k]!=="" ? ctx[k] : m); }
+function fill(key, ctx){ const t=templates().find(x=>x.key===key);
+  return (t?t.body:"").replace(/\{(\w+)\}/g, (m,k) => ctx[k]!=null && ctx[k]!=="" ? ctx[k] : m)
+    .split("\n").filter(l=>!l.includes("{track_link}")).join("\n"); }   // no link yet (older booking): leave that line out
 const jobCtx = j => ({first_name:first(j.name), name:j.name, brand:SITE.name, package:j.package, vehicle:vehShort(j.vehicle).toLowerCase(), date:fmtDay(j.wash_date), slot:j.slot,
-  address:[j.address, j.area].filter(Boolean).join(", "), id:j.id, total:rupee(j.total), review_link:BASE+"review.html?b="+encodeURIComponent(j.id), book_link:BASE+"book.html"});
+  address:[j.address, j.area].filter(Boolean).join(", "), id:j.id, total:rupee(j.total), review_link:BASE+"review.html?b="+encodeURIComponent(j.id), book_link:BASE+"book.html", track_link:trackLink(j)});
+const trackLink = j => j.track_key ? BASE+"track.html?b="+encodeURIComponent(j.id)+"&k="+j.track_key : "";
 const MSG_ACTION = {confirm:"confirm", onway:"on_way", review:"review_asked", remind:"reminded"};
 
 /* ============================== bookings: shared bits ============================== */
@@ -748,7 +763,7 @@ async function act(id, action, from, opt){
   if(/^paid/.test(action) && !quiet) celebrate(from);
   const later = () => { queueAdd({fn:"staff_update", id, action, name:before.name, label:DONE_MSG[action]}); if(!quiet) toast(DONE_MSG[action]+" · saved on this phone, will sync when online", false, undoFor(id, action)); return true; };
   if(QUEUE.length){ later(); flush(); return true; }
-  try{ const f = await rpc("staff_update", {p_id:id, p_action:action}); JOBS.set(id, f); delete HIST[id]; redraw(); if(S.v==="b") loadHist(id); return true; }
+  try{ const f = await rpc("staff_update", {p_id:id, p_action:action}); JOBS.set(id, f); delete HIST[id]; redraw(); if(S.v==="b") loadHist(id); if(/paid|unpaid/.test(action)) loadCash(); return true; }
   catch(e){ if(e.message==="signed out") return false; if(netDown(e)) return later(); JOBS.set(id, before); redraw(); toast(e.message||"Couldn't save. Try again.", true); return false; }
 }
 document.addEventListener("click", e => {
@@ -1119,6 +1134,8 @@ function dHome(){
   const attn = [
     ...uc.map(j=>`<div class="list-row" data-id="${esc(j.id)}"><span class="lr-main" data-open="${esc(j.id)}"><b>${esc(j.name)} <span class="pill st-new">Not confirmed</span></b><span>${relDay(j.wash_date)}, ${esc(j.slot)} · ${esc(j.package)}</span></span><a class="btn wa sm" data-act="confirm" target="_blank" rel="noopener" href="${wa(j.phone, fill("confirm", jobCtx(j)))}">Confirm</a></div>`),
     ...up.map(j=>`<div class="list-row" data-id="${esc(j.id)}"><span class="lr-main" data-open="${esc(j.id)}"><b>${esc(j.name)} <span class="pill st-collect">Collect ${rupee(j.total)}</span></b><span>Washed ${relDay(j.wash_date)} · ${esc(j.package)}</span></span><button class="btn sm" type="button" data-open="${esc(j.id)}">Open</button></div>`),
+    ...(ATTN.changes||[]).map(c=>`<button class="list-row" type="button" data-open="${esc(c.id)}"><span class="lr-main"><b>${esc(c.name)} <span class="pill st-new">Changed online</span></b><span>${esc(c.detail.replace(/^(Moved|Cancelled) (online )?by the customer( online)?/, "$1"))} · ${ago(c.at)}</span></span>${I.fwd}</button>`),
+    ...(ATTN.cash||[]).map(c=>`<div class="list-row"><span class="lr-main"><b>Cash with ${esc(first(c.name))}: ${rupee(c.balance)}</b><span>${c.today?rupee(c.today)+" collected today":"From earlier days"} · tap Received when you get it</span></span><button class="btn sm" type="button" data-cashrecv="${esc(c.id)}">Received</button></div>`),
     ATTN.unassigned?`<button class="list-row" type="button" data-go="bookings"><span class="lr-main"><b>${ATTN.unassigned} job${ATTN.unassigned>1?"s":""} in the next 3 days with no washer</b><span>Open a booking and choose a washer</span></span>${I.fwd}</button>`:"",
     ATTN.due?`<button class="list-row" type="button" data-go="customers" data-cumode="due"><span class="lr-main"><b>${ATTN.due} customer${ATTN.due>1?"s":""} due for a wash</b><span>Last wash 12+ days ago, nothing booked</span></span><span class="pill st-confirmed">Rebook</span></button>`:"",
     ...(KIT&&KIT.sup.some(x=>x.is_low)?[`<button class="list-row" type="button" data-go="kit"><span class="lr-main"><b>Running low: ${KIT.sup.filter(x=>x.is_low).map(x=>esc(x.name)).join(", ")}</b><span>Buy more, then update Stock &amp; bills</span></span>${I.fwd}</button>`]:[]),
@@ -1158,6 +1175,7 @@ function countUp(root){
 /* ============================== JOBS (day runner) ============================== */
 let DAY=null;
 async function vJobs(){
+  loadRain(); loadCash();
   const k="day."+S.day; DAY=cache.get(k); if(DAY) remember(DAY.jobs); dJobs(painted!=="jobs/" || S.dayDrawn!==S.day); S.dayDrawn=S.day;
   try{ const d=await rpc("staff_day",{p_date:S.day}); DAY=d; remember(d.jobs, true); cache.set(k,d); if(S.v==="jobs") dJobs(); } catch(e){ quiet(e); }
 }
@@ -1172,6 +1190,7 @@ function dJobs(scroll){
   const acts = (openJobs?`<button class="btn" type="button" data-route aria-label="Route">${I.route}<span class="hide-sm">Route</span></button>`:"") + (isOwner()&&openJobs&&S.day>=istToday()?`<button class="btn" type="button" data-moveday>${I.move}<span class="hide-sm">Move day</span></button>`:"") + (!isOwner()&&anyMine?`<div class="seg"><button type="button" data-mine="1" class="${S.mine?"on":""}">Mine</button><button type="button" data-mine="0" class="${!S.mine?"on":""}">Everyone</button></div>`:"") + newBtn();
   let html = pageHead(relDay(S.day), fmtDay(S.day,{weekday:"long", day:"numeric", month:"long"}) + (live.length?` · ${done}/${live.length} washed`:""), acts)
     + (n&&n.body?`<div class="notice">${I.note}<div><b>${esc(n.body)}</b><small>${esc(n.by||"")} · ${ago(n.updated_at)}</small></div></div>`:"")
+    + cashCard() + rainBanner(jobs)
     + `<div class="daystrip" id="strip">${DAY?DAY.strip.map(d=>`<button type="button" class="day${d.date===istToday()?" today":""}${d.date===S.day?" sel":""}" data-sday="${d.date}"><small>${fmtDay(d.date,{weekday:"short"})}</small><b>${fmtDay(d.date,{day:"numeric"})}</b><i>${d.count>3?`<em>${d.count}</em>`:Array.from({length:d.count},(_,k)=>`<span class="${k<d.open?"open":""}"></span>`).join("")}</i></button>`).join(""):Array.from({length:8},()=>'<div class="skel" style="flex:none;width:58px;height:66px"></div>').join("")}</div>`;
   if(!DAY){ V().innerHTML = html + skel(2,260); return; }
   if(live.length) html += `<div class="row"><div class="prog"><i style="width:${Math.round(done/live.length*100)}%"></i></div><span class="small muted"><b style="color:var(--ink)">${done}/${live.length}</b> washed · ${toCollect?`<b style="color:var(--coral)">${rupee(toCollect)}</b> to collect`:"all paid"}</span></div>`;
@@ -1770,9 +1789,13 @@ function dCustomers(shell){
       : `<section class="card empty"><b>${S.cu.q?"Nobody found":"No customers yet"}</b></section>`;
   } else {
     if(!DUE){ el.innerHTML=skel(2,120); return; }
-    el.innerHTML = DUE.length ? `<p class="small muted" style="margin-bottom:12px">${DUE.length} customer${DUE.length>1?"s":""} with nothing booked whose last wash was ${S.cu.due}+ days ago.</p><div class="grid grid-3">${DUE.map((d,i)=>`<section class="card"><div class="card-head"><h2>${esc(d.name)}</h2><span class="pill st-collect">${d.days_ago} days</span></div>
+    const recent = d => d.reminder_sent_at && Date.now()-new Date(d.reminder_sent_at) < 7*864e5, fresh=DUE.filter(d=>!recent(d)), later=DUE.filter(recent);
+    const dueCard = d => { const i=DUE.indexOf(d); return `<section class="card${recent(d)?" muted-card":""}"><div class="card-head"><h2>${esc(d.name)}</h2><span class="pill st-collect">${d.days_ago} days</span></div>
       <p class="small muted">${esc(d.vehicle)} · last: ${esc(d.package)} on ${fmtDay(d.last_date)}${d.area?" · "+esc(d.area):""}<br>${d.washes} wash${d.washes>1?"es":""}${d.reminder_sent_at?` · reminded ${ago(d.reminder_sent_at)}`:""}</p>
-      <div class="row" style="margin-top:12px"><a class="btn wa sm" target="_blank" rel="noopener" data-rebook="${i}" href="${wa(d.phone, fill("rebook", {first_name:first(d.name), brand:SITE.name, days:d.days_ago, package:d.package, book_link:BASE+"book.html"}))}">Send rebook message</a><a class="btn sm" href="${tel(d.phone)}">Call</a><button class="btn sm" type="button" data-newfor="${d.phone}">New booking</button></div></section>`).join("")}</div>`
+      <div class="row" style="margin-top:12px"><a class="btn wa sm" target="_blank" rel="noopener" data-rebook="${i}" href="${wa(d.phone, fill("rebook", {first_name:first(d.name), brand:SITE.name, days:d.days_ago, package:d.package, book_link:BASE+"book.html"}))}">Send rebook message</a><a class="btn sm" href="${tel(d.phone)}">Call</a><button class="btn sm" type="button" data-newfor="${d.phone}">New booking</button></div></section>`; };
+    el.innerHTML = DUE.length ? `<p class="small muted" style="margin-bottom:12px">${fresh.length} customer${fresh.length===1?"":"s"} with nothing booked whose last wash was ${S.cu.due}+ days ago. Plan and society customers aren't listed.</p>`
+      + (fresh.length?`<div class="grid grid-3">${fresh.map(dueCard).join("")}</div>`:`<section class="card empty"><b>Everyone due has been reminded</b>They're below. They come back to the top 7 days after the reminder.</section>`)
+      + (later.length?`<div class="grp" style="margin-top:18px"><h2>Reminded in the last 7 days · ${later.length}</h2></div><div class="grid grid-3">${later.map(dueCard).join("")}</div>`:"")
       : `<section class="card empty"><b>Nobody is due</b>Customers show up here ${S.cu.due} days after their last wash.</section>`;
   }
 }
@@ -2095,7 +2118,7 @@ function accountSheet(){
   else rpc("staff_my_pay").then(m=>{ const el=$("myPay"); if(!el) return; el.innerHTML=`<dl class="dl"><dt>This month</dt><dd><b>${m.month_washes}</b> wash${m.month_washes===1?"":"es"} · <b>${rupee(m.month_earned)}</b></dd><dt>Still to be paid</dt><dd><b>${rupee(m.owed)}</b></dd><dt>Rate</dt><dd>${rupee(m.pay_car)} a car · ${rupee(m.pay_bike)} a bike</dd>${m.payouts.length?`<dt>Last paid</dt><dd>${rupee(m.payouts[0].amount)} on ${fmtDay(String(m.payouts[0].paid_at).slice(0,10),{day:"numeric",month:"short"})}</dd>`:""}</dl>`; })
     .catch(()=>{ const el=$("myPay"); if(el) el.innerHTML='<p class="small muted">Couldn\'t load. Check your internet.</p>'; });
 }
-$("sheetBody").addEventListener("click", e => { const b=e.target.closest("[data-th]"); if(!b) return; store.set("vb.theme", b.dataset.th==="auto"?null:b.dataset.th); applyTheme(); $$("#themeSeg button").forEach(x=>x.classList.toggle("on", x===b)); });
+$("sheetBody").addEventListener("click", e => { const b=e.target.closest("[data-th]"); if(!b) return; $$("#themeSeg button").forEach(x=>x.classList.toggle("on", x===b)); themeSwap(() => { store.set("vb.theme", b.dataset.th==="auto"?null:b.dataset.th); applyTheme(); }, b); });
 $("sheetBody").addEventListener("submit", async e => {
   if(e.target.id!=="pwForm") return; e.preventDefault(); const pw=$("myPw").value, m=$("pwMsg"); m.hidden=false;
   if(pw.length<8){ m.className="msg bad"; m.textContent="Use 8 or more characters."; return; }
@@ -2251,15 +2274,111 @@ $("sheetBody").addEventListener("click", async e => {
   else toast("Shake to undo is on");
 });
 
+/* ============================== cash handover ============================== */
+/* Washers: cash they collected (Paid in cash on their jobs) minus what the owner marked received. */
+let CASH=store.get("vb.cash")||null;
+async function loadCash(){ if(!S.me || isOwner()) return; try{ CASH=await rpc("staff_cash"); store.set("vb.cash", CASH); if(S.v==="jobs") dJobs(); }catch(e){} }
+function cashCard(){
+  if(isOwner() || !CASH || CASH.balance<=0) return "";
+  return `<button class="cashbar" type="button" data-cashme>${I.cash}<span><b>Cash with you: ${rupee(CASH.balance)}</b><small>${CASH.today?rupee(CASH.today)+" collected today · ":""}hand it to the owner</small></span>${I.fwd}</button>`;
+}
+const handRows = (list, undo) => list.map(h=>`<div class="list-row" style="cursor:default"><span class="lr-main"><b>${rupee(h.amount)} received${h.expected>h.amount?` <span class="pill st-collect">${rupee(h.expected-h.amount)} short</span>`:""}</b><span>${fmtDay(String(h.at).slice(0,10),{day:"numeric",month:"short"})} · ${ago(h.at)}${h.by?" · by "+esc(first(h.by)):""}${h.note?" · "+esc(h.note):""}</span></span>${undo && Date.now()-new Date(h.at)<2*864e5?`<button class="btn sm" type="button" data-cashundo="${h.id}">Undo</button>`:""}</div>`).join("");
+function cashMeSheet(){
+  const c=CASH; if(!c) return;
+  openSheet("Cash with you", `<div class="menu"><div class="cash-big"><small>Still with you</small><b class="num">${rupee(c.balance)}</b></div>
+    ${c.today_jobs.length?`<h4>Paid in cash today</h4>${c.today_jobs.map(j=>`<button class="list-row" type="button" data-open="${esc(j.id)}"><span class="lr-main"><b>${esc(j.name)}</b><span>${new Date(j.paid_at).toLocaleTimeString("en-IN",{hour:"numeric",minute:"2-digit",timeZone:"Asia/Kolkata"})}</span></span><b class="num">${rupee(j.total)}</b></button>`).join("")}`:""}
+    ${c.handovers.length?`<h4>Handed over</h4>${handRows(c.handovers.slice(0,5))}`:""}
+    <p class="small muted">When you give the cash to the owner, they tap <b>Received</b> on their phone and this goes down.</p></div>`);
+}
+async function cashRecvSheet(id){
+  let c=(ATTN&&ATTN.cash||[]).find(x=>x.id===id); try{ const all=await rpc("owner_cash"); c=all.find(x=>x.id===id)||c; }catch(e){}
+  if(!c) return toast("Couldn't load the cash for this washer", true);
+  openSheet("Cash from "+first(c.name), `<div class="menu" data-cashfor="${esc(c.id)}">
+    <div class="cash-big"><small>The app expects</small><b class="num">${rupee(c.balance)}</b><span>${c.today?rupee(c.today)+" collected today":"all from earlier days"}</span></div>
+    <label class="field">Amount you received (₹)<input class="input" id="cashAmt" type="number" inputmode="numeric" min="1" step="1" value="${Math.max(c.balance,0)}"></label>
+    <p class="small" id="cashDiff" aria-live="polite"></p>
+    <label class="field">Note (optional)<input class="input" id="cashNote" maxlength="200" placeholder="e.g. ₹50 kept for petrol"></label>
+    <button class="btn primary" type="button" id="cashGo" data-expect="${c.balance}">${I.check}Mark received</button>
+    ${c.handovers.length?`<h4>Earlier handovers</h4>${handRows(c.handovers, true)}`:""}</div>`);
+  cashDiff();
+}
+function cashDiff(){ const a=$("cashAmt"), out=$("cashDiff"), go=$("cashGo"); if(!a||!out) return; const d=Math.round(+a.value||0) - +go.dataset.expect;
+  out.className="small"+(d<0?" warn-tx":""); out.textContent = !a.value ? "" : d===0 ? "Matches what the app expects." : d<0 ? `${rupee(-d)} short. That stays with the washer until it's handed over.` : `${rupee(d)} more than the app expects. Check that every cash job is marked Paid in cash.`; }
+document.addEventListener("input", e => { if(e.target.id==="cashAmt") cashDiff(); });
+document.addEventListener("click", async e => {
+  if(e.target.closest("[data-cashme]")) return cashMeSheet();
+  const r=e.target.closest("[data-cashrecv]"); if(r) return cashRecvSheet(r.dataset.cashrecv);
+  const u=e.target.closest("[data-cashundo]"); if(u){ u.disabled=true; try{ await rpc("owner_cash_undo",{p_id:+u.dataset.cashundo}); closeSheet(); toast("Handover undone"); vHome(); }catch(x){ u.disabled=false; toast(x.message, true); } return; }
+  if(e.target.closest("#cashGo")){ const host=e.target.closest("[data-cashfor]"), amt=Math.round(+$("cashAmt").value||0), exp=+$("cashGo").dataset.expect;
+    if(amt<1) return toast("Enter the amount you received", true);
+    $("cashGo").disabled=true;
+    try{ await rpc("owner_cash_received",{p_staff:host.dataset.cashfor, p_amount:amt, p_note:$("cashNote").value.trim()}); closeSheet(); buzz([18,40,18]);
+      toast(`Received ${rupee(amt)}`+(amt<exp?` · ${rupee(exp-amt)} still with them`:"")); vHome(); }
+    catch(x){ $("cashGo").disabled=false; toast(x.message, true); } }
+});
+
+/* ============================== rain warning ============================== */
+/* Free forecast from Open-Meteo (no key, nothing about customers is sent: only a point in central Mumbai). */
+const RAIN_AT={lat:19.11, lon:72.88};
+let RAIN=store.get("vb.rain")||null, rainBusy=false;
+async function loadRain(){
+  if(rainBusy || (RAIN && Date.now()-RAIN.at<45*60e3)) return; rainBusy=true;
+  try{ const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${RAIN_AT.lat}&longitude=${RAIN_AT.lon}&hourly=precipitation_probability,precipitation&timezone=Asia%2FKolkata&forecast_days=4`);
+    const j=await r.json(); if(j && j.hourly){ RAIN={at:Date.now(), t:j.hourly.time, p:j.hourly.precipitation_probability, mm:j.hourly.precipitation}; store.set("vb.rain", RAIN); if(S.v==="jobs") dJobs(); } }
+  catch(e){} rainBusy=false;
+}
+function rainFor(day, slot){
+  if(!RAIN) return null; const h=SLOT_H[slot]; if(!h) return null; let p=0, mm=0, n=0;
+  RAIN.t.forEach((t,i)=>{ if(t.slice(0,10)!==day) return; const hr=+t.slice(11,13); if(hr>=h[0] && hr<h[1]){ p=Math.max(p, RAIN.p[i]||0); mm+=RAIN.mm[i]||0; n++; } });
+  return n ? {p, mm:Math.round(mm*10)/10} : null;
+}
+function rainBanner(jobs){
+  if(!RAIN || (store.get("vb.rainHide")||{})[S.day]) return "";
+  const by={}; jobs.filter(j=>["new","confirmed","on_way"].includes(j.status)).forEach(j=>(by[j.slot]=by[j.slot]||[]).push(j));
+  const wet=Object.keys(by).sort((a,b)=>SLOTS.indexOf(a)-SLOTS.indexOf(b)).map(sl=>({sl, r:rainFor(S.day, sl), n:by[sl].length})).filter(x=>x.r && x.r.p>=60 && x.r.mm>=1);
+  if(!wet.length) return "";
+  return `<div class="rainbar" role="status">${I.rain}<div class="rain-tx"><b>Rain likely ${wet.length===1?wet[0].sl:relDay(S.day).toLowerCase()}</b><small>${wet.map(x=>`${x.sl}: ${x.r.p}% chance, about ${x.r.mm} mm · ${x.n} job${x.n>1?"s":""}`).join("<br>")}</small><small class="rain-src">Forecast: Open-Meteo</small></div>
+    <div class="rain-acts">${isOwner()&&S.day>=istToday()?`<button class="btn sm" type="button" data-moveday>${I.move}Move day</button>`:""}<button class="link-btn" type="button" data-rainhide>Hide</button></div></div>`;
+}
+document.addEventListener("click", e => { if(e.target.closest("[data-rainhide]")){ const h=store.get("vb.rainHide")||{}; h[S.day]=1; Object.keys(h).forEach(d=>{ if(d<istToday()) delete h[d]; }); store.set("vb.rainHide", h); dJobs(); } });
+
+/* ============================== light / dark: ink transition ============================== */
+/* The new look spreads from the button you tapped like a splash of ink (Chrome, Edge, Safari 18+; others switch at once). */
+let INK=null;
+function inkMask(){
+  if(INK) return INK; let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const N=72, pts=[], ph=[rnd()*6.3, rnd()*6.3, rnd()*6.3], spikes=Array.from({length:9},()=>({a:rnd()*6.283, w:.05+rnd()*.07, h:5+rnd()*9}));
+  for(let i=0;i<N;i++){ const a=i/N*6.283; let r=31+3.2*Math.sin(3*a+ph[0])+2.4*Math.sin(5*a+ph[1])+1.6*Math.sin(11*a+ph[2])+(rnd()-.5)*1.6;
+    spikes.forEach(s=>{ let d=Math.abs(a-s.a); d=Math.min(d, 6.283-d); const u=d/s.w; r+=s.h*Math.exp(-u*u); }); pts.push([50+r*Math.cos(a), 50+r*Math.sin(a)]); }
+  let d=`M${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
+  for(let i=0;i<N;i++){ const p0=pts[(i-1+N)%N], p1=pts[i], p2=pts[(i+1)%N], p3=pts[(i+2)%N];
+    d+=`C${(p1[0]+(p2[0]-p0[0])/6).toFixed(2)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(2)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(2)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`; }
+  const drops=Array.from({length:14},()=>{ const a=rnd()*6.283, r=40+rnd()*8.5, s=.5+rnd()*1.8; return `<circle cx="${(50+r*Math.cos(a)).toFixed(2)}" cy="${(50+r*Math.sin(a)).toFixed(2)}" r="${s.toFixed(2)}"/>`; }).join("");
+  INK=`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="#fff"><path d="${d}Z"/>${drops}</g></svg>`)}")`;
+  return INK;
+}
+function themeSwap(change, from){
+  if(!document.startViewTransition || matchMedia("(prefers-reduced-motion:reduce)").matches) return change();
+  const r=from&&from.getBoundingClientRect(), x=r&&r.width?r.left+r.width/2:innerWidth-40, y=r&&r.width?r.top+r.height/2:40;
+  const far=Math.hypot(Math.max(x, innerWidth-x), Math.max(y, innerHeight-y)), end=Math.ceil(far/0.25), img=inkMask();
+  let vt; try{ vt=document.startViewTransition(change); }catch(e){ return change(); }
+  vt.ready.then(() => {
+    const k=[{maskImage:img, WebkitMaskImage:img, maskSize:"0px 0px", WebkitMaskSize:"0px 0px", maskPosition:`${x}px ${y}px`, WebkitMaskPosition:`${x}px ${y}px`, maskRepeat:"no-repeat", WebkitMaskRepeat:"no-repeat"},
+             {maskImage:img, WebkitMaskImage:img, maskSize:`${end}px ${end}px`, WebkitMaskSize:`${end}px ${end}px`, maskPosition:`${x-end/2}px ${y-end/2}px`, WebkitMaskPosition:`${x-end/2}px ${y-end/2}px`, maskRepeat:"no-repeat", WebkitMaskRepeat:"no-repeat"}];
+    document.documentElement.animate(k, {duration:1100, easing:"cubic-bezier(.7,0,.25,1)", pseudoElement:"::view-transition-new(root)"});
+  }).catch(()=>{});
+}
+
 /* ============================== bell (notifications) ============================== */
 function drawBell(ring){
-  const seen=store.get("vb.bellSeen")||"", n=NOTES.filter(x=>x.at>seen).length + (isOwner()?(S.inboxCount||0):0);
+  const seen=store.get("vb.bellSeen")||"", n=NOTES.filter(x=>x.at>seen).length + (isOwner()?(S.inboxCount||0)+((ATTN&&ATTN.changes)||[]).filter(c=>c.at>seen).length:0);
   $$("[data-bell]").forEach(b=>{ setHTML(b, I.bell + (n?`<span class="bell-count">${n>9?"9+":n}</span>`:"")); if(ring){ b.classList.remove("ring"); void b.offsetWidth; b.classList.add("ring"); } });
 }
 document.addEventListener("click", e => {
   const b=e.target.closest("[data-bell]"); if(!b) return; if(!$("pop").hidden){ closePop(); return; }
   const r=b.getBoundingClientRect(), pop=$("pop"), seen=store.get("vb.bellSeen")||"", items=[];
   if(isOwner() && S.inboxCount) items.push(`<button class="list-row" type="button" data-go="inbox"><span class="lr-main"><b>${S.inboxCount} new in Inbox</b><span>Society requests, messages and reviews</span></span><span class="nav-badge">${S.inboxCount}</span></button>`);
+  if(isOwner() && ATTN) (ATTN.changes||[]).forEach(c=>items.push(`<button class="list-row" type="button" data-open="${esc(c.id)}"><span class="lr-main"><b>${c.at>seen?"● ":""}${esc(c.name)} changed their booking</b><span>${esc(c.detail.replace(/^(Moved|Cancelled) (online )?by the customer( online)?/, "$1"))} · ${ago(c.at)}</span></span></button>`));
   if(isOwner() && ATTN && ATTN.unconfirmed.length) items.push(`<button class="list-row" type="button" data-go="home"><span class="lr-main"><b>${ATTN.unconfirmed.length} booking${ATTN.unconfirmed.length>1?"s":""} not confirmed yet</b><span>Confirm them on WhatsApp from Home</span></span></button>`);
   NOTES.slice(0,15).forEach(x=>items.push(`<button class="list-row" type="button" data-open="${esc(x.id)}"><span class="lr-main"><b>${x.at>seen?"● ":""}${esc(x.text)}</b><span>${esc(x.sub)} · ${ago(x.at)}</span></span></button>`));
   pop.innerHTML = `<h3>Notifications</h3>${items.join("")||'<div class="empty">Nothing new. New bookings show up here.</div>'}`;

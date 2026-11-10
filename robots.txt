@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /ops.html
 Disallow: /receipt.html
+Disallow: /track.html
 
 Sitemap: https://littlegasp.github.io/vroombrite/sitemap.xml
