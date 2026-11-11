@@ -2,6 +2,7 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["11 Nov 2026", "Jobs from earlier days that were never marked washed or cancelled no longer disappear. They show at the top of today's Jobs (Left over from earlier days) and on Home (Not finished) until someone deals with them."],
   ["10 Nov 2026", "Customers can now see their booking live, and move or cancel it themselves until 2 hours before the slot. The link is on the website after booking and in the Confirm message. Changes show on Home and in the bell as Changed online."],
   ["10 Nov 2026", "Cash handover: washers see Cash with you on Jobs. Owner: Home shows the cash each washer holds; tap Received when they hand it over (it warns if the amount is short)."],
   ["10 Nov 2026", "Rain warning on Jobs when rain is likely in a slot that has bookings (today and the next 3 days), with Move day for the owner."],
@@ -58,6 +59,7 @@ const GUIDE = [
 
   { id: "home", role: "owner", title: "Home", body: `
 <ul><li>The boxes at the top: jobs today, upcoming, money collected and <b>Washed, not paid</b>. Tap a box to open that screen.</li>
+<li><b>Not finished</b> (red, at the top of Needs attention): a job from an earlier day that is still New, Confirmed or On the way. Open it: if it was done, tap <b>Mark washed</b> (and the payment); if not, change its day or cancel it.</li>
 <li><b>Needs attention</b>: bookings not confirmed yet (tap <b>Confirm</b> to send the WhatsApp), washed jobs not paid, jobs with no washer, customers due for a wash and new Inbox items.</li>
 <li><b>Changed online</b>: a customer moved or cancelled their booking from their link in the last 3 days. Tap it to open the booking; the new day and time are already saved. Send them the "Customer moved it" message if you like.</li>
 <li><b>Cash with (washer)</b>: cash a washer collected (jobs marked <b>Paid in cash</b>) that you haven't received yet. When they hand it over, tap <b>Received</b>, check the amount and tap <b>Mark received</b>. If it's less, the app says how much is short and keeps that with the washer. A mistake? Open it again and tap <b>Undo</b> (within 2 days).</li>
@@ -82,6 +84,7 @@ const GUIDE = [
 <p><b>Route</b> lists the day's open jobs in order and opens them in Google Maps, starting from where you are. Choose <b>By time</b> or <b>Same area together</b>. Google Maps takes 10 stops per link, so a busy day has more than one button.</p>
 <p>Owner: <b>Move day</b> is for rain or a day off. Tick the bookings, pick the new day (and a time, or keep each one's time), then tap <b>Move</b>. A list opens with a <b>WhatsApp</b> button for each customer with the "Moved" message ready; send them one by one. The history of each booking shows the move. Slot limits don't stop a move, but the app tells you if the new day is closed or already busy.</p>
 <p>Washers see <b>Mine</b> (jobs given to you) and <b>Everyone</b>.</p>
+<p><b>Left over from earlier days</b> (red, on today only): jobs from the last 60 days that were never marked washed or cancelled. Each says which day it was from. If you washed it, tap <b>Mark washed</b> (and the payment). If not, open it and change the day, or cancel it. It stays here until one of these is done.</p>
 <p><b>Rain likely</b>: a blue note shows when rain is likely (60% or more) in a slot that has open jobs, for today and the next 3 days. Owner: tap <b>Move day</b> to move them. <b>Hide</b> hides it for that day.</p>
 <p>Washers: <b>Cash with you</b> shows the cash you collected (jobs you marked <b>Paid in cash</b>) that the owner hasn't received yet. Tap it to see today's cash jobs. It goes down when the owner taps <b>Received</b>.</p>
 <p>If a customer has <b>referral credit</b>, the card says so. Take it off the bill, then tap <b>Mark used</b>.</p>` },

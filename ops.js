@@ -55,6 +55,7 @@ const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["11 Nov 2026", "Jobs from earlier days that were never marked washed or cancelled no longer disappear. They show at the top of today's Jobs (Left over from earlier days) and on Home (Not finished) until someone deals with them."],
   ["10 Nov 2026", "Customers can now see their booking live, and move or cancel it themselves until 2 hours before the slot. The link is on the website after booking and in the Confirm message. Changes show on Home and in the bell as Changed online."],
   ["10 Nov 2026", "Cash handover: washers see Cash with you on Jobs. Owner: Home shows the cash each washer holds; tap Received when they hand it over (it warns if the amount is short)."],
   ["10 Nov 2026", "Rain warning on Jobs when rain is likely in a slot that has bookings (today and the next 3 days), with Move day for the owner."],
@@ -111,6 +112,7 @@ const GUIDE = [
 
   { id: "home", role: "owner", title: "Home", body: `
 <ul><li>The boxes at the top: jobs today, upcoming, money collected and <b>Washed, not paid</b>. Tap a box to open that screen.</li>
+<li><b>Not finished</b> (red, at the top of Needs attention): a job from an earlier day that is still New, Confirmed or On the way. Open it: if it was done, tap <b>Mark washed</b> (and the payment); if not, change its day or cancel it.</li>
 <li><b>Needs attention</b>: bookings not confirmed yet (tap <b>Confirm</b> to send the WhatsApp), washed jobs not paid, jobs with no washer, customers due for a wash and new Inbox items.</li>
 <li><b>Changed online</b>: a customer moved or cancelled their booking from their link in the last 3 days. Tap it to open the booking; the new day and time are already saved. Send them the "Customer moved it" message if you like.</li>
 <li><b>Cash with (washer)</b>: cash a washer collected (jobs marked <b>Paid in cash</b>) that you haven't received yet. When they hand it over, tap <b>Received</b>, check the amount and tap <b>Mark received</b>. If it's less, the app says how much is short and keeps that with the washer. A mistake? Open it again and tap <b>Undo</b> (within 2 days).</li>
@@ -135,6 +137,7 @@ const GUIDE = [
 <p><b>Route</b> lists the day's open jobs in order and opens them in Google Maps, starting from where you are. Choose <b>By time</b> or <b>Same area together</b>. Google Maps takes 10 stops per link, so a busy day has more than one button.</p>
 <p>Owner: <b>Move day</b> is for rain or a day off. Tick the bookings, pick the new day (and a time, or keep each one's time), then tap <b>Move</b>. A list opens with a <b>WhatsApp</b> button for each customer with the "Moved" message ready; send them one by one. The history of each booking shows the move. Slot limits don't stop a move, but the app tells you if the new day is closed or already busy.</p>
 <p>Washers see <b>Mine</b> (jobs given to you) and <b>Everyone</b>.</p>
+<p><b>Left over from earlier days</b> (red, on today only): jobs from the last 60 days that were never marked washed or cancelled. Each says which day it was from. If you washed it, tap <b>Mark washed</b> (and the payment). If not, open it and change the day, or cancel it. It stays here until one of these is done.</p>
 <p><b>Rain likely</b>: a blue note shows when rain is likely (60% or more) in a slot that has open jobs, for today and the next 3 days. Owner: tap <b>Move day</b> to move them. <b>Hide</b> hides it for that day.</p>
 <p>Washers: <b>Cash with you</b> shows the cash you collected (jobs you marked <b>Paid in cash</b>) that the owner hasn't received yet. Tap it to see today's cash jobs. It goes down when the owner taps <b>Received</b>.</p>
 <p>If a customer has <b>referral credit</b>, the card says so. Take it off the bill, then tap <b>Mark used</b>.</p>` },
@@ -274,7 +277,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "33c16de2e9";
+const BUILD_ID = "70551ae744";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";
@@ -1131,7 +1134,9 @@ function dHome(){
   const h=hour(), greet = h<12?"Good morning":h<17?"Good afternoon":"Good evening", n=SET.notice;
   if(!OV||!ATTN){ V().innerHTML = pageHead(`${greet}, ${esc(first(S.me.name))}`, fmtDay(istToday(),{weekday:"long", day:"numeric", month:"long"}), newBtn()) + `<div class="grid grid-kpi">${skel(5,96)}</div><div class="grid grid-2">${skel(2,300)}</div>`; return; }
   const uc=ATTN.unconfirmed.map(j=>JOBS.get(j.id)||j).filter(j=>j.status==="new"), up=ATTN.unpaid.map(j=>JOBS.get(j.id)||j).filter(j=>j.status==="done"&&!isPaid(j));
+  const od=(ATTN.overdue||[]).map(j=>JOBS.get(j.id)||j).filter(j=>["new","confirmed","on_way"].includes(j.status) && j.wash_date<istToday());
   const attn = [
+    ...od.map(j=>`<button class="list-row" type="button" data-open="${esc(j.id)}"><span class="lr-main"><b>${esc(j.name)} <span class="pill st-overdue">Not finished</span></b><span>${relDay(j.wash_date)}, ${esc(j.slot)} · still ${esc(PILL[j.status][1])}${j.assigned_name?" · "+esc(first(j.assigned_name)):""}. Mark it washed, move it or cancel it.</span></span>${I.fwd}</button>`),
     ...uc.map(j=>`<div class="list-row" data-id="${esc(j.id)}"><span class="lr-main" data-open="${esc(j.id)}"><b>${esc(j.name)} <span class="pill st-new">Not confirmed</span></b><span>${relDay(j.wash_date)}, ${esc(j.slot)} · ${esc(j.package)}</span></span><a class="btn wa sm" data-act="confirm" target="_blank" rel="noopener" href="${wa(j.phone, fill("confirm", jobCtx(j)))}">Confirm</a></div>`),
     ...up.map(j=>`<div class="list-row" data-id="${esc(j.id)}"><span class="lr-main" data-open="${esc(j.id)}"><b>${esc(j.name)} <span class="pill st-collect">Collect ${rupee(j.total)}</span></b><span>Washed ${relDay(j.wash_date)} · ${esc(j.package)}</span></span><button class="btn sm" type="button" data-open="${esc(j.id)}">Open</button></div>`),
     ...(ATTN.changes||[]).map(c=>`<button class="list-row" type="button" data-open="${esc(c.id)}"><span class="lr-main"><b>${esc(c.name)} <span class="pill st-new">Changed online</span></b><span>${esc(c.detail.replace(/^(Moved|Cancelled) (online )?by the customer( online)?/, "$1"))} · ${ago(c.at)}</span></span>${I.fwd}</button>`),
@@ -1147,7 +1152,7 @@ function dHome(){
   V().innerHTML = `<div class="rise" style="display:flex;flex-direction:column;gap:18px">` + pageHead(`${greet}, ${esc(first(S.me.name))}`, fmtDay(istToday(),{weekday:"long", day:"numeric", month:"long"})+` · ${OV.today} job${OV.today===1?"":"s"} today`, newBtn()+`<button class="btn" type="button" data-go="jobs">${I.jobs}Today's jobs</button>`)
     + (n&&n.body?`<div class="notice">${I.note}<div><b>${esc(n.body)}</b><small>${esc(n.by||"")} · ${ago(n.updated_at)}</small></div></div>`:"")
     + `<div class="grid grid-kpi">${kpi("Jobs today",OV.today,"tap to open","","jobs")}${kpi("Upcoming",OV.upcoming,"after today","","bookings")}${kpi("Collected, 7 days",rupee(OV.collected_week))}${kpi("Washed, not paid",rupee(OV.unpaid_amount),OV.unpaid_count+" job"+(OV.unpaid_count===1?"":"s"),OV.unpaid_amount>0?"warn":"")}${kpi("Collected this month",rupee(OV.collected_month),"see Analytics","good","analytics")}</div>`
-    + `<div class="grid grid-2"><section class="card"><div class="card-head"><h2>Needs attention</h2>${uc.length+up.length?`<span class="pill st-collect">${uc.length+up.length}</span>`:""}</div>${attn.length?attn.join(""):`<div class="empty"><b>All clear</b>Every booking is confirmed and every finished wash is paid.</div>`}</section>
+    + `<div class="grid grid-2"><section class="card"><div class="card-head"><h2>Needs attention</h2>${od.length+uc.length+up.length?`<span class="pill st-collect">${od.length+uc.length+up.length}</span>`:""}</div>${attn.length?attn.join(""):`<div class="empty"><b>All clear</b>Every booking is confirmed and every finished wash is paid.</div>`}</section>
       <section class="card" id="calCard">${calHTML()}</section></div>`
     + `<section class="card"><div class="card-head"><h2>Recent bookings</h2><button class="link-btn" type="button" data-go="bookings">See all</button></div>${recent.length?`<div style="overflow-x:auto"><table class="data"><thead><tr><th class="hide-sm">Booked</th><th>Name</th><th>When</th><th class="hide-sm">Package</th><th class="r">Total</th><th>Status</th></tr></thead><tbody>${recent.map(j=>`<tr data-go="b/${encodeURIComponent(j.id)}"><td class="nw muted small hide-sm">${ago(j.created_at)}</td><td><b>${esc(j.name)}</b><div class="tiny muted">${esc(SOURCE[j.source]||"")}</div></td><td class="nw">${relDay(j.wash_date)}<div class="tiny muted">${esc(j.slot)}</div></td><td class="hide-sm">${esc(j.package)}</td><td class="r num">${rupee(j.total)}</td><td>${pill(j)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">No bookings yet.</div>'}</section></div>`;
   if(firstPaint()) countUp($("view"));
@@ -1176,8 +1181,8 @@ function countUp(root){
 let DAY=null;
 async function vJobs(){
   loadRain(); loadCash();
-  const k="day."+S.day; DAY=cache.get(k); if(DAY) remember(DAY.jobs); dJobs(painted!=="jobs/" || S.dayDrawn!==S.day); S.dayDrawn=S.day;
-  try{ const d=await rpc("staff_day",{p_date:S.day}); DAY=d; remember(d.jobs, true); cache.set(k,d); if(S.v==="jobs") dJobs(); } catch(e){ quiet(e); }
+  const k="day."+S.day; DAY=cache.get(k); if(DAY){ remember(DAY.jobs); remember(DAY.leftover); } dJobs(painted!=="jobs/" || S.dayDrawn!==S.day); S.dayDrawn=S.day;
+  try{ const d=await rpc("staff_day",{p_date:S.day}); DAY=d; remember(d.jobs, true); remember(d.leftover); cache.set(k,d); if(S.v==="jobs") dJobs(); } catch(e){ quiet(e); }
 }
 function dJobs(scroll){
   if(S.v!=="jobs") return;
@@ -1185,6 +1190,9 @@ function dJobs(scroll){
   let jobs = DAY ? DAY.jobs.map(j => JOBS.get(j.id) || j).filter(j => j.wash_date===S.day) : [];
   const anyMine = jobs.some(j=>j.assigned_to===meId), filterOn = !isOwner() && anyMine && S.mine;
   if(filterOn) jobs = jobs.filter(j => j.assigned_to===meId || !j.assigned_to);
+  /* Left over: earlier days' jobs never marked washed or cancelled. Shown on today until someone deals with them. */
+  let left = S.day===istToday() && DAY && DAY.leftover ? DAY.leftover.map(j => JOBS.get(j.id) || j).filter(j => ["new","confirmed","on_way"].includes(j.status) && j.wash_date<istToday()) : [];
+  if(!isOwner() && S.mine && left.some(j=>j.assigned_to===meId)) left = left.filter(j => j.assigned_to===meId || !j.assigned_to);
   const live = jobs.filter(j=>j.status!=="cancelled"), done = live.filter(j=>j.status==="done").length, toCollect = live.filter(j=>!isPaid(j)).reduce((s,j)=>s+j.total,0);
   const openJobs = jobs.filter(j=>["new","confirmed","on_way"].includes(j.status)).length;
   const acts = (openJobs?`<button class="btn" type="button" data-route aria-label="Route">${I.route}<span class="hide-sm">Route</span></button>`:"") + (isOwner()&&openJobs&&S.day>=istToday()?`<button class="btn" type="button" data-moveday>${I.move}<span class="hide-sm">Move day</span></button>`:"") + (!isOwner()&&anyMine?`<div class="seg"><button type="button" data-mine="1" class="${S.mine?"on":""}">Mine</button><button type="button" data-mine="0" class="${!S.mine?"on":""}">Everyone</button></div>`:"") + newBtn();
@@ -1194,6 +1202,7 @@ function dJobs(scroll){
     + `<div class="daystrip" id="strip">${DAY?DAY.strip.map(d=>`<button type="button" class="day${d.date===istToday()?" today":""}${d.date===S.day?" sel":""}" data-sday="${d.date}"><small>${fmtDay(d.date,{weekday:"short"})}</small><b>${fmtDay(d.date,{day:"numeric"})}</b><i>${d.count>3?`<em>${d.count}</em>`:Array.from({length:d.count},(_,k)=>`<span class="${k<d.open?"open":""}"></span>`).join("")}</i></button>`).join(""):Array.from({length:8},()=>'<div class="skel" style="flex:none;width:58px;height:66px"></div>').join("")}</div>`;
   if(!DAY){ V().innerHTML = html + skel(2,260); return; }
   if(live.length) html += `<div class="row"><div class="prog"><i style="width:${Math.round(done/live.length*100)}%"></i></div><span class="small muted"><b style="color:var(--ink)">${done}/${live.length}</b> washed · ${toCollect?`<b style="color:var(--coral)">${rupee(toCollect)}</b> to collect`:"all paid"}</span></div>`;
+  if(left.length) html += `<div class="grp"><h2 class="overdue-h">Left over from earlier days · ${left.length}</h2></div><p class="small muted" style="margin:-6px 0 0">Never marked washed or cancelled. If it was done, mark it washed (and paid); otherwise open it and change the day, or cancel it.</p><div class="jobs">${left.map(j => (left.length<=3 || S.open.has(j.id)) ? card(j).replace(/(<article class="job[^"]*"[^>]*>)/, `$1<div class="left-tag">${I.clock||""}From ${esc(relDay(j.wash_date))}, ${esc(j.slot)}</div>`) : jrow(j).replace('class="jrow', 'class="jrow jrow-inplace')).join("")}</div>`;
   if(!jobs.length) html += `<section class="card empty"><b>No jobs ${S.day===istToday()?"today":"on "+fmtDay(S.day)}</b>New bookings from the website appear here by themselves.<div style="margin-top:14px">${newBtn()}</div></section>`;
   else {
     const open = live.filter(j => ["new","confirmed","on_way"].includes(j.status)), collect = live.filter(j => j.status==="done" && !isPaid(j)),

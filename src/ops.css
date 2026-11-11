@@ -773,3 +773,8 @@ html[data-theme="dark"] .rainbar > svg{color:#55D6C2}
 /* ---- light / dark: the new look spreads like ink (see themeSwap in ops.js) ---- */
 ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
 ::view-transition-group(root){animation-duration:1.1s}
+
+/* ---- jobs left over from earlier days ---- */
+.st-overdue{background:var(--red-tint);color:var(--red)}
+.grp h2.overdue-h{color:var(--red)}
+.left-tag{display:inline-flex;align-self:flex-start;margin-bottom:10px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--red-tint);color:var(--red)}
