@@ -189,6 +189,7 @@ h2.big{font-size:clamp(2.1rem,5.2vw,4.1rem);line-height:1.02;letter-spacing:-.03
 .dk .tabs button[aria-pressed="true"]{background:var(--lime);color:var(--ink)}
 .controls{display:flex;flex-wrap:wrap;gap:12px;margin-top:40px}
 .pkgs{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:26px}
+.pkgs.n2{grid-template-columns:repeat(2,1fr)} .pkgs.n4{grid-template-columns:repeat(2,1fr)}
 .pkg{position:relative;display:flex;flex-direction:column;gap:14px;padding:30px;border-radius:16px;background:#fff;color:var(--text-dark);border:1px solid var(--line-dark);min-width:0;transition:transform .3s,box-shadow .3s}
 .pkg:hover{transform:translateY(-4px);box-shadow:0 24px 60px -30px rgba(21,25,28,.35)}
 .pkg.feat{background:var(--ink);color:var(--bone);border-color:var(--ink)}
@@ -609,3 +610,8 @@ body[data-page="book"] .fab,body[data-page="review"] .fab,.fab.onbook{display:no
 .btn-danger{background:var(--coral);color:#15191C}
 .btn-danger:hover{background:#ff9d77}
 @media (max-width:520px){ .tr-card{padding:18px} .tr-steps li{font-size:.66rem} .tr-steps small{font-size:.62rem} }
+.tr-ph-h{font-family:Montserrat,sans-serif;font-size:1.05rem;margin:0}
+.tr-ph-k{margin:10px 0 6px;color:#8B9398;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tr-ph{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.tr-ph img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block;background:rgba(255,255,255,.05)}
+#trPhotos:empty{display:none}

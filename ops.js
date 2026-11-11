@@ -2,12 +2,12 @@
 const PKG = {
   car: [
     {n:"Essential wash", d:"A thorough exterior refresh to bring back that just-cleaned feel.", t:"~30 MIN", i:["Snow-foam pre-wash","Hand wash with microfibre mitt","Tyres and rims","Glass and mirrors"]},
-    {n:"Foam & glow",    d:"Foam wash, careful rinse and finishing touches for a brilliant shine.", t:"~45 MIN", i:["Everything in Essential","Interior vacuum: seats, mats, boot","Dashboard and door wipe-down","Tyre dressing"]},
+    {n:"Foam & glow",    d:"Foam wash, careful rinse and finishing touches for a brilliant shine.", t:"~45 MIN", hl:1, i:["Everything in Essential","Interior vacuum: seats, mats, boot","Dashboard and door wipe-down","Tyre dressing"]},
     {n:"Deep refresh",   d:"Extra attention for the details, inside and out. A complete reset.", t:"~90 MIN", i:["Everything in Foam & glow","Seat and roof shampoo","Spray wax coat","AC vents and crevices"]}
   ],
   bike: [
     {n:"Quick bike wash", d:"A neat exterior clean for your everyday ride.", t:"~20 MIN", i:["Foam wash and rinse","Wheels and spokes","Seat wipe","Microfibre dry"]},
-    {n:"Foam & detail",   d:"Foam wash with careful cleaning around the details.", t:"~35 MIN", i:["Everything in Quick","Body polish","Chain clean and lube","Plastic and tyre dressing"]},
+    {n:"Foam & detail",   d:"Foam wash with careful cleaning around the details.", t:"~35 MIN", hl:1, i:["Everything in Quick","Body polish","Chain clean and lube","Plastic and tyre dressing"]},
     {n:"Chain & shine",   d:"A detailed clean for your bike's hardest-working parts.", t:"~50 MIN", i:["Everything in Foam & detail","Engine degrease","Wax coat on tank","Chrome and visor polish"]}
   ]
 };
@@ -49,12 +49,33 @@ const SLOTS = ["6–8 AM","8–10 AM","10 AM–1 PM","2–5 PM","5–8 PM"];
 /* min = minimum order value (package + add-ons, before discount) for the ₹50 to apply */
 const PROMOS = { WELCOME50: { off: 50, min: 299, label: "₹50 off your first wash" } };
 const REFERRAL = { friendOff: 50, referrerCredit: 50, min: 299 };
+/* The whole list as one object (what the database stores), and putting a saved list in place. */
+function catalogNow(){
+  return {pkg:{car:PKG.car.map((x,i)=>Object.assign({}, x, {p:{hatch:PRICE.hatch[i], sedan:PRICE.sedan[i], suv:PRICE.suv[i]}})),
+               bike:PKG.bike.map((x,i)=>Object.assign({}, x, {p:{bike:PRICE.bike[i]}}))},
+          addons:{car:ADDONS.car, bike:ADDONS.bike}, detail:DETAIL, plans:{car:PLANS.car, bike:PLANS.bike}};
+}
+function applyCatalog(c){
+  if(!c || !c.pkg || !Array.isArray(c.pkg.car) || !c.pkg.car.length || !Array.isArray(c.pkg.bike) || !c.pkg.bike.length) return false;
+  const bare = x => { const y=Object.assign({}, x); delete y.p; y.i=y.i||[]; return y; }, n = v => Math.max(0, Math.round(+v||0));
+  PKG.car=c.pkg.car.map(bare); PKG.bike=c.pkg.bike.map(bare);
+  PRICE.hatch=c.pkg.car.map(x=>n(x.p&&x.p.hatch)); PRICE.sedan=c.pkg.car.map(x=>n(x.p&&x.p.sedan)); PRICE.suv=c.pkg.car.map(x=>n(x.p&&x.p.suv)); PRICE.bike=c.pkg.bike.map(x=>n(x.p&&x.p.bike));
+  ADDONS.car=(c.addons&&c.addons.car)||[]; ADDONS.bike=(c.addons&&c.addons.bike)||[];
+  DETAIL.splice(0, DETAIL.length, ...(c.detail||[]));
+  PLANS.car=(c.plans&&c.plans.car)||[]; PLANS.bike=(c.plans&&c.plans.bike)||[];
+  return true;
+}
 const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
 
 /* Help guide for the staff app. Keep it in step with the app: every change people can see
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["11 Nov 2026", "Owner: Settings → Services & prices. Add, remove or rename washes, add-ons, detailing treatments and plans, and change any price. Save, and the website and this app use it straight away."],
+  ["11 Nov 2026", "Owner: a washer can now be paid a fixed monthly salary instead of per wash (Settings → Pay)."],
+  ["11 Nov 2026", "Owner: your phone now alerts you when a customer moves or cancels a booking from their link (needs the updated alert setup, see Phone alerts)."],
+  ["11 Nov 2026", "Customers see their before and after photos on their booking link once you've added them."],
+  ["11 Nov 2026", "Owner: Settings → Data & activity → Money ledger downloads every rupee in and out for your accountant. Home's plan-ending reminder now has an Ask to renew button right there."],
   ["11 Nov 2026", "Jobs from earlier days that were never marked washed or cancelled no longer disappear. They show at the top of today's Jobs (Left over from earlier days) and on Home (Not finished) until someone deals with them."],
   ["10 Nov 2026", "Customers can now see their booking live, and move or cancel it themselves until 2 hours before the slot. The link is on the website after booking and in the Confirm message. Changes show on Home and in the bell as Changed online."],
   ["10 Nov 2026", "Cash handover: washers see Cash with you on Jobs. Owner: Home shows the cash each washer holds; tap Received when they hand it over (it warns if the amount is short)."],
@@ -204,14 +225,14 @@ const GUIDE = [
 <li>Owner: <b>Approve</b> or <b>Reject</b> each bill; Home shows how many are waiting. Approved bills count as costs in Analytics (don't enter them again in Monthly costs). Your own bills are approved straight away.</li></ul>` },
 
   { id: "pay", role: "owner", title: "Washer pay (Settings → Pay)", body: `
-<ol><li>Set each washer's rate <b>per car wash</b> and <b>per bike wash</b>, then <b>Save rates</b>.</li>
+<ol><li>Choose how each washer is paid: <b>Per wash</b> (set a rate per car wash and per bike wash) or <b>Monthly salary</b> (set the amount a month). Tap <b>Save pay</b>.</li>
 <li>Pick <b>This week</b>, <b>This month</b> or <b>Last month</b>. Each washer shows washes, what they earned and what's still owed. A job counts on the day it was marked washed, for the washer it was given to; a society visit counts each vehicle ticked.</li>
 <li><b>Send statement</b> opens WhatsApp to the washer with the count and amounts (add their mobile in Team first).</li>
-<li>When you've paid them, tap <b>Mark … paid</b> (twice). <b>Paid before</b> lists past payments; <b>Undo</b> if you marked one by mistake.</li></ol>
+<li>When you've paid them, tap <b>Mark … paid</b> (twice). For a monthly salary, each month in the dates you picked is marked paid once (pick <b>This month</b> or <b>Last month</b>). <b>Paid before</b> lists past payments; <b>Undo</b> if you marked one by mistake.</li></ol>
 <p>Pay you mark paid counts as costs in Analytics, so don't enter washer pay again in Monthly costs. Washers see their own pay under <b>Me → My pay</b>.</p>` },
 
   { id: "alerts", role: "owner", title: "Phone alerts and nightly backup", body: `
-<p><b>Phone alerts</b>: get a notification when a booking comes in from the website, even with the app closed.</p>
+<p><b>Phone alerts</b>: get a notification when a booking comes in from the website, or a customer moves or cancels one from their link, even with the app closed. The same function also shows customers their wash photos on their link, so after an update to it, paste the new file again (step 1, open the <b>push</b> function → Code → paste → Deploy).</p>
 <ol><li>One-time setup in Supabase: <b>Edge Functions → Deploy a new function → Via editor</b>, name it <b>push</b>, paste the file <b>supabase/functions/push/index.ts</b>, Deploy. Then in the function's settings switch <b>off</b> "Verify JWT with legacy secret".</li>
 <li>iPhone: open the staff app in Safari, tap <b>Share → Add to Home Screen</b>, and open <b>VB Staff</b> from the Home Screen. Android: Chrome works as it is.</li>
 <li>Tap your name / <b>More → My account</b> → <b>Phone alerts</b> → <b>Turn on alerts</b>, and allow notifications. A test alert arrives. Do this on each phone you want alerts on.</li></ol>
@@ -233,12 +254,13 @@ const GUIDE = [
 <p>You can't switch off, demote or delete your own login.</p>` },
 
   { id: "settings", role: "owner", title: "Settings", body: `
-<ul><li><b>Slots &amp; days off</b>: how many website bookings each time (6–8 AM, 8–10 AM…) can take in a day; leave it empty for no limit. When a time is full, the website shows it as <b>Full</b> and the customer picks another. Tick a <b>weekly day off</b> if you don't work that day. Use <b>Close a day or a time</b> for holidays, heavy rain or a big society job, and <b>Open again</b> to undo it. Bookings already made on a closed day stay; move or cancel them yourself. You can always add bookings yourself; the app only warns you.</li>
+<ul><li><b>Services &amp; prices</b>: every wash, add-on, detailing treatment and monthly plan customers can book. Tap one to change its name, prices (car washes have a price for each size), time or what's included; <b>↑ ↓</b> changes the order; <b>Remove</b> (tap twice) takes it off; <b>Add</b> makes a new one. Nothing changes until you tap <b>Save changes</b> in the dark bar at the bottom; <b>Discard</b> throws your changes away. After saving, the website and the New booking form use the new list straight away. Bookings already made keep their price. A line like "Everything in Essential" brings in the lines of the Essential wash (on the website table and in the checklist).</li>
+<li><b>Slots &amp; days off</b>: how many website bookings each time (6–8 AM, 8–10 AM…) can take in a day; leave it empty for no limit. When a time is full, the website shows it as <b>Full</b> and the customer picks another. Tick a <b>weekly day off</b> if you don't work that day. Use <b>Close a day or a time</b> for holidays, heavy rain or a big society job, and <b>Open again</b> to undo it. Bookings already made on a closed day stay; move or cancel them yourself. You can always add bookings yourself; the app only warns you.</li>
 <li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {track_link} (the customer's own see/move/cancel link), {days}, {society}, {brand}.</li>
 <li><b>Offers</b>: change WELCOME50 and the referral offer (amount, minimum order, first wash only, on/off), or add a new code like DIWALI100. The website uses the new amounts straight away.</li>
 <li><b>Monthly costs</b>: ads, supplies, fuel, washer pay and other costs. Analytics then shows profit and cost per wash.</li>
 <li><b>Team notice</b>: one line everyone sees at the top of Home and Jobs ("Rain today, carry covers"). Clear it when done.</li>
-<li><b>Data &amp; activity</b>: download bookings as a spreadsheet (CSV), the Google Sheet copy key, and the <b>Activity log</b> (who changed logins, offers or messages, downloaded or deleted data; it never shows customers' details).</li></ul>` },
+<li><b>Data &amp; activity</b>: download bookings as a spreadsheet (CSV), the <b>Money ledger</b> for your accountant (every rupee in and out for the dates, with totals, no customer names), the Google Sheet copy key, and the <b>Activity log</b> (who changed logins, offers or messages, downloaded or deleted data; it never shows customers' details).</li></ul>` },
 
   { id: "analytics", role: "owner", title: "Reading Analytics", body: `
 <p>Pick a range (7 days, 30 days, This month, Last month, 90 days). Each box compares it with the same number of days just before: green ▲ is better, red ▼ is worse.</p>
@@ -277,7 +299,7 @@ const GUIDE = [
    GUIDE and WHATS_NEW from ops-guide.js. */
 (function(){
 "use strict";
-const BUILD_ID = "70551ae744";
+const BUILD_ID = "f3273e094b";
 const $ = id => document.getElementById(id);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const URL_ = (SITE.supabaseUrl||"").replace(/\/$/,""), KEY = SITE.supabaseKey||"";
@@ -1145,7 +1167,7 @@ function dHome(){
     ATTN.due?`<button class="list-row" type="button" data-go="customers" data-cumode="due"><span class="lr-main"><b>${ATTN.due} customer${ATTN.due>1?"s":""} due for a wash</b><span>Last wash 12+ days ago, nothing booked</span></span><span class="pill st-confirmed">Rebook</span></button>`:"",
     ...(KIT&&KIT.sup.some(x=>x.is_low)?[`<button class="list-row" type="button" data-go="kit"><span class="lr-main"><b>Running low: ${KIT.sup.filter(x=>x.is_low).map(x=>esc(x.name)).join(", ")}</b><span>Buy more, then update Stock &amp; bills</span></span>${I.fwd}</button>`]:[]),
     ...(KIT&&KIT.exp.some(x=>x.status==="pending")?[`<button class="list-row" type="button" data-go="kit"><span class="lr-main"><b>${KIT.exp.filter(x=>x.status==="pending").length} bill${KIT.exp.filter(x=>x.status==="pending").length>1?"s":""} to approve</b><span>${rupee(KIT.exp.filter(x=>x.status==="pending").reduce((a,x)=>a+x.amount,0))} added by washers</span></span>${I.fwd}</button>`]:[]),
-    ...(PLANS_L||[]).filter(c=>c.status==="active" && (c.renew||c.due>0)).map(c=>`<button class="list-row" type="button" data-go="c/${c.id}"><span class="lr-main"><b>${esc(c.name)} <span class="pill st-plan">${esc(c.kind==="society"?"Society":c.plan_name||"Plan")}</span></b><span>${[c.due>0?"Payment due "+rupee(c.due):"", c.renew?(c.last_end?"Month ends "+relDay(c.last_end).toLowerCase():"First month not started"):""].filter(Boolean).join(" · ")}</span></span>${I.fwd}</button>`),
+    ...(PLANS_L||[]).filter(c=>c.status==="active" && (c.renew||c.due>0)).map(c=>c.renew && c.last_end && c.phone ? `<div class="list-row"><span class="lr-main" data-go="c/${c.id}" style="cursor:pointer"><b>${esc(c.name)} <span class="pill st-plan">${esc(c.kind==="society"?"Society":c.plan_name||"Plan")}</span></b><span>Ends ${relDay(c.last_end).toLowerCase()}. Ask if they want next month.</span></span><a class="btn wa sm" target="_blank" rel="noopener" href="${wa(c.phone, fill("plan_renew", cCtx(c,{period_end:c.last_end, period_start:c.last_end, price:c.price})))}">${I.chat}Ask to renew</a></div>` : `<button class="list-row" type="button" data-go="c/${c.id}"><span class="lr-main"><b>${esc(c.name)} <span class="pill st-plan">${esc(c.kind==="society"?"Society":c.plan_name||"Plan")}</span></b><span>${[c.due>0?"Payment due "+rupee(c.due):"", c.renew?(c.last_end?"Month ends "+relDay(c.last_end).toLowerCase():"First month not started"):""].filter(Boolean).join(" · ")}</span></span>${I.fwd}</button>`),
     S.inboxCount?`<button class="list-row" type="button" data-go="inbox"><span class="lr-main"><b>${S.inboxCount} new in Inbox</b><span>${[OV.new_leads?OV.new_leads+" society":"",OV.new_enquiries?OV.new_enquiries+" message":"",OV.pending_reviews?OV.pending_reviews+" review":""].filter(Boolean).join(" · ")}</span></span><span class="nav-badge">${S.inboxCount}</span></button>`:""
   ].filter(Boolean);
   const recent = ATTN.recent.map(j=>JOBS.get(j.id)||j);
@@ -1925,13 +1947,14 @@ const PAY_RANGES={week:["This week",()=>{ const t=istToday(), d=new Date(t+"T12:
 const payStatement=(w,f,t)=>{ const cars=w.jobs.filter(x=>!/bike/i.test(x.vehicle)).reduce((a,x)=>a+x.units,0), bikes=w.jobs.filter(x=>/bike/i.test(x.vehicle)).reduce((a,x)=>a+x.units,0);
   return `Hi ${first(w.name)}, your ${SITE.name} pay for ${fmtDay(f,{day:"numeric",month:"short"})} – ${fmtDay(t,{day:"numeric",month:"short"})}:\n`+(cars?`${cars} car wash${cars>1?"es":""} × ${rupee(w.pay_car)} = ${rupee(cars*w.pay_car)}\n`:"")+(bikes?`${bikes} bike wash${bikes>1?"es":""} × ${rupee(w.pay_bike)} = ${rupee(bikes*w.pay_bike)}\n`:"")
     +`Total ${rupee(w.earned)}`+(w.earned-w.owed?`\nAlready paid ${rupee(w.earned-w.owed)}`:"")+(w.owed?`\nStill to pay ${rupee(w.owed)}`:"\nAll paid. Thank you!"); };
-const SET_TABS=[["team","Team"],["pay","Pay"],["slots","Slots & days off","Slots"],["messages","WhatsApp messages","Messages"],["offers","Offers"],["costs","Monthly costs","Costs"],["notice","Team notice","Notice"],["data","Data & activity","Data"]];
+const SET_TABS=[["team","Team"],["services","Services & prices","Services"],["pay","Pay"],["slots","Slots & days off","Slots"],["messages","WhatsApp messages","Messages"],["offers","Offers"],["costs","Monthly costs","Costs"],["notice","Team notice","Notice"],["data","Data & activity","Data"]];
 async function vSettings(){
   if(!SET_TABS.some(t=>t[0]===S.setTab)) S.setTab="team";
   TEAM=TEAM||cache.get("team"); dSettings();
   try{
     if(S.setTab==="team"){ TEAM=await rpc("owner_team"); cache.set("team",TEAM); }
     if(S.setTab==="offers") OFFERS=await rpc("owner_offers");
+    if(S.setTab==="services"){ const r=await Promise.all([rpc("public_catalog"), rpc("owner_catalog_info")]); if(r[0] && !CATDIRTY){ store.set("vb.catalog", r[0]); applyCatalog(r[0].data); CATD=null; } CATINFO=r[1]; }
     if(S.setTab==="pay"){ const [f,t]=PAY_RANGES[S.payR||"month"][1](); PAY=await rpc("owner_pay",{p_from:f, p_to:t}); }
     if(S.setTab==="slots") SLOTSET=await rpc("staff_slots",{p_from:istToday(), p_to:addDays(istToday(),120)});
     if(S.setTab==="costs") COSTS=await rpc("owner_costs",{p_month:S.setMonth});
@@ -1942,7 +1965,8 @@ async function vSettings(){
 const AUD = {export:"Downloaded bookings", booking_deleted:"Deleted a booking", login_added:"Added a login", login_switched_on:"Switched a login on", login_switched_off:"Switched a login off",
   login_role:"Changed access", login_password:"Set a new password", login_edited:"Changed a login", login_deleted:"Deleted a login", messages_saved:"Changed WhatsApp messages",
   notice_posted:"Posted the team notice", notice_cleared:"Cleared the team notice", offers_saved:"Changed an offer", costs_saved:"Saved monthly costs",
-  slots_saved:"Changed slot limits or days off", day_closed:"Closed a day", day_reopened:"Opened a day again"};
+  slots_saved:"Changed slot limits or days off", day_closed:"Closed a day", day_reopened:"Opened a day again", catalog_saved:"Changed services & prices",
+  pay_rates:"Changed a washer's pay", pay_out:"Marked pay as paid", pay_undone:"Undid a pay entry"};
 const COST_CATS=[["ads","Ads (Meta, Google)"],["supplies","Shampoo, cloths, supplies"],["fuel","Fuel and travel"],["pay","Washer pay"],["other","Other"]];
 function dSettings(){
   if(S.v!=="settings") return;
@@ -1968,14 +1992,21 @@ function dSettings(){
       <button class="btn primary" type="button" id="stClose" style="margin-top:14px">Close it</button>
       <p class="opt-h" style="margin:18px 0 4px">Closed days coming up</p>
       ${X.closures.length?X.closures.map(c=>{ const n=cnt(c.day,c.slot); return `<div class="list-row" style="cursor:default"><div class="lr-main"><b>${relDay(c.day)}${relDay(c.day).length<10?", "+fmtDay(c.day,{day:"numeric",month:"short"}):""}</b><span>${c.slot?esc(c.slot):"Whole day"}${c.reason?" · "+esc(c.reason):""}${n?` · <b class="warn-tx">${n} booking${n>1?"s":""} already</b>`:""}</span></div><button class="btn sm" type="button" data-reopen="${c.id}">Open again</button></div>`; }).join(""):'<p class="muted small">Nothing closed.</p>'}</section></div>`; }
+  if(tab==="services") body = svcEditor();
   if(tab==="pay"){ const [f,t]=PAY_RANGES[S.payR||"month"][1]();
     body = `<div class="seg">${Object.entries(PAY_RANGES).map(([k,[l]])=>`<button type="button" data-payr="${k}" class="${(S.payR||"month")===k?"on":""}">${l}</button>`).join("")}</div>
       <p class="small muted">Pay is counted from the day a job is marked washed, for the washer it's given to. A society visit counts each vehicle ticked. ${fmtDay(f,{day:"numeric",month:"short"})} – ${fmtDay(t,{day:"numeric",month:"short"})}.</p>`
       + (!PAY ? skel(2,160) : PAY.length ? `<div class="grid grid-2">${PAY.map(w=>`<section class="card" data-wid="${w.id}"><div class="card-head"><h2>${esc(w.name)}</h2>${w.owed?`<span class="pill st-collect">Owed ${rupee(w.owed)}</span>`:w.earned?'<span class="pill st-done">All paid</span>':""}</div>
-        <div class="form-grid"><label class="field">Per car wash ₹<input type="number" min="0" inputmode="numeric" data-rate="car" value="${w.pay_car}"></label><label class="field">Per bike wash ₹<input type="number" min="0" inputmode="numeric" data-rate="bike" value="${w.pay_bike}"></label></div>
-        <button class="btn sm" type="button" data-saverate style="margin-top:8px">Save rates</button>
-        <dl class="dl" style="margin-top:12px"><dt>Washes</dt><dd><b>${w.washes}</b></dd><dt>Earned</dt><dd><b>${rupee(w.earned)}</b></dd><dt>Still owed</dt><dd><b>${rupee(w.owed)}</b></dd></dl>
-        ${!w.pay_car&&!w.pay_bike&&w.washes?'<p class="small warn-tx">Set the rates above to work out the pay.</p>':""}
+        <div class="seg" data-ptype style="margin-bottom:10px"><button type="button" data-pt="per_wash" class="${w.pay_type!=="monthly"?"on":""}">Per wash</button><button type="button" data-pt="monthly" class="${w.pay_type==="monthly"?"on":""}">Monthly salary</button></div>
+        <div class="form-grid" data-pf="per_wash"${w.pay_type==="monthly"?" hidden":""}><label class="field">Per car wash ₹<input type="number" min="0" inputmode="numeric" data-rate="car" value="${w.pay_car}"></label><label class="field">Per bike wash ₹<input type="number" min="0" inputmode="numeric" data-rate="bike" value="${w.pay_bike}"></label></div>
+        <div class="form-grid" data-pf="monthly"${w.pay_type==="monthly"?"":" hidden"}><label class="field">Salary a month ₹<input type="number" min="0" inputmode="numeric" data-rate="month" value="${w.pay_month||""}" placeholder="e.g. 12000"></label></div>
+        <button class="btn sm" type="button" data-saverate style="margin-top:8px">Save pay</button>
+        ${w.pay_type==="monthly"
+          ? `<dl class="dl" style="margin-top:12px"><dt>Salary</dt><dd><b>${rupee(w.pay_month||0)}</b> a month</dd><dt>Washes</dt><dd><b>${w.washes}</b> <span class="muted small">(for your records)</span></dd>
+              ${(w.months||[]).map(m=>`<dt>${fmtDay(m.month,{month:"long",year:"numeric"})}</dt><dd>${m.paid?'<span class="pill st-done">Paid</span>':`<span class="pill st-collect">${rupee(w.pay_month||0)} owed</span>`}</dd>`).join("")}</dl>
+             ${!w.pay_month?'<p class="small warn-tx">Enter the monthly salary above.</p>':""}`
+          : `<dl class="dl" style="margin-top:12px"><dt>Washes</dt><dd><b>${w.washes}</b></dd><dt>Earned</dt><dd><b>${rupee(w.earned)}</b></dd><dt>Still owed</dt><dd><b>${rupee(w.owed)}</b></dd></dl>
+             ${!w.pay_car&&!w.pay_bike&&w.washes?'<p class="small warn-tx">Set the rates above to work out the pay.</p>':""}`}
         <div class="row" style="margin-top:10px">${w.owed?`<button class="btn coral" type="button" data-payout>Mark ${rupee(w.owed)} paid</button>`:""}${w.phone&&w.washes?`<a class="btn wa" target="_blank" rel="noopener" href="${wa(w.phone, payStatement(w,f,t))}">${I.chat}Send statement</a>`:""}</div>
         ${w.jobs.length?`<details style="margin-top:10px"><summary class="small muted">Jobs · ${w.jobs.length}</summary><table class="mini"><tbody>${w.jobs.map(x=>`<tr><td>${fmtDay(x.day,{day:"numeric",month:"short"})}</td><td>${esc(x.name)}<br><span class="muted small">${esc(x.package)}${x.units>1?" · "+x.units+" vehicles":""}</span></td><td class="num">${rupee(x.amount)}${x.paid?' <span class="muted small">paid</span>':""}</td></tr>`).join("")}</tbody></table></details>`:""}
         ${w.payouts.length?`<details style="margin-top:6px"><summary class="small muted">Paid before · ${w.payouts.length}</summary><table class="mini"><tbody>${w.payouts.map(x=>`<tr><td>${fmtDay(String(x.paid_at).slice(0,10),{day:"numeric",month:"short"})}</td><td>${fmtDay(x.from,{day:"numeric",month:"short"})}–${fmtDay(x.to,{day:"numeric",month:"short"})} · ${x.washes} washes${x.note?" · "+esc(x.note):""}</td><td class="num">${rupee(x.amount)} <button class="link-btn small" type="button" data-unpay="${x.id}">Undo</button></td></tr>`).join("")}</tbody></table></details>`:""}
@@ -1989,12 +2020,13 @@ function dSettings(){
   if(tab==="notice"){ const n=SET.notice; body = `<section class="card"><div class="card-head"><h2>Team notice</h2></div><p class="small muted" style="margin-bottom:12px">One line everyone sees at the top of Home and Jobs until you clear it.</p>
     <label class="field">Notice<textarea id="stNotice" rows="2" maxlength="280" placeholder="e.g. Rain today, carry seat covers">${esc(n&&n.body||"")}</textarea></label><div class="row" style="margin-top:12px"><button class="btn primary" type="button" id="stNoticeSave">Post</button>${n&&n.body?'<button class="btn" type="button" id="stNoticeClear">Clear</button>':""}</div></section>`; }
   if(tab==="data") body = `<div class="grid grid-2"><section class="card"><div class="card-head"><h2>Download bookings</h2></div><p class="small muted" style="margin-bottom:12px">A spreadsheet (CSV) with customers' details. Keep it private. The download is noted in the activity log.</p>
-      <div class="form-grid"><label class="field">From<input type="date" id="stFrom" value="${monthStart(istToday())}"></label><label class="field">To<input type="date" id="stTo" value="${monthEnd(istToday())}"></label></div><button class="btn primary" type="button" id="stExport" style="margin-top:14px">Download CSV</button></section>
+      <div class="form-grid"><label class="field">From<input type="date" id="stFrom" value="${monthStart(istToday())}"></label><label class="field">To<input type="date" id="stTo" value="${monthEnd(istToday())}"></label></div><div class="row" style="margin-top:14px"><button class="btn primary" type="button" id="stExport">Download bookings</button><button class="btn" type="button" id="stLedger">${I.cash}Money ledger</button></div>
+      <p class="small muted" style="margin-top:10px"><b>Money ledger</b> is for your accountant: every rupee in (washes, plans) and out (approved bills, washer pay, monthly costs) for the same dates, with totals. It has no customer names or numbers.</p></section>
     <section class="card"><div class="card-head"><h2>Google Sheet copy</h2></div><p class="small muted" style="margin-bottom:12px">Paste this key into the Google Sheet copy script (Vroombrite → Set copy key) so it can copy bookings every night. Keep it private.</p>
       <div class="keybox"><span id="sheetKey" style="flex:1">${TEAM?esc(TEAM.sheet_copy_key):"…"}</span><button class="btn sm" type="button" id="copyKey">Copy</button></div></section></div>
     <section class="card"><div class="card-head"><h2>Activity log</h2></div><p class="small muted" style="margin-bottom:12px">Who changed logins, offers or messages, downloaded or deleted data. Customers' details are never shown here.</p>
       ${AUDIT?(AUDIT.length?`<ol class="timeline">${AUDIT.map(a=>`<li><span class="dot"></span><div>${esc(AUD[a.action]||a.action)}${a.detail?" · "+esc(a.detail):""}<small>${esc(a.actor_name||"")} · ${fmtTime(a.at)}</small></div></li>`).join("")}</ol>`:'<p class="muted">Nothing yet.</p>'):skel(1,120)}</section>`;
-  V().innerHTML = pageHead("Settings", "Team, slots and days off, messages, offers, costs and data") + `<div class="seg">${SET_TABS.map(([k,l,sh])=>`<button type="button" data-settab="${k}" class="${tab===k?"on":""}"${sh?` aria-label="${l}"`:""}>${sh?`<span class="t-lg">${l}</span><span class="t-sm" aria-hidden="true">${sh}</span>`:l}</button>`).join("")}</div>` + body;
+  V().innerHTML = pageHead("Settings", "Team, services &amp; prices, pay, slots, messages, offers, costs and data") + `<div class="seg">${SET_TABS.map(([k,l,sh])=>`<button type="button" data-settab="${k}" class="${tab===k?"on":""}"${sh?` aria-label="${l}"`:""}>${sh?`<span class="t-lg">${l}</span><span class="t-sm" aria-hidden="true">${sh}</span>`:l}</button>`).join("")}</div>` + body;
 }
 function offerRow(o){
   const isRef = o && o.code==="REFERRAL";
@@ -2028,11 +2060,15 @@ document.addEventListener("click", async e => {
     const ro=t.closest("[data-reopen]"); if(ro){ ro.disabled=true; await rpc("owner_reopen_day",{p_id:+ro.dataset.reopen}); SLOTSET=await rpc("staff_slots",{p_from:istToday(), p_to:addDays(istToday(),120)}); toast("Open again"); dSettings(); }
     const pr=t.closest("[data-payr]"); if(pr){ S.payR=pr.dataset.payr; PAY=null; dSettings(); vSettings(); return; }
     const wc=t.closest("[data-wid]");
-    if(wc && t.closest("[data-saverate]")){ await rpc("owner_set_rates",{p_staff:wc.dataset.wid, p_car:+wc.querySelector('[data-rate="car"]').value||0, p_bike:+wc.querySelector('[data-rate="bike"]').value||0}); toast("Rates saved"); return vSettings(); }
+    if(wc && t.closest("[data-pt]")){ const pt=t.closest("[data-pt]").dataset.pt; wc.querySelectorAll("[data-pf]").forEach(x=>x.hidden=x.dataset.pf!==pt); return; }
+    if(wc && t.closest("[data-saverate]")){ const pt=(wc.querySelector("[data-pt].on")||{dataset:{pt:"per_wash"}}).dataset.pt, v=k=>+wc.querySelector(`[data-rate="${k}"]`).value||0;
+      if(pt==="monthly" && !v("month")) return toast("Enter the salary a month", true);
+      await rpc("owner_set_pay",{p_staff:wc.dataset.wid, p_type:pt, p_car:v("car"), p_bike:v("bike"), p_month:v("month")}); toast(pt==="monthly"?"Monthly salary saved":"Rates saved"); return vSettings(); }
     if(wc && t.closest("[data-payout]")){ const b=t.closest("[data-payout]"); if(!b.dataset.sure){ b.dataset.sure="1"; b.textContent="Tap again: you've paid "+b.textContent.replace(/^Mark | paid$/g,""); return; }
-      const [f,to]=PAY_RANGES[S.payR||"month"][1](); const r=await rpc("owner_pay_out",{p_staff:wc.dataset.wid, p_from:f, p_to:to, p_note:""}); toast(`Marked ${rupee(r.amount)} paid for ${r.washes} wash${r.washes>1?"es":""}`); return vSettings(); }
+      const [f,to]=PAY_RANGES[S.payR||"month"][1](); const r=await rpc("owner_pay_out",{p_staff:wc.dataset.wid, p_from:f, p_to:to, p_note:""}); toast(r.months?`Marked ${rupee(r.amount)} salary paid for ${r.months} month${r.months>1?"s":""}`:`Marked ${rupee(r.amount)} paid for ${r.washes} wash${r.washes>1?"es":""}`); return vSettings(); }
     const up=t.closest("[data-unpay]"); if(up){ if(!up.dataset.sure){ up.dataset.sure="1"; up.textContent="Tap again"; return; } await rpc("owner_undo_payout",{p_id:+up.dataset.unpay}); toast("Payment undone"); return vSettings(); }
     if(t.id==="stExport") return exportCsv(t);
+    if(t.id==="stLedger") return exportLedger(t);
     if(t.id==="copyKey") navigator.clipboard.writeText($("sheetKey").textContent).then(()=>toast("Key copied")).catch(()=>{});
   }catch(x){ if(x.message!=="signed out") toast(x.message||"Couldn't save", true); t.disabled=false; }
 });
@@ -2124,7 +2160,8 @@ function accountSheet(){
     ${isOwner()?`<fieldset class="fs"><legend>Phone alerts</legend><div id="pushBox"><div class="skel" style="height:40px"></div></div></fieldset>`:`<fieldset class="fs"><legend>My pay</legend><div id="myPay"><div class="skel" style="height:40px"></div></div></fieldset><button class="btn" type="button" data-go="kit">${I.box}Stock &amp; bills</button>`}
     ${feedbackBox()}<button class="btn" type="button" id="refreshNow">Refresh now</button><button class="btn" type="button" data-go="help">Help</button><button class="btn danger" type="button" data-signout>Sign out</button></div>`, "account");
   if(isOwner()) drawPushBox();
-  else rpc("staff_my_pay").then(m=>{ const el=$("myPay"); if(!el) return; el.innerHTML=`<dl class="dl"><dt>This month</dt><dd><b>${m.month_washes}</b> wash${m.month_washes===1?"":"es"} · <b>${rupee(m.month_earned)}</b></dd><dt>Still to be paid</dt><dd><b>${rupee(m.owed)}</b></dd><dt>Rate</dt><dd>${rupee(m.pay_car)} a car · ${rupee(m.pay_bike)} a bike</dd>${m.payouts.length?`<dt>Last paid</dt><dd>${rupee(m.payouts[0].amount)} on ${fmtDay(String(m.payouts[0].paid_at).slice(0,10),{day:"numeric",month:"short"})}</dd>`:""}</dl>`; })
+  else rpc("staff_my_pay").then(m=>{ const el=$("myPay"); if(!el) return; el.innerHTML = m.pay_type==="monthly" ? `<dl class="dl"><dt>Salary</dt><dd><b>${rupee(m.pay_month)}</b> a month</dd><dt>This month</dt><dd><b>${m.month_washes}</b> wash${m.month_washes===1?"":"es"} · ${m.month_paid?'<span class="pill st-done">Salary paid</span>':"salary not paid yet"}</dd>${m.payouts.length?`<dt>Last paid</dt><dd>${rupee(m.payouts[0].amount)} on ${fmtDay(String(m.payouts[0].paid_at).slice(0,10),{day:"numeric",month:"short"})}</dd>`:""}</dl>`
+  : `<dl class="dl"><dt>This month</dt><dd><b>${m.month_washes}</b> wash${m.month_washes===1?"":"es"} · <b>${rupee(m.month_earned)}</b></dd><dt>Still to be paid</dt><dd><b>${rupee(m.owed)}</b></dd><dt>Rate</dt><dd>${rupee(m.pay_car)} a car · ${rupee(m.pay_bike)} a bike</dd>${m.payouts.length?`<dt>Last paid</dt><dd>${rupee(m.payouts[0].amount)} on ${fmtDay(String(m.payouts[0].paid_at).slice(0,10),{day:"numeric",month:"short"})}</dd>`:""}</dl>`; })
     .catch(()=>{ const el=$("myPay"); if(el) el.innerHTML='<p class="small muted">Couldn\'t load. Check your internet.</p>'; });
 }
 $("sheetBody").addEventListener("click", e => { const b=e.target.closest("[data-th]"); if(!b) return; $$("#themeSeg button").forEach(x=>x.classList.toggle("on", x===b)); themeSwap(() => { store.set("vb.theme", b.dataset.th==="auto"?null:b.dataset.th); applyTheme(); }, b); });
@@ -2378,6 +2415,120 @@ function themeSwap(change, from){
   }).catch(()=>{});
 }
 
+/* ============================== services & prices (Settings) ============================== */
+/* The owner edits the whole list here; saving puts it on the website and in this app at once.
+   CATD is the draft being edited; it stays (with the Save bar) until saved or discarded. */
+let CATD=null, CATDIRTY=false, CATINFO=null, CATOPEN=null;
+const deepCopy = x => JSON.parse(JSON.stringify(x));
+try{ const c=store.get("vb.catalog"); if(c && c.data) applyCatalog(c.data); }catch(e){}
+function loadCatalogOps(){ rpc("public_catalog").then(c=>{ if(c && c.data){ store.set("vb.catalog", c); if(!CATDIRTY) applyCatalog(c.data); } }).catch(()=>{}); }
+const T_ICONS=["◫","◎","◇","⚙","✳","◐","✦","◆","❖","☼","✧","◈"];
+const cPath = (o, path) => path.split(".").reduce((a,k)=>a==null?a:a[/^\d+$/.test(k)?+k:k], o);
+function cSet(path, v){ const ks=path.split("."), last=ks.pop(), o=cPath(CATD, ks.join(".")); if(o==null) return; if(v===undefined) delete o[last]; else o[/^\d+$/.test(last)?+last:last]=v; }
+function svcIn(path, label, opt){ opt=opt||{}; const v=cPath(CATD, path);
+  if(opt.list) return `<label class="field${opt.wide?" wide":""}">${label}<textarea rows="${opt.rows||4}" data-cp="${path}" data-list placeholder="One per line">${esc((v||[]).join("\n"))}</textarea></label>`;
+  if(opt.area) return `<label class="field wide">${label}<textarea rows="2" data-cp="${path}" maxlength="300">${esc(v||"")}</textarea></label>`;
+  if(opt.num) return `<label class="field">${label}<input type="number" min="0" step="1" inputmode="numeric" data-cp="${path}" data-num value="${v==null?"":v}"></label>`;
+  return `<label class="field${opt.wide?" wide":""}">${label}<input data-cp="${path}" maxlength="${opt.max||60}" value="${esc(v||"")}"${opt.ph?` placeholder="${esc(opt.ph)}"`:""}></label>`; }
+function svcItem(list, i, n, title, sub, body){
+  const key=list+"."+i;
+  return `<details class="svc"${CATOPEN===key?" open":""} data-ckey="${key}"><summary><span class="svc-t"><b>${esc(title||"(no name)")}</b><small>${sub}</small></span><span class="svc-ch" aria-hidden="true">›</span></summary>
+    <div class="svc-b"><div class="form-grid">${body}</div>
+    <div class="row svc-acts"><button class="btn sm" type="button" data-cmv="${list}|${i}|-1"${i===0?" disabled":""} aria-label="Move up">↑</button><button class="btn sm" type="button" data-cmv="${list}|${i}|1"${i===n-1?" disabled":""} aria-label="Move down">↓</button>
+      <button class="btn sm danger-tx" type="button" data-crm="${list}|${i}">${I.x}Remove</button></div></div></details>`; }
+function svcEditor(){
+  if(!CATD) CATD=deepCopy(catalogNow());
+  const C=CATD, money=v=>rupee(+v||0);
+  const washes = v => (C.pkg[v]||[]).map((x,i,a)=>svcItem("pkg."+v, i, a.length, x.n,
+      (v==="car"?`${money(x.p.hatch)} · ${money(x.p.sedan)} · ${money(x.p.suv)}`:money(x.p.bike)) + (x.hl?' · <span class="pill st-plan">Most booked</span>':""),
+      svcIn(`pkg.${v}.${i}.n`,"Name") + svcIn(`pkg.${v}.${i}.t`,"Time it takes",{max:20, ph:"~45 MIN"}) + svcIn(`pkg.${v}.${i}.d`,"Short description",{area:1})
+      + (v==="car" ? svcIn(`pkg.car.${i}.p.hatch`,"Hatchback ₹",{num:1}) + svcIn(`pkg.car.${i}.p.sedan`,"Sedan ₹",{num:1}) + svcIn(`pkg.car.${i}.p.suv`,"SUV / MUV ₹",{num:1}) : svcIn(`pkg.bike.${i}.p.bike`,"Price ₹",{num:1}))
+      + svcIn(`pkg.${v}.${i}.i`,"What's included",{list:1, wide:1, rows:5})
+      + `<label class="check wide"><input type="checkbox" data-cp="pkg.${v}.${i}.hl" data-flag${x.hl?" checked":""}> Show the <b>Most booked</b> tag on this one</label>`)).join("");
+  const adds = v => (C.addons[v]||[]).map((x,i,a)=>svcItem("addons."+v, i, a.length, x.n, "+"+money(x.p),
+      svcIn(`addons.${v}.${i}.n`,"Name") + svcIn(`addons.${v}.${i}.p`,"Price ₹",{num:1}) + svcIn(`addons.${v}.${i}.d`,"Short description",{area:1}))).join("");
+  const treats = (C.detail||[]).map((x,i,a)=>svcItem("detail", i, a.length, x.n, "from "+money(x.p)+(x.t?" · "+esc(x.t):""),
+      `<label class="field">Icon<select data-cp="detail.${i}.ic">${T_ICONS.map(ic=>`<option${ic===x.ic?" selected":""}>${ic}</option>`).join("")}</select></label>`
+      + svcIn(`detail.${i}.n`,"Name") + svcIn(`detail.${i}.p`,"Price from ₹",{num:1}) + svcIn(`detail.${i}.t`,"Time it takes",{max:20, ph:"~2 hrs"})
+      + svcIn(`detail.${i}.d`,"Short description",{area:1}) + svcIn(`detail.${i}.tags`,"What's done (short points)",{list:1, wide:1, rows:3}))).join("");
+  const plans = v => (C.plans[v]||[]).map((x,i,a)=>svcItem("plans."+v, i, a.length, x.n, `${money(x.p)} a month · ${x.w||0} washes`+(x.hl?' · <span class="pill st-plan">Highlighted</span>':""),
+      svcIn(`plans.${v}.${i}.s`,"Small label on top",{max:30, ph:"EVERYDAY FAVOURITE"}) + svcIn(`plans.${v}.${i}.n`,"Name") + svcIn(`plans.${v}.${i}.p`,"Price a month ₹",{num:1}) + svcIn(`plans.${v}.${i}.w`,"Washes a month",{num:1})
+      + svcIn(`plans.${v}.${i}.d`,"Short description",{area:1}) + svcIn(`plans.${v}.${i}.i`,"What's included",{list:1, wide:1, rows:4})
+      + `<label class="check wide"><input type="checkbox" data-cp="plans.${v}.${i}.hl" data-flag${x.hl?" checked":""}> Highlight this plan</label>`)).join("");
+  const sec = (title, help, list, addKey, addTx) => `<section class="card svc-sec"><div class="card-head"><h2>${title}</h2><button class="btn sm" type="button" data-cadd="${addKey}">${I.plus}${addTx}</button></div><p class="small muted" style="margin:-4px 0 10px">${help}</p>${list||'<p class="small muted">None yet.</p>'}</section>`;
+  return `<section class="card"><div class="card-head"><h2>Services & prices</h2></div>
+      <p class="small muted">Everything customers can book. Saving changes the website (Car wash, Bike wash, Detailing, Plans and Book pages) and this app's New booking form straight away. Bookings already made keep their price.${CATINFO&&CATINFO.by?` Last changed by ${esc(first(CATINFO.by))} ${ago(CATINFO.updated_at)}.`:""}</p></section>
+    ${sec("Car washes", "Tap one to change its name, prices for each size, or what's included. Lines like “Everything in Essential” bring in the lines of that wash.", washes("car"), "pkg.car", "Add a car wash")}
+    ${sec("Bike washes", "Same as cars, with one price.", washes("bike"), "pkg.bike", "Add a bike wash")}
+    <div class="grid grid-2">${sec("Car add-ons", "Extras a customer can tick when booking a car.", adds("car"), "addons.car", "Add")}${sec("Bike add-ons", "Extras for bikes.", adds("bike"), "addons.bike", "Add")}</div>
+    ${sec("Detailing treatments", "Shown on the Detailing page and as extras when booking a car.", treats, "detail", "Add a treatment")}
+    <div class="grid grid-2">${sec("Car plans", "Monthly plans on the Plans page.", plans("car"), "plans.car", "Add")}${sec("Bike plans", "Monthly plans for bikes.", plans("bike"), "plans.bike", "Add")}</div>
+    <div class="savebar" id="svcBar"${CATDIRTY?"":" hidden"}><span>Changes not saved yet</span><button class="btn sm" type="button" id="svcDiscard">Discard</button><button class="btn primary" type="button" id="svcSave">${I.check}Save changes</button></div>`;
+}
+const NEW_ITEM = {
+  "pkg.car": () => ({n:"New car wash", d:"", t:"~30 MIN", i:[], p:{hatch:0, sedan:0, suv:0}}),
+  "pkg.bike": () => ({n:"New bike wash", d:"", t:"~20 MIN", i:[], p:{bike:0}}),
+  "addons.car": () => ({id:"a"+Date.now().toString(36).slice(-7), n:"New add-on", d:"", p:0}),
+  "addons.bike": () => ({id:"a"+Date.now().toString(36).slice(-7), n:"New add-on", d:"", p:0}),
+  "detail": () => ({id:"t"+Date.now().toString(36).slice(-7), ic:"✦", n:"New treatment", d:"", tags:[], t:"~1 hr", p:0}),
+  "plans.car": () => ({s:"", n:"New plan", d:"", p:0, w:4, i:[]}),
+  "plans.bike": () => ({s:"", n:"New plan", d:"", p:0, w:4, i:[]})
+};
+function svcDirty(){ CATDIRTY=true; const b=$("svcBar"); if(b) b.hidden=false; }
+document.addEventListener("input", e => { const el=e.target.closest("[data-cp]"); if(!el || !CATD) return;
+  const path=el.dataset.cp;
+  if(el.hasAttribute("data-flag")) cSet(path, el.checked?1:undefined);
+  else if(el.hasAttribute("data-list")) cSet(path, el.value.split("\n").map(x=>x.trim()).filter(Boolean));
+  else if(el.hasAttribute("data-num")) cSet(path, el.value==="" ? null : Math.max(0, Math.round(+el.value)));
+  else cSet(path, el.value);
+  svcDirty(); });
+document.addEventListener("change", e => { const el=e.target.closest("[data-cp]"); if(el && (el.tagName==="SELECT" || el.type==="checkbox")) el.dispatchEvent(new Event("input", {bubbles:true})); });
+document.addEventListener("toggle", e => { const d=e.target; if(d.matches && d.matches("details.svc")) CATOPEN = d.open ? d.dataset.ckey : (CATOPEN===d.dataset.ckey?null:CATOPEN); }, true);
+function svcCheck(c){
+  const bad = (x, keys) => keys.some(k => x.p==null || x.p[k]==null || isNaN(x.p[k]));
+  for(const v of ["car","bike"]){
+    if(!c.pkg[v].length) return `Keep at least one ${v} wash`;
+    for(const x of c.pkg[v]){ if(!String(x.n||"").trim()) return `Every ${v} wash needs a name`; if(bad(x, v==="car"?["hatch","sedan","suv"]:["bike"])) return `${x.n}: enter every price`; }
+    for(const x of c.addons[v]) { if(!String(x.n||"").trim()) return "Every add-on needs a name"; if(x.p==null) return `${x.n}: enter a price`; }
+    for(const x of c.plans[v]) { if(!String(x.n||"").trim()) return "Every plan needs a name"; if(x.p==null) return `${x.n}: enter the price a month`; if(!x.w) return `${x.n}: enter washes a month`; }
+  }
+  for(const x of c.detail){ if(!String(x.n||"").trim()) return "Every treatment needs a name"; if(x.p==null) return `${x.n}: enter a price`; }
+  return "";
+}
+document.addEventListener("click", async e => {
+  if(S.v!=="settings" || S.setTab!=="services" || !CATD) return;
+  const t=e.target;
+  const add=t.closest("[data-cadd]"); if(add){ const k=add.dataset.cadd, list=cPath(CATD,k); list.push(NEW_ITEM[k]()); CATOPEN=k+"."+(list.length-1); svcDirty(); dSettings(); return; }
+  const mv=t.closest("[data-cmv]"); if(mv){ const [k,i,d]=mv.dataset.cmv.split("|"), list=cPath(CATD,k), a=+i, b=a+(+d); if(b<0||b>=list.length) return; [list[a],list[b]]=[list[b],list[a]]; CATOPEN=k+"."+b; svcDirty(); dSettings(); return; }
+  const rm=t.closest("[data-crm]"); if(rm){ const [k,i]=rm.dataset.crm.split("|"), list=cPath(CATD,k);
+    if(k.startsWith("pkg.") && list.length<=1) return toast("Keep at least one wash here", true);
+    if(!rm.dataset.sure){ rm.dataset.sure="1"; rm.textContent="Tap again to remove"; return; }
+    const gone=list.splice(+i,1)[0]; CATOPEN=null; svcDirty(); dSettings(); toast(`Removed ${gone.n||"it"}. Save to make it final.`); return; }
+  if(t.closest("#svcDiscard")){ CATD=null; CATDIRTY=false; CATOPEN=null; dSettings(); toast("Changes discarded"); return; }
+  if(t.closest("#svcSave")){ const err=svcCheck(CATD); if(err) return toast(err, true);
+    const b=$("svcSave"); b.disabled=true;
+    try{ const r=await rpc("owner_save_catalog",{p:CATD}); store.set("vb.catalog",{data:r.data, updated_at:r.updated_at}); applyCatalog(r.data);
+      CATINFO={by:r.by, updated_at:r.updated_at}; CATD=null; CATDIRTY=false; buzz([18,40,18]); toast("Saved. The website shows the new list now."); dSettings(); }
+    catch(x){ b.disabled=false; toast(x.message, true); } }
+});
+addEventListener("beforeunload", e => { if(CATDIRTY){ e.preventDefault(); e.returnValue=""; } });
+
+/* ============================== money ledger (Settings → Data) ============================== */
+async function exportLedger(btn){
+  const from=$("stFrom").value, to=$("stTo").value; if(!from||!to||from>to) return toast("Pick a start and end date", true);
+  btn.disabled=true; const tx=btn.textContent; btn.textContent="Preparing…";
+  try{
+    const rows=await rpc("owner_ledger",{p_from:from, p_to:to});
+    const cell=v=>{ const t=String(v==null?"":v); return /[",\n]/.test(t)?`"${t.replace(/"/g,'""')}"`:t; };
+    const tin=rows.reduce((a,r)=>a+(+r.in||0),0), tout=rows.reduce((a,r)=>a+(+r.out||0),0);
+    const lines=[["Date","Type","Reference","Details","Method","Money in (₹)","Money out (₹)"].join(","), ...rows.map(r=>[r.date,r.type,r.ref,r.detail,r.method,r.in||"",r.out||""].map(cell).join(",")),
+      "", ["","Total","","","",tin,tout].map(cell).join(","), ["","Net (in minus out)","","","",tin-tout,""].map(cell).join(",")];
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"})); a.download=`vroombrite-money-${from}-to-${to}.csv`; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    toast(`${rows.length} lines downloaded · in ${rupee(tin)}, out ${rupee(tout)}`); AUDIT=await rpc("owner_audit",{p_limit:150}); dSettings();
+  }catch(x){ toast(x.message, true); }
+  btn.disabled=false; btn.textContent=tx;
+}
+
 /* ============================== bell (notifications) ============================== */
 function drawBell(ring){
   const seen=store.get("vb.bellSeen")||"", n=NOTES.filter(x=>x.at>seen).length + (isOwner()?(S.inboxCount||0)+((ATTN&&ATTN.changes)||[]).filter(c=>c.at>seen).length:0);
@@ -2482,7 +2633,7 @@ async function start(){
   if(!S.me.active){ show("wait"); return; }
   const wasOpen = !$("shell").hidden;
   show("app"); drawNav(); if(!wasOpen) route();
-  await refreshSettings(); drawNav(); redraw();
+  await refreshSettings(); drawNav(); redraw(); loadCatalogOps();
   drawSync(); flush(); pingCheck(); if(isOwner() && S.v!=="home") rpc("owner_overview").then(o=>{ OV=o; cache.set("numbers",o); setCounts(); }).catch(()=>{});
   setTimeout(()=>tour(), 600);
 }

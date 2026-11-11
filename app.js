@@ -1,15 +1,16 @@
 /* Vroombrite — shared site script. Business settings (phone, UPI, database) are in config.js. */
 
-/* Prices are launch placeholders — change them here and every page updates. */
+/* Services and prices. These are only the starting values: the owner changes them in the staff app
+   (Settings → Services & prices), and the website and staff app load the saved list from the database (applyCatalog). */
 const PKG = {
   car: [
     {n:"Essential wash", d:"A thorough exterior refresh to bring back that just-cleaned feel.", t:"~30 MIN", i:["Snow-foam pre-wash","Hand wash with microfibre mitt","Tyres and rims","Glass and mirrors"]},
-    {n:"Foam & glow",    d:"Foam wash, careful rinse and finishing touches for a brilliant shine.", t:"~45 MIN", i:["Everything in Essential","Interior vacuum: seats, mats, boot","Dashboard and door wipe-down","Tyre dressing"]},
+    {n:"Foam & glow",    d:"Foam wash, careful rinse and finishing touches for a brilliant shine.", t:"~45 MIN", hl:1, i:["Everything in Essential","Interior vacuum: seats, mats, boot","Dashboard and door wipe-down","Tyre dressing"]},
     {n:"Deep refresh",   d:"Extra attention for the details, inside and out. A complete reset.", t:"~90 MIN", i:["Everything in Foam & glow","Seat and roof shampoo","Spray wax coat","AC vents and crevices"]}
   ],
   bike: [
     {n:"Quick bike wash", d:"A neat exterior clean for your everyday ride.", t:"~20 MIN", i:["Foam wash and rinse","Wheels and spokes","Seat wipe","Microfibre dry"]},
-    {n:"Foam & detail",   d:"Foam wash with careful cleaning around the details.", t:"~35 MIN", i:["Everything in Quick","Body polish","Chain clean and lube","Plastic and tyre dressing"]},
+    {n:"Foam & detail",   d:"Foam wash with careful cleaning around the details.", t:"~35 MIN", hl:1, i:["Everything in Quick","Body polish","Chain clean and lube","Plastic and tyre dressing"]},
     {n:"Chain & shine",   d:"A detailed clean for your bike's hardest-working parts.", t:"~50 MIN", i:["Everything in Foam & detail","Engine degrease","Wax coat on tank","Chrome and visor polish"]}
   ]
 };
@@ -51,6 +52,22 @@ const SLOTS = ["6–8 AM","8–10 AM","10 AM–1 PM","2–5 PM","5–8 PM"];
 /* min = minimum order value (package + add-ons, before discount) for the ₹50 to apply */
 const PROMOS = { WELCOME50: { off: 50, min: 299, label: "₹50 off your first wash" } };
 const REFERRAL = { friendOff: 50, referrerCredit: 50, min: 299 };
+/* The whole list as one object (what the database stores), and putting a saved list in place. */
+function catalogNow(){
+  return {pkg:{car:PKG.car.map((x,i)=>Object.assign({}, x, {p:{hatch:PRICE.hatch[i], sedan:PRICE.sedan[i], suv:PRICE.suv[i]}})),
+               bike:PKG.bike.map((x,i)=>Object.assign({}, x, {p:{bike:PRICE.bike[i]}}))},
+          addons:{car:ADDONS.car, bike:ADDONS.bike}, detail:DETAIL, plans:{car:PLANS.car, bike:PLANS.bike}};
+}
+function applyCatalog(c){
+  if(!c || !c.pkg || !Array.isArray(c.pkg.car) || !c.pkg.car.length || !Array.isArray(c.pkg.bike) || !c.pkg.bike.length) return false;
+  const bare = x => { const y=Object.assign({}, x); delete y.p; y.i=y.i||[]; return y; }, n = v => Math.max(0, Math.round(+v||0));
+  PKG.car=c.pkg.car.map(bare); PKG.bike=c.pkg.bike.map(bare);
+  PRICE.hatch=c.pkg.car.map(x=>n(x.p&&x.p.hatch)); PRICE.sedan=c.pkg.car.map(x=>n(x.p&&x.p.sedan)); PRICE.suv=c.pkg.car.map(x=>n(x.p&&x.p.suv)); PRICE.bike=c.pkg.bike.map(x=>n(x.p&&x.p.bike));
+  ADDONS.car=(c.addons&&c.addons.car)||[]; ADDONS.bike=(c.addons&&c.addons.bike)||[];
+  DETAIL.splice(0, DETAIL.length, ...(c.detail||[]));
+  PLANS.car=(c.plans&&c.plans.car)||[]; PLANS.bike=(c.plans&&c.plans.bike)||[];
+  return true;
+}
 const SIZE_LABEL = {hatch:"Hatchback", sedan:"Sedan", suv:"SUV / MUV"};
 
 /* ========================================================= */
@@ -116,33 +133,53 @@ $$("[data-copy]").forEach(b => b.addEventListener("click", () => {
 }));
 
 /* ---------- packages, compare tables, add-ons, plans, treatments ---------- */
+/* Owner-entered text goes through h() so a stray < or & can't break the page. */
+const h = t => String(t==null?"":t).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function pkgCard(veh,size,i){
   const pk=PKG[veh][i], pr=PRICE[priceKey(veh,size)][i];
-  return `<article class="pkg${i===1?" feat":""}">${i===1?'<span class="pop">MOST BOOKED</span>':""}<span class="num">0${i+1}</span><h3>${pk.n}</h3><p class="desc">${pk.d}</p><div class="price">${rupee(pr)}<small>/ wash${veh==="car"?" · "+SIZE_LABEL[size].toLowerCase():""}</small></div><span class="meta">${pk.t} · AT YOUR PARKING</span><ul>${pk.i.map(x=>`<li>${x}</li>`).join("")}</ul><a class="btn ${i===1?"btn-lime":"btn-dark"}" href="${LINK.book}" data-book="${veh}|${size}|${i}">Book this wash <span class="arrow">↗</span></a></article>`;
+  return `<article class="pkg${pk.hl?" feat":""}">${pk.hl?'<span class="pop">MOST BOOKED</span>':""}<span class="num">${String(i+1).padStart(2,"0")}</span><h3>${h(pk.n)}</h3><p class="desc">${h(pk.d)}</p><div class="price">${rupee(pr)}<small>/ wash${veh==="car"?" · "+SIZE_LABEL[size].toLowerCase():""}</small></div><span class="meta">${h(pk.t)} · AT YOUR PARKING</span><ul>${(pk.i||[]).map(x=>`<li>${h(x)}</li>`).join("")}</ul><a class="btn ${pk.hl?"btn-lime":"btn-dark"}" href="${LINK.book}" data-book="${veh}|${size}|${i}">Book this wash <span class="arrow">↗</span></a></article>`;
 }
 function compareTable(veh,size){
-  const P=PKG[veh], all=[...new Set(P[0].i.concat(P[1].i,P[2].i))].filter(x=>!x.startsWith("Everything"));
-  const has=(i,x)=>{ for(let k=i;k>=0;k--) if(P[k].i.includes(x)) return true; return false; };
-  return `<thead><tr><th>What's included</th>${P.map(x=>`<th>${x.n}</th>`).join("")}</tr></thead><tbody>${all.map(x=>`<tr><td>${x}</td>${[0,1,2].map(i=>has(i,x)?'<td class="yes">✓</td>':'<td class="no">—</td>').join("")}</tr>`).join("")}<tr><td><b>Time</b></td>${P.map(x=>`<td>${x.t.replace("~","").toLowerCase()}</td>`).join("")}</tr><tr><td><b>Price</b></td>${[0,1,2].map(i=>`<td><b>${rupee(PRICE[priceKey(veh,size)][i])}</b></td>`).join("")}</tr></tbody>`;
+  const P=PKG[veh], all=[...new Set([].concat(...P.map(x=>x.i||[])))].filter(x=>!x.startsWith("Everything"));
+  const has=(i,x)=>{ for(let k=i;k>=0;k--) if((P[k].i||[]).includes(x)) return true; return false; };
+  return `<thead><tr><th>What's included</th>${P.map(x=>`<th>${h(x.n)}</th>`).join("")}</tr></thead><tbody>${all.map(x=>`<tr><td>${h(x)}</td>${P.map((_,i)=>has(i,x)?'<td class="yes">✓</td>':'<td class="no">—</td>').join("")}</tr>`).join("")}<tr><td><b>Time</b></td>${P.map(x=>`<td>${h(String(x.t||"").replace("~","").toLowerCase())}</td>`).join("")}</tr><tr><td><b>Price</b></td>${P.map((_,i)=>`<td><b>${rupee(PRICE[priceKey(veh,size)][i])}</b></td>`).join("")}</tr></tbody>`;
 }
 function bindPkgBlock(root){
   const veh=root.dataset.pkgs, grid=$$(".pkgs",root)[0], tbl=$$("table",root)[0];
-  let size="hatch";
-  const draw=()=>{ grid.innerHTML=[0,1,2].map(i=>pkgCard(veh,size,i)).join(""); if(tbl) tbl.innerHTML=compareTable(veh,size); };
+  let size="hatch", hv=veh;
+  const draw=()=>{ const v=root.querySelector("[data-hveh]")?hv:veh, n=PKG[v].length; grid.classList.toggle("n2", n===2); grid.classList.toggle("n4", n>=4);
+    grid.innerHTML=PKG[v].map((_,i)=>pkgCard(v, v==="bike"?"hatch":size, i)).join(""); if(tbl) tbl.innerHTML=compareTable(veh,size); };
   $$("[data-size]",root).forEach(b=>b.addEventListener("click",()=>{ size=b.dataset.size; $$("[data-size]",root).forEach(x=>x.setAttribute("aria-pressed",x===b)); draw(); }));
-  $$("[data-hveh]",root).forEach(b=>b.addEventListener("click",()=>{ const v=b.dataset.hveh; $$("[data-hveh]",root).forEach(x=>x.setAttribute("aria-pressed",x===b)); grid.innerHTML=[0,1,2].map(i=>pkgCard(v,"hatch",i)).join(""); }));
-  draw();
+  $$("[data-hveh]",root).forEach(b=>b.addEventListener("click",()=>{ hv=b.dataset.hveh; size="hatch"; $$("[data-hveh]",root).forEach(x=>x.setAttribute("aria-pressed",x===b)); draw(); }));
+  if(root.querySelector("[data-hveh]")) hv=(root.querySelector('[data-hveh][aria-pressed="true"]')||root.querySelector("[data-hveh]")).dataset.hveh;
+  root._draw=draw; draw();
 }
-$$("[data-pkgs]").forEach(bindPkgBlock);
-$$("[data-addons]").forEach(el => { const L=ADDONS[el.dataset.addons]; el.classList.add(L.length===3?"n3":"n4"); el.innerHTML=L.map(a=>`<div class="addon"><b>${a.n}</b><span>${a.d}</span><strong>+${rupee(a.p)}</strong></div>`).join(""); });
-$$("[data-treat]").forEach(el => el.innerHTML = DETAIL.map(t=>`<article class="tcard"><span class="ic">${t.ic}</span><div><h3>${t.n}</h3><p>${t.d}</p><ul>${t.tags.map(x=>`<li>${x}</li>`).join("")}</ul></div><div class="tp"><b>${rupee(t.p)}</b><span>from · ${t.t}</span></div></article>`).join(""));
-function planCards(v){ return PLANS[v].map(p=>`<article class="plan${p.hl?" hl":""}"><span>${p.s}</span><h3>${p.n}</h3><p>${p.d}</p><div class="pp">${rupee(p.p)}<small> / month</small></div><b class="per">${rupee(Math.round(p.p/p.w))} per wash</b><ul>${p.i.map(x=>`<li>${x}</li>`).join("")}</ul><a class="btn ${p.hl?"btn-lime":"btn-ghost"}" target="_blank" rel="noopener" href="${waLink(`Hi ${SITE.name}, I'm interested in the ${p.n} monthly plan for my ${v}.`)}">Start this plan <span class="arrow">↗</span></a></article>`).join(""); }
-$$("[data-plans]").forEach(root => {
-  const grid=$$(".plans",root)[0];
-  const draw=v=>grid.innerHTML=planCards(v);
-  $$("[data-pveh]",root).forEach(b=>b.addEventListener("click",()=>{ $$("[data-pveh]",root).forEach(x=>x.setAttribute("aria-pressed",x===b)); draw(b.dataset.pveh); }));
-  draw("car");
-});
+function planCards(v){ return PLANS[v].map(p=>`<article class="plan${p.hl?" hl":""}"><span>${h(p.s)}</span><h3>${h(p.n)}</h3><p>${h(p.d)}</p><div class="pp">${rupee(p.p)}<small> / month</small></div>${p.w>0?`<b class="per">${rupee(Math.round(p.p/p.w))} per wash</b>`:""}<ul>${(p.i||[]).map(x=>`<li>${h(x)}</li>`).join("")}</ul><a class="btn ${p.hl?"btn-lime":"btn-ghost"}" target="_blank" rel="noopener" href="${waLink(`Hi ${SITE.name}, I'm interested in the ${p.n} monthly plan for my ${v}.`)}">Start this plan <span class="arrow">↗</span></a></article>`).join(""); }
+/* Everything priced on the page. Runs again when a newer list arrives from the database. */
+function drawCatalog(){
+  $$("[data-pkgs]").forEach(r => r._draw ? r._draw() : bindPkgBlock(r));
+  $$("[data-addons]").forEach(el => { const L=ADDONS[el.dataset.addons]||[]; el.classList.toggle("n3", L.length%3===0 && L.length%4!==0); el.classList.toggle("n4", !(L.length%3===0 && L.length%4!==0)); el.innerHTML=L.map(a=>`<div class="addon"><b>${h(a.n)}</b><span>${h(a.d)}</span><strong>+${rupee(a.p)}</strong></div>`).join(""); });
+  $$("[data-treat]").forEach(el => el.innerHTML = DETAIL.map(t=>`<article class="tcard"><span class="ic">${h(t.ic)}</span><div><h3>${h(t.n)}</h3><p>${h(t.d)}</p><ul>${(t.tags||[]).map(x=>`<li>${h(x)}</li>`).join("")}</ul></div><div class="tp"><b>${rupee(t.p)}</b><span>from · ${h(t.t)}</span></div></article>`).join(""));
+  $$("[data-plans]").forEach(root => { const grid=$$(".plans",root)[0];
+    if(!root._bound){ root._bound=1; root._v="car"; $$("[data-pveh]",root).forEach(b=>b.addEventListener("click",()=>{ $$("[data-pveh]",root).forEach(x=>x.setAttribute("aria-pressed",x===b)); root._v=b.dataset.pveh; grid.innerHTML=planCards(root._v); })); }
+    grid.innerHTML=planCards(root._v); });
+  /* "From ₹149" style prices written in the page text */
+  $$("[data-from]").forEach(el => { const v=el.dataset.from, list=v==="bike"?PRICE.bike:PRICE.hatch; if(list.length) el.textContent=(el.dataset.lead||"From ")+rupee(Math.min(...list)); });
+  $$("[data-dfrom]").forEach(el => { const t=DETAIL.find(d=>d.id===el.dataset.dfrom); const row=el.closest(".addon"); if(row) row.hidden=!t; if(t) el.textContent="from "+rupee(t.p); });
+  try{ if($("pkgPick") && B && $("pkgPick").innerHTML){ B.pkg=Math.max(0, Math.min(B.pkg, PKG[B.veh].length-1)); renderPick(); } }catch(e){}   // booking form not set up yet on first draw
+}
+/* Prices: the last list this browser saw (instant), then the database's current one. */
+const CAT_KEY="vb.catalog";
+try{ const c=JSON.parse(localStorage.getItem(CAT_KEY)||"null"); if(c) applyCatalog(c.data||c); }catch(e){}
+drawCatalog();
+function loadCatalog(){
+  if(!USE_DB) return;
+  rpc("public_catalog",{}).then(c=>{ if(!c || !c.data) return; let old=null; try{ old=localStorage.getItem(CAT_KEY); }catch(e){}
+    const now=JSON.stringify(c); if(now===old) return; try{ localStorage.setItem(CAT_KEY, now); }catch(e){}
+    if(applyCatalog(c.data)) drawCatalog(); }).catch(()=>{});
+}
+loadCatalog();
+
 $$("[data-areas]").forEach(el => el.innerHTML = AREAS.map(x=>`<a href="${PREVIEW?"#wash-"+x.slug:"doorstep-car-wash-"+x.slug+".html"}"><span>${x.a}<small>${x.pins.join(" · ")}</small></span></a>`).join(""));
 
 /* ---------- PIN checkers ---------- */
@@ -222,6 +259,7 @@ const B={veh:"car",size:"hatch",pkg:1,adds:new Set(),step:1,pinOk:false};
 function applyPreselect(){
   if(!bform) return;
   const s=ss.get("dgBook"); if(s){ const [v,z,i]=s.split("|"); B.veh=v==="bike"?"bike":"car"; B.size=SIZE_LABEL[z]?z:"hatch"; B.pkg=+i||0; ss.set("dgBook",""); }
+  B.pkg=Math.max(0, Math.min(B.pkg, PKG[B.veh].length-1));
   const pin=ss.get("dgPin"); if(pin){ $("b-pin").value=pin; ss.set("dgPin",""); checkBookPin(); }
   $("bv-"+B.veh).checked=true; if(B.veh==="car") $("bs-"+B.size).checked=true;
   renderPick(); showStep(1);
@@ -231,11 +269,11 @@ function renderPick(){
   $("sizeField").hidden=B.veh==="bike";
   $("detailField").hidden=B.veh==="bike";
   const pr=PRICE[priceKey(B.veh,B.size)];
-  $("pkgPick").innerHTML=PKG[B.veh].map((p,i)=>`<label><span><input type="radio" name="pkg" value="${i}" ${i===B.pkg?"checked":""}><b>${p.n}</b><small>${p.t.replace("~","about ").toLowerCase()} · ${p.i[p.i[0].startsWith("Everything")?1:0]}</small></span><strong>${rupee(pr[i])}</strong></label>`).join("");
+  $("pkgPick").innerHTML=PKG[B.veh].map((p,i)=>`<label><span><input type="radio" name="pkg" value="${i}" ${i===B.pkg?"checked":""}><b>${h(p.n)}</b><small>${h(String(p.t||"").replace("~","about ").toLowerCase())}${(p.i||[]).length?" · "+h(p.i[p.i[0].startsWith("Everything")&&p.i[1]?1:0]):""}</small></span><strong>${rupee(pr[i])}</strong></label>`).join("");
   const ids=new Set(addonList().map(a=>a.id).concat(B.veh==="car"?DETAIL.map(d=>d.id):[]));
   [...B.adds].forEach(id=>{ if(!ids.has(id)) B.adds.delete(id); });
-  $("addPick").innerHTML=addonList().map(a=>`<label><input type="checkbox" value="${a.id}" ${B.adds.has(a.id)?"checked":""}> ${a.n} <b>+${rupee(a.p)}</b></label>`).join("");
-  $("detailPick").innerHTML=DETAIL.map(a=>`<label><input type="checkbox" value="${a.id}" ${B.adds.has(a.id)?"checked":""}> ${a.n} <b>+${rupee(a.p)}</b></label>`).join("");
+  $("addPick").innerHTML=addonList().map(a=>`<label><input type="checkbox" value="${a.id}" ${B.adds.has(a.id)?"checked":""}> ${h(a.n)} <b>+${rupee(a.p)}</b></label>`).join("");
+  $("detailPick").innerHTML=DETAIL.map(a=>`<label><input type="checkbox" value="${a.id}" ${B.adds.has(a.id)?"checked":""}> ${h(a.n)} <b>+${rupee(a.p)}</b></label>`).join("");
   $("sumImg").src=B.veh==="bike"?"img/bike.jpg":"img/shine.jpg";
   updateSum();
 }
@@ -465,7 +503,16 @@ if(trk){
   const day=(d,o)=>new Date(d+"T12:00:00Z").toLocaleDateString("en-IN",Object.assign({weekday:"short",day:"numeric",month:"short",timeZone:"UTC"},o||{}));
   const tm=t=>t?new Date(t).toLocaleTimeString("en-IN",{hour:"numeric",minute:"2-digit",timeZone:"Asia/Kolkata"}):"";
   const STARTS={"6–8 AM":6,"8–10 AM":8,"10 AM–1 PM":10,"2–5 PM":14,"5–8 PM":17};
-  let T=null, mode="", pick={d:"", s:""}, reason="", busy=false, msg="", timer=0;
+  let T=null, mode="", pick={d:"", s:""}, reason="", busy=false, msg="", timer=0, PH=null, phN=-1;
+  /* Wash photos: the push function checks the private link and returns links that work for an hour. */
+  async function loadPhotos(){
+    if(!T || !T.photos || T.photos===phN) return; phN=T.photos;
+    try{ const r=await fetch(SITE.supabaseUrl+"/functions/v1/push",{method:"POST", headers:{"Content-Type":"application/json", apikey:SITE.supabaseKey}, body:JSON.stringify({photos:{id:bid, key}})});
+      const j=await r.json(); PH=(j&&j.photos)||[]; if(!mode) drawPhotos(); }catch(e){ phN=-1; }
+  }
+  function drawPhotos(){ const el=$("trPhotos"); if(!el || !PH || !PH.length) return;
+    const pair=k=>PH.filter(x=>x.kind===k);
+    el.innerHTML=`<h3 class="tr-ph-h">Your wash photos</h3>${["before","after"].filter(k=>pair(k).length).map(k=>`<p class="tr-ph-k">${k==="before"?"Before":"After"}</p><div class="tr-ph">${pair(k).map(x=>`<a href="${x.url}" target="_blank" rel="noopener"><img src="${x.url}" alt="${k==="before"?"Before":"After"} the wash" loading="lazy"></a>`).join("")}</div>`).join("")}`; }
   const bad=m=>{ trk.innerHTML=`<div class="tr-card"><p>${m||"We couldn't find this booking. Please check the link, or WhatsApp us and we'll send it again."}</p></div>`; };
   async function load(){
     if(!USE_DB || !bid || !key) return bad();
@@ -495,7 +542,9 @@ if(trk){
         <dt>Service</dt><dd>${e(T.package)}${ex.length?"<br><small>+ "+ex.map(e).join(", ")+"</small>":""}</dd>${T.area?`<dt>Area</dt><dd>${e(T.area)}</dd>`:""}
         ${T.washer&&!cancelled?`<dt>Washer</dt><dd>${e(T.washer)}</dd>`:""}
         ${T.payment==="covered"?`<dt>Payment</dt><dd>Covered by your plan</dd>`:`<dt>Total</dt><dd>${rupee(T.total)}${T.discount>0?` <small>(${rupee(T.discount)} off)</small>`:""} · ${paid?(T.payment==="paid_upi"?"Paid by UPI":"Paid in cash"):cancelled?"Not charged":"Pay after the wash"}</dd>`}</dl>
+      <div id="trPhotos"></div>
       ${msg?`<p class="status ok">${e(msg)}</p>`:""}${acts}</div>`;
+    if(PH) drawPhotos(); loadPhotos();
   }
   async function drawMove(){
     const t0=ist(); if(!pick.d){ pick={d:T.wash_date, s:T.slot}; }

@@ -1,7 +1,10 @@
 // push — phone alerts for the staff app (web push).
 //
 //  • The staff app calls it with a signed-in user to get the alert key ("key") or send itself a test ("test").
-//  • The database calls it when a booking comes in from the website; it then alerts the owner's phones.
+//  • The database calls it when a booking comes in from the website, or a customer moves or cancels one
+//    from their tracking link; it then alerts the owner's phones.
+//  • The customer's tracking page calls it for the wash photos (it checks the private link first and
+//    returns links that work for one hour).
 //
 // It makes its own key pair the first time and keeps it in the database (table push_config),
 // where only this function can read it. Nothing secret is in the repo or the app.
@@ -85,6 +88,35 @@ export async function handle(req: Request, env: (k: string) => string | undefine
       url: "ops.html#b/" + b.id, tag: b.id,
     });
     return reply(200, { ok: true, ...r });
+  }
+
+  // 1b. From the database: a customer moved or cancelled a booking online.
+  if (typeof body.change === "string") {
+    const { data, error } = await admin.rpc("push_hook", { p_booking: body.change, p_secret: String(body.secret ?? "") });
+    if (error) return reply(500, { error: error.message });
+    if (!data) return reply(403, { error: "Not allowed." });
+    const b = data.booking;
+    if (!b) return reply(404, { error: "No such booking." });
+    const cancelled = body.kind === "cancelled";
+    const r = await send(data.subs ?? [], {
+      title: (cancelled ? "Cancelled online · " : "Moved online · ") + b.name,
+      body: cancelled ? `${b.package} · was ${SLOT_DAY(b.wash_date)}, ${b.slot}` : `${b.package} · now ${SLOT_DAY(b.wash_date)}, ${b.slot}${b.area ? " · " + b.area : ""}`,
+      url: "ops.html#b/" + b.id, tag: b.id + "-change",
+    });
+    return reply(200, { ok: true, ...r });
+  }
+
+  // 1c. From the customer's tracking page: wash photos (before and after), only with the right private link.
+  if (body.photos && typeof body.photos === "object") {
+    const p = body.photos as { id?: unknown; key?: unknown };
+    if (typeof p.id !== "string" || typeof p.key !== "string" || p.key.length < 16) return reply(400, { error: "Bad request." });
+    const { data, error } = await admin.rpc("track_photos", { p_id: p.id, p_key: p.key });
+    if (error) return reply(500, { error: error.message });
+    const list = (data ?? []) as { kind: string; path: string }[];
+    if (!list.length) return reply(200, { photos: [] });
+    const { data: signed, error: e2 } = await admin.storage.from("job-photos").createSignedUrls(list.map((x) => x.path), 3600);
+    if (e2) return reply(500, { error: e2.message });
+    return reply(200, { photos: list.map((x, i) => ({ kind: x.kind, url: signed?.[i]?.signedUrl })).filter((x) => x.url) });
   }
 
   // 2. From the staff app: a signed-in member of staff.

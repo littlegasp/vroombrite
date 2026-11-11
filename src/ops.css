@@ -778,3 +778,27 @@ html[data-theme="dark"] .rainbar > svg{color:#55D6C2}
 .st-overdue{background:var(--red-tint);color:var(--red)}
 .grp h2.overdue-h{color:var(--red)}
 .left-tag{display:inline-flex;align-self:flex-start;margin-bottom:10px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--red-tint);color:var(--red)}
+
+/* ---- services & prices editor ---- */
+.svc-sec{display:flex;flex-direction:column;gap:8px}
+details.svc{border:1px solid var(--glass-edge);border-radius:14px;background:var(--column);overflow:hidden}
+details.svc > summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+details.svc > summary::-webkit-details-marker{display:none}
+.svc-t{display:flex;flex-direction:column;min-width:0;flex:1}
+.svc-t b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .svc-t small{color:var(--muted);font-size:12.5px}
+.svc-ch{font-size:22px;line-height:1;color:var(--muted);transition:transform .2s}
+details.svc[open] .svc-ch{transform:rotate(90deg)}
+.svc-b{padding:4px 14px 14px;border-top:1px solid var(--glass-edge)}
+.svc-b .form-grid{margin-top:10px}
+.svc-b .field.wide,.svc-b .check.wide{grid-column:1/-1}
+.svc-b .check{display:flex;align-items:center;gap:8px;font-size:14px}
+.svc-acts{margin-top:12px;gap:8px}
+.danger-tx{color:var(--red)!important}
+.savebar{position:sticky;bottom:16px;z-index:20;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 18px;border-radius:16px;background:#15191C;color:#F7F8F5;box-shadow:0 14px 34px -10px rgba(21,25,28,.55);animation:drop .3s}
+.savebar[hidden]{display:none}
+.savebar span{flex:1;font-weight:600;font-size:14px}
+.savebar .btn:not(.primary){background:rgba(255,255,255,.12);color:#F7F8F5;border-color:transparent}
+@media (max-width:820px){ .savebar{bottom:calc(env(safe-area-inset-bottom,0px) + 100px)} .savebar span{font-size:13px} }
+/* 9 tabs on a phone: three rows of three */
+@media (max-width:820px){ .seg > button:first-child:nth-last-child(9),.seg > button:first-child:nth-last-child(9) ~ button{grid-column:span 4} }
+.savebar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}

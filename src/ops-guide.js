@@ -2,6 +2,11 @@
    updates its section here and adds a line to WHATS_NEW, in the same commit.
    role: "all" (everyone) or "owner". Write for washers: short steps, button names as on screen. */
 const WHATS_NEW = [
+  ["11 Nov 2026", "Owner: Settings → Services & prices. Add, remove or rename washes, add-ons, detailing treatments and plans, and change any price. Save, and the website and this app use it straight away."],
+  ["11 Nov 2026", "Owner: a washer can now be paid a fixed monthly salary instead of per wash (Settings → Pay)."],
+  ["11 Nov 2026", "Owner: your phone now alerts you when a customer moves or cancels a booking from their link (needs the updated alert setup, see Phone alerts)."],
+  ["11 Nov 2026", "Customers see their before and after photos on their booking link once you've added them."],
+  ["11 Nov 2026", "Owner: Settings → Data & activity → Money ledger downloads every rupee in and out for your accountant. Home's plan-ending reminder now has an Ask to renew button right there."],
   ["11 Nov 2026", "Jobs from earlier days that were never marked washed or cancelled no longer disappear. They show at the top of today's Jobs (Left over from earlier days) and on Home (Not finished) until someone deals with them."],
   ["10 Nov 2026", "Customers can now see their booking live, and move or cancel it themselves until 2 hours before the slot. The link is on the website after booking and in the Confirm message. Changes show on Home and in the bell as Changed online."],
   ["10 Nov 2026", "Cash handover: washers see Cash with you on Jobs. Owner: Home shows the cash each washer holds; tap Received when they hand it over (it warns if the amount is short)."],
@@ -151,14 +156,14 @@ const GUIDE = [
 <li>Owner: <b>Approve</b> or <b>Reject</b> each bill; Home shows how many are waiting. Approved bills count as costs in Analytics (don't enter them again in Monthly costs). Your own bills are approved straight away.</li></ul>` },
 
   { id: "pay", role: "owner", title: "Washer pay (Settings → Pay)", body: `
-<ol><li>Set each washer's rate <b>per car wash</b> and <b>per bike wash</b>, then <b>Save rates</b>.</li>
+<ol><li>Choose how each washer is paid: <b>Per wash</b> (set a rate per car wash and per bike wash) or <b>Monthly salary</b> (set the amount a month). Tap <b>Save pay</b>.</li>
 <li>Pick <b>This week</b>, <b>This month</b> or <b>Last month</b>. Each washer shows washes, what they earned and what's still owed. A job counts on the day it was marked washed, for the washer it was given to; a society visit counts each vehicle ticked.</li>
 <li><b>Send statement</b> opens WhatsApp to the washer with the count and amounts (add their mobile in Team first).</li>
-<li>When you've paid them, tap <b>Mark … paid</b> (twice). <b>Paid before</b> lists past payments; <b>Undo</b> if you marked one by mistake.</li></ol>
+<li>When you've paid them, tap <b>Mark … paid</b> (twice). For a monthly salary, each month in the dates you picked is marked paid once (pick <b>This month</b> or <b>Last month</b>). <b>Paid before</b> lists past payments; <b>Undo</b> if you marked one by mistake.</li></ol>
 <p>Pay you mark paid counts as costs in Analytics, so don't enter washer pay again in Monthly costs. Washers see their own pay under <b>Me → My pay</b>.</p>` },
 
   { id: "alerts", role: "owner", title: "Phone alerts and nightly backup", body: `
-<p><b>Phone alerts</b>: get a notification when a booking comes in from the website, even with the app closed.</p>
+<p><b>Phone alerts</b>: get a notification when a booking comes in from the website, or a customer moves or cancels one from their link, even with the app closed. The same function also shows customers their wash photos on their link, so after an update to it, paste the new file again (step 1, open the <b>push</b> function → Code → paste → Deploy).</p>
 <ol><li>One-time setup in Supabase: <b>Edge Functions → Deploy a new function → Via editor</b>, name it <b>push</b>, paste the file <b>supabase/functions/push/index.ts</b>, Deploy. Then in the function's settings switch <b>off</b> "Verify JWT with legacy secret".</li>
 <li>iPhone: open the staff app in Safari, tap <b>Share → Add to Home Screen</b>, and open <b>VB Staff</b> from the Home Screen. Android: Chrome works as it is.</li>
 <li>Tap your name / <b>More → My account</b> → <b>Phone alerts</b> → <b>Turn on alerts</b>, and allow notifications. A test alert arrives. Do this on each phone you want alerts on.</li></ol>
@@ -180,12 +185,13 @@ const GUIDE = [
 <p>You can't switch off, demote or delete your own login.</p>` },
 
   { id: "settings", role: "owner", title: "Settings", body: `
-<ul><li><b>Slots &amp; days off</b>: how many website bookings each time (6–8 AM, 8–10 AM…) can take in a day; leave it empty for no limit. When a time is full, the website shows it as <b>Full</b> and the customer picks another. Tick a <b>weekly day off</b> if you don't work that day. Use <b>Close a day or a time</b> for holidays, heavy rain or a big society job, and <b>Open again</b> to undo it. Bookings already made on a closed day stay; move or cancel them yourself. You can always add bookings yourself; the app only warns you.</li>
+<ul><li><b>Services &amp; prices</b>: every wash, add-on, detailing treatment and monthly plan customers can book. Tap one to change its name, prices (car washes have a price for each size), time or what's included; <b>↑ ↓</b> changes the order; <b>Remove</b> (tap twice) takes it off; <b>Add</b> makes a new one. Nothing changes until you tap <b>Save changes</b> in the dark bar at the bottom; <b>Discard</b> throws your changes away. After saving, the website and the New booking form use the new list straight away. Bookings already made keep their price. A line like "Everything in Essential" brings in the lines of the Essential wash (on the website table and in the checklist).</li>
+<li><b>Slots &amp; days off</b>: how many website bookings each time (6–8 AM, 8–10 AM…) can take in a day; leave it empty for no limit. When a time is full, the website shows it as <b>Full</b> and the customer picks another. Tick a <b>weekly day off</b> if you don't work that day. Use <b>Close a day or a time</b> for holidays, heavy rain or a big society job, and <b>Open again</b> to undo it. Bookings already made on a closed day stay; move or cancel them yourself. You can always add bookings yourself; the app only warns you.</li>
 <li><b>WhatsApp messages</b>: change the wording of every ready message. Words in curly brackets are filled in for each customer: {first_name}, {package}, {vehicle}, {date}, {slot}, {address}, {id}, {total}, {review_link}, {book_link}, {track_link} (the customer's own see/move/cancel link), {days}, {society}, {brand}.</li>
 <li><b>Offers</b>: change WELCOME50 and the referral offer (amount, minimum order, first wash only, on/off), or add a new code like DIWALI100. The website uses the new amounts straight away.</li>
 <li><b>Monthly costs</b>: ads, supplies, fuel, washer pay and other costs. Analytics then shows profit and cost per wash.</li>
 <li><b>Team notice</b>: one line everyone sees at the top of Home and Jobs ("Rain today, carry covers"). Clear it when done.</li>
-<li><b>Data &amp; activity</b>: download bookings as a spreadsheet (CSV), the Google Sheet copy key, and the <b>Activity log</b> (who changed logins, offers or messages, downloaded or deleted data; it never shows customers' details).</li></ul>` },
+<li><b>Data &amp; activity</b>: download bookings as a spreadsheet (CSV), the <b>Money ledger</b> for your accountant (every rupee in and out for the dates, with totals, no customer names), the Google Sheet copy key, and the <b>Activity log</b> (who changed logins, offers or messages, downloaded or deleted data; it never shows customers' details).</li></ul>` },
 
   { id: "analytics", role: "owner", title: "Reading Analytics", body: `
 <p>Pick a range (7 days, 30 days, This month, Last month, 90 days). Each box compares it with the same number of days just before: green ▲ is better, red ▼ is worse.</p>
